@@ -8,7 +8,7 @@ Test out the entire experiment [here](https://cocosci-optdisco.herokuapp.com) or
 
 Adapted from Fred Callaway's [PsiTurk + Heroku](https://github.com/fredcallaway/psirokuturk) starter repository.
 
-All emojis designed by OpenMoji – the open-source emoji and icon project. License: CC BY-SA 4.0
+All emojis designed by [OpenMoji](https://openmoji.org/) – the open-source emoji and icon project. License: [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
 
 ## Quickstart
 Project uses Python 3. Install dependencies (here, in a virtualenv)
