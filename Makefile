@@ -1,5 +1,5 @@
 dev:
-	forego start -f Procfile.dev
+	forego start -p 22362 -f Procfile.dev
 
 dev-python: export FLASK_ENV=development
 dev-python:

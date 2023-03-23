@@ -11,24 +11,37 @@ Adapted from Fred Callaway's [PsiTurk + Heroku](https://github.com/fredcallaway/
 All emojis designed by [OpenMoji](https://openmoji.org/) – the open-source emoji and icon project. License: [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
 
 ## Quickstart
-Project uses Python 3. Install dependencies (here, in a virtualenv)
+
+### Installation
+
+Project requires Python 3.9+ and Postgres. Depending on the method of Postgres installation, you might have to set your PATH to point to Postgres binaries for Python dependency installation to succeed.
+
+Install Python dependencies into a virtualenv:
 ```
-virtualenv env
+python3 -m venv env
 . env/bin/activate
 pip install -r requirements.txt
 ```
 
-It also uses Parcel to bundle JavaScript and CSS, which requires installation:
+We also use Parcel to bundle JavaScript and CSS, which requires installation:
 ```
 npm install
 ```
 
-You can run the development stack using a Procfile runner (like forego, `brew install forego`):
+In order to run the server, we use a Procfile runner, like `forego`, which you can install with:
 ```
+brew install forego
+```
+
+### Run the server
+
+Run the server via the Makefile:
+```
+. env/bin/activate
 make dev
 ```
 
-In place of the Procfile runner, you can run the two processes you need to run the server: the Python server (with `make dev-python`) and the JavaScript bundler (with `npm run watch`).
+To run the server without a Procfile runner (`forego`) you need to run the following two commands: the Python server (with `make dev-python`) and the JavaScript bundler (with `npm run watch`).
 
 ### Try it out!
 
@@ -42,6 +55,8 @@ git push heroku master
 ```
 
 ### Errors
+
+_Note: These instructions are likely to be very outdated._
 
 If you're seeing an `Library not loaded: @rpath/libssl.1.1.dylib ... Reason: image not found` error when running `./bin/psiturk-herokudb', you may need to `pip uninstall psycopg2` and run the following:
 ```
