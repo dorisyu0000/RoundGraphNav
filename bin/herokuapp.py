@@ -8,7 +8,7 @@ import multiprocessing
 def verify_config_conditions_match_json():
     config = configparser.ConfigParser()
     config.read('config.txt')
-    with open('static/optdisco/js/configuration/configuration.js') as f:
+    with open('static/graph-nav/js/configuration/configuration.js') as f:
         dd = f.read()
         # trim what we use to support es6 module loading
         assert dd.startswith('export default ') and dd.endswith(';')

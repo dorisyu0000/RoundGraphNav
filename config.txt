@@ -26,7 +26,7 @@ login_username = user
 login_pw = pw
 threads = auto
 secret_key = 'this is my secret key which is hard to guess, i should change this'
-adserver_revproxy_host = cocosci-optdisco.herokuapp.com
+adserver_revproxy_host = graph-nav.herokuapp.com
 
 [Task Parameters]
 experiment_code_version = 1.14
@@ -42,4 +42,4 @@ bonus_message = "Thanks for participating!"
 #   https://<host>:<port>/ad
 
 use_psiturk_ad_server = false
-ad_location = https://cocosci-optdisco.herokuapp.com/pub
+ad_location = https://graph-nav.herokuapp.com/pub

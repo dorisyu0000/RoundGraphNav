@@ -46,7 +46,7 @@
 
 .GraphNavigation-State {
   /* HACK structuring this way so it's easier to have in text. */
-  background-image: url('/static/optdisco/images/openmoji/2B1B.svg');
+  background-image: url('/static/graph-nav/images/openmoji/2B1B.svg');
 }
 
 .GraphNavigation-edge {
@@ -66,19 +66,19 @@
 }
 
 .GraphNavigation-current {
-  background-image: url('/static/optdisco/images/openmoji/2733.svg');
+  background-image: url('/static/graph-nav/images/openmoji/2733.svg');
 }
 .GraphNavigation-goal {
-  background-image: url('/static/optdisco/images/openmoji/2B50.svg');
+  background-image: url('/static/graph-nav/images/openmoji/2B50.svg');
 }
 .GraphNavigation-probe {
-  background-image: url('/static/optdisco/images/openmoji/2754.svg');
+  background-image: url('/static/graph-nav/images/openmoji/2754.svg');
   background-color: white;
   border: 2px solid black !important;
   border-radius: 100% !important;
 }
 .GraphNavigation-cue {
-  background-image: url('/static/optdisco/images/openmoji/2734.svg');
+  background-image: url('/static/graph-nav/images/openmoji/2734.svg');
 }
 
 .GraphNavigation.withGraphic .GraphNavigation-State {

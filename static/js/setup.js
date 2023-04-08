@@ -1,4 +1,4 @@
-import {markdown, makeSingletonPromiseQueue} from '../optdisco/js/utils.js';
+import {markdown, makeSingletonPromiseQueue} from '../graph-nav/js/utils.js';
 import {PsiTurk} from './psiturk.js';
 import $ from '../lib/jquery-min.js';
 import _ from '../lib/underscore-min.js';

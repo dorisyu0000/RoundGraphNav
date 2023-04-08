@@ -1,5 +1,5 @@
 {
-  "name": "cocosci-optdisco",
+  "name": "graph-nav",
   "version": "1.0.0",
   "description": "Navigation experiments over graphs to characterize hierarchical structure in behavior.",
   "source": "templates/exp.template.html",
@@ -17,12 +17,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/cgc/cocosci-optdisco.git"
+    "url": "git+https://github.com/cgc/graph-nav.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/cgc/cocosci-optdisco/issues"
+    "url": "https://github.com/cgc/graph-nav/issues"
   },
-  "homepage": "https://github.com/cgc/cocosci-optdisco#readme"
+  "homepage": "https://github.com/cgc/graph-nav#readme"
 }

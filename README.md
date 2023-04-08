@@ -1,14 +1,7 @@
-# cocosci-optdisco
+# graph-nav
 
-Navigation experiments over graphs to characterize hierarchical structure in behavior.
+Navigation experiments over graphs.
 
-Test out the entire experiment [here](https://cocosci-optdisco.herokuapp.com) or try out specific tasks:
-- [GraphTraining](https://cocosci-optdisco.herokuapp.com/testexperiment?type=GraphTraining)
-- [PathIdentification](https://cocosci-optdisco.herokuapp.com/testexperiment?type=PathIdentification)
-
-Adapted from Fred Callaway's [PsiTurk + Heroku](https://github.com/fredcallaway/psirokuturk) starter repository.
-
-All emojis designed by [OpenMoji](https://openmoji.org/) – the open-source emoji and icon project. License: [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
 
 ## Quickstart
 
@@ -68,9 +61,9 @@ pip install --global-option=build_ext \
 ## Experiment workflow
 1. Prep code! Make sure cost on consent screen (`templates/consent.html`) is up to date.
 2. Update `experiment_code_version` and make a git tag marking commit the code was run with.
-3. Scale up Heroku: `heroku ps:scale --app cocosci-optdisco web=1:Hobby`.
+3. Scale up Heroku: `heroku ps:scale --app graph-nav web=1:Hobby`.
 4. Using `./bin/psiturk-herokudb`, ensure `mode live`, submit with `hit create <# HIT> <payment> <expiry>`. Example is `hit create 9 4.00 1`.
-5. Use sanity script to keep track of HITs & automatically scale down Heroku: `python bin/sanity.py cocosci-optdisco`.
+5. Use sanity script to keep track of HITs & automatically scale down Heroku: `python bin/sanity.py graph-nav`.
 6. Pay/Approve workers for a HIT with `worker approve --hit $HIT`. See HITs with `hit list --active`.
 7. Verify all workers have been paid with `worker list --submitted`.
 8. Download data with `PORT= ON_HEROKU=1 DATABASE_URL=$(heroku config:get DATABASE_URL) bin/fetch_data.py $CODE_VERSION`.
@@ -78,4 +71,4 @@ pip install --global-option=build_ext \
 
 ## Adding new OpenMoji
 
-To add new OpenMoji, you need to edit `static/optdisco/images/openmoji/copyscript.py` by adding in the new emoji to copy in. You'll first have to download the OpenMoji SVG Color pack from [their site](https://openmoji.org/) and change paths in the script to work for your installation. Then run `copyscript.py`.
+To add new OpenMoji, you need to edit `static/graph-nav/images/openmoji/copyscript.py` by adding in the new emoji to copy in. You'll first have to download the OpenMoji SVG Color pack from [their site](https://openmoji.org/) and change paths in the script to work for your installation. Then run `copyscript.py`.

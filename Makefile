@@ -6,6 +6,6 @@ dev-python:
 	python bin/herokuapp.py
 
 experiment-scaleup:
-	heroku ps:scale --app cocosci-optdisco web=1:Hobby
+	heroku ps:scale --app graph-nav web=1:Hobby
 experiment-scaledown:
-	heroku ps:scale --app cocosci-optdisco web=0:Free
+	heroku ps:scale --app graph-nav web=0:Free

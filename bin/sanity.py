@@ -90,6 +90,6 @@ sleep = make_sleep()
 if __name__ == '__main__':
     import sys
     heroku_app = sys.argv[1]
-    assert heroku_app == 'cocosci-optdisco', 'Delete this only if you trust the program to run on other projects...'
+    assert heroku_app == 'graph-nav', 'Delete this only if you trust the program to run on other projects...'
     sanity_loop(heroku_app)
 

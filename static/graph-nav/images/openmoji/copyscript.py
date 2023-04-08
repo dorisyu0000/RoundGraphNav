@@ -10,7 +10,7 @@ graphics = [
 ]
 
 source = '/Users/carlos/Downloads/openmoji-svg-color'
-dest = '/Users/carlos/pu/cocosci-optdisco/static/optdisco/images/openmoji'
+dest = '/Users/carlos/pu/graph-nav/static/graph-nav/images/openmoji'
 graphics_dict = {}
 
 for item in graphics:

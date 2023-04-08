@@ -213,6 +213,7 @@ async function initializeExperiment() {
     // },
 
     // inst,
+
     gn(configuration.graph.ordering.navigation_practice_len1.map(t => ({...t, showMap: false}))), // hACK do we need this showmap: False???
     {
       type: 'MapInstruction',
