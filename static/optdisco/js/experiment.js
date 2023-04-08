@@ -28,20 +28,6 @@ function formWithValidation({stimulus, validate}) {
   };
 }
 
-const simpleDebrief = () => [{
-  type: 'survey-multi-choice',
-  preamble: markdown(`
-  # Experiment complete
-
-  Thanks for participating! Please answer the questions below before
-  submitting the experiment.
-  `),
-  button_label: 'Submit',
-  questions: [
-    {prompt: "Did you draw or take a picture of the map? If so, how often did you look at it? Note: Your completed experiment will be accepted regardless of your answer to this question.", name: 'draw-picture-map', options: ['Did not draw/take picture', 'Rarely looked', 'Sometimes looked', 'Often looked'], required:true},
-  ],
-}];
-
 const debrief = () => [{
   type: 'survey-multi-choice',
   preamble: markdown(`
@@ -126,7 +112,7 @@ async function initializeExperiment() {
 
   // TODO TODO TODO: for circle graphs, we can do scaleEdgeFactor, but for planar they look bad
   const graphRenderOptions = {
-    onlyShowCurrentEdges,
+    onlyShowCurrentEdges: false,
     fixedXY: configuration.embedding.coordinates,
     width: 800,
     height: 450,
@@ -198,75 +184,35 @@ async function initializeExperiment() {
     };
   }
 
-  var pi = (copy, timeline) => ({
-    type: 'CirclePathIdentification',
-    copy,
-    graph,
-    graphics: gfx,
-    timeline: addShowMap(timeline),
-    //timeLimit: timeLimit,
-    identifyOneState: true,
-    graphRenderOptions: {...graphRenderOptions, edgeShow: () => false},
-    planarOptions,
-  });
-
   const makePracticeOver = () => makeSimpleInstruction(`
     Now, we'll move on to the real questions.
   `);
 
   var timeline = _.flatten([
-    /*
-    {
-      type: 'FollowPath',
-      graph,
-      graphics: gfx,
-      timeline: [{
-        start: 0,
-        goal: 1,
-      }],
-      graphRenderOptions,
-      planarOptions,
-    },
-    {
-      type: 'CGTransition',
-      graph,
-      graphics: gfx,
-      timeline: [{
-        start: 0,
-        cues: [0, 1],
-      }],
-      graphRenderOptions,
-      planarOptions,
-    },
-    */
-    inst,
-    makeSimpleInstruction(`
-      First, you will perform a series of navigation tasks. We'll start with some practice.
+    // {
+    //   type: 'FollowPath',
+    //   graph,
+    //   graphics: gfx,
+    //   timeline: [{
+    //     start: 0,
+    //     goal: 1,
+    //   }],
+    //   graphRenderOptions,
+    //   planarOptions,
+    // },
+    // {
+    //   type: 'CGTransition',
+    //   graph,
+    //   graphics: gfx,
+    //   timeline: [{
+    //     start: 0,
+    //     cues: [0, 1],
+    //   }],
+    //   graphRenderOptions,
+    //   planarOptions,
+    // },
 
-      Your goal is to navigate to the goal marked yellow in as few steps as possible.
-
-      ${renderSmallEmoji(null, 'GraphNavigation-goal')}
-    `),
-    {
-      type: 'HTMLForm',
-      stimulus: `
-      ## ☝️ Helpful hint:
-
-      When navigating to a goal, one strategy is to set __subgoals__.
-
-      For example, imagine taking a road trip from Miami to Los Angeles 🚗.
-      You might plan to get to a subgoal in Texas from Miami and
-      then from there to Los Angeles.
-
-      <img src="static/optdisco/images/usa.png" style="width:700px">
-
-      In your own words, please explain what you think a subgoal is.
-
-      <textarea cols="50" rows="3" name="subgoal"></textarea>
-
-      __Also, please note that at the end of this experiment, we will ask you several questions about your subgoals.__
-      `,
-    },
+    // inst,
     gn(configuration.graph.ordering.navigation_practice_len1.map(t => ({...t, showMap: false}))), // hACK do we need this showmap: False???
     {
       type: 'MapInstruction',
@@ -278,60 +224,7 @@ async function initializeExperiment() {
     gn(configuration.graph.ordering.navigation_practice_len2),
     makePracticeOver(),
     gnAdaptive(configuration.graph.ordering.navigation),
-
-    /* Solway 2014-style question */
-    formWithValidation({
-      validate: formData => formData.comprehension == 'Any location you would visit',
-      stimulus: markdown(`
-      Great job!
-
-      Now, we will show you start and goal locations like before, but you do not have to navigate.
-
-      Instead, just click on a location you would visit along your route. It can be any location you would visit.
-
-      **The connections between locations will be hidden**, so make sure to study the map with all the connections.
-
-      After answering this comprehension question, you will perform a practice round.<br />
-      <br />
-      <h3>For the next rounds, what should you select?</h3>
-      <br />
-      <span class="validation" style="color: red; font-weight: bold;"></span><br />
-      <label><input type="radio" name="comprehension" value="The location just before the goal" />The location just before the goal</label><br />
-      <label><input type="radio" name="comprehension" value="Any location you would visit" />Any location you would visit</label><br />
-      <label><input type="radio" name="comprehension" value="The first location you would visit" />The first location you would visit</label><br />
-      <label><input type="radio" name="comprehension" value="Any location" />Any location</label><br />
-      `),
-    }),
-    pi('solway2014', configuration.graph.ordering.navigation_practice_len2),
-    makePracticeOver(),
-    pi('solway2014', configuration.graph.ordering.probes_solway2014),
-
-    /* Now, the subgoal questions */
-    formWithValidation({
-      validate: formData => formData.comprehension == 'A subgoal that comes to mind or the goal',
-      stimulus: `
-      Great job!
-
-      Now, we want to check how you chose subgoals 🤔.
-
-      We will show you start and goal locations like before, but you do not have to navigate. Instead, just click on the location you would set as a subgoal if you were to navigate. If you do not have a subgoal, just click on the goal.
-
-      After answering this comprehension question, you will perform a practice round.<br />
-      <br />
-      <h3>For the next rounds, what should you select?</h3>
-      <br />
-      <span class="validation" style="color: red; font-weight: bold;"></span><br />
-      <label><input type="radio" name="comprehension" value="Only the goal" />Only the goal</label><br />
-      <label><input type="radio" name="comprehension" value="Anything" />Anything</label><br />
-      <label><input type="radio" name="comprehension" value="A subgoal that comes to mind or anything" />A subgoal that comes to mind or anything</label><br />
-      <label><input type="radio" name="comprehension" value="A subgoal that comes to mind or the goal" />A subgoal that comes to mind or the goal</label><br />
-      `,
-    }),
-    pi('subgoal', configuration.graph.ordering.navigation_practice_len2),
-    makePracticeOver(),
-    pi('subgoal', configuration.graph.ordering.probes_subgoal),
-    pi('busStop', [{identifyOneState: true}]),
-    simpleDebrief(),
+    // simpleDebrief(),
   ]);
 
   if (location.pathname == '/testexperiment') {

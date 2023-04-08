@@ -170,7 +170,7 @@ export class CircleGraph {
 
     while (true) { // eslint-disable-line no-constant-condition
       // State transition
-      const {state} = await this.keyTransition();
+      const {state} = await this.clickTransition();
       // Record information
       data.states.push(state);
       data.times.push(Date.now() - startTime);
@@ -392,6 +392,7 @@ function renderCircleGraph(graph, gfx, goal, options) {
       addKey(successorKeys[successor][graph.successors(successor).indexOf(state)], successor, state, e.norm);
     });
   }
+
 
   return `
   <div class="GraphNavigation withGraphic" style="width: ${width}px; height: ${height}px;">
@@ -695,15 +696,17 @@ addPlugin('CircleGraphNavigation', trialErrorHandling(async function(root, trial
     Object.assign(trial, dynamicProperties);
   }
 
-  const mapData = await maybeShowMap(root, trial);
+  // const mapData = await maybeShowMap(root, trial);
 
   const cg = new CircleGraph(trial);
   root.innerHTML = `
-  Navigate to ${renderSmallEmoji(trial.graphics[trial.goal], 'GraphNavigation-goal')}. It might be helpful to set subgoals.
+    Maximize reward over three steps
   `;
   root.appendChild(cg.el);
-
+  const mapInteractions = cg.showMap();
   const data = await cg.navigate({onStateVisit: trial.onStateVisit});
+  console.log('mapInteractions')
+
 
   await endTrialScreen(root);
 

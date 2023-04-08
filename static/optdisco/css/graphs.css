@@ -93,8 +93,9 @@
 }
 .GraphNavigation.withGraphic .GraphNavigation-current {
   background-image: none;
-  background-color: #4caf50;
+  background-color: #888;
 }
+
 .GraphNavigation.withGraphic .GraphNavigation-goal {
   background-image: none;
   background-color: #ffeb3b;
@@ -196,6 +197,10 @@
 }
 .GraphNavigation.withGraphic .State > img {
   display: block;
+}
+
+.GraphNavigation.withGraphic .GraphNavigation-current > img {
+  display: none;
 }
 
 /* Implementing map view, with click-based reveal. */
