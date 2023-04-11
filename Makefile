@@ -1,4 +1,5 @@
 dev:
+	open "http://localhost:22362/testexperiment"
 	forego start -p 22362 -f Procfile.dev
 
 dev-python: export FLASK_ENV=development
