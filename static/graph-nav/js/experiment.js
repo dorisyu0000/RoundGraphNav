@@ -74,27 +74,14 @@ const QUERY = new URLSearchParams(location.search);
 async function initializeExperiment() {
   psiturk.recordUnstructuredData('browser', window.navigator.userAgent);
 
-  // TODO TODO TODO: for circle graphs, we can do scaleEdgeFactor, but for planar they look bad
-  const graphRenderOptions = {
+  const config = await $.getJSON('static/json/test.json');
+  config.graph = new Graph(config.adjacency)
+  config.graphRenderOptions = {
     onlyShowCurrentEdges: false,
     width: 800,
     height: 450,
     scaleEdgeFactor: 0.95,
   };
-  const planarOptions = {
-    // type: 'circle', // HACK
-    // For Solway planarization.
-    // fixedXY: configuration.embedding.coordinates,
-    // keyDistanceFactor: 1.35, can we nix this?
-    // width: 800,
-    // height: 450,
-    // scaleEdgeFactor: 1,
-    // HACK we don't use this, but should really implement something more useful?????
-    // successorKeys: clockwiseKeys(graph, configuration.embedding.order),
-  };
-  const config = await $.getJSON('static/json/test.json');
-  console.log("TEST")
-  const graph = new Graph(config.adjacency)
 
   // var inst = {
   //   type: 'CircleGraphNavigationInstruction',
@@ -106,27 +93,9 @@ async function initializeExperiment() {
   //   onlyShowCurrentEdges,
   // };
 
-  function addShowMap(trials) {
-    return trials
-    // return trials.map((t, idx) => ({showMap: (idx % 2) == 0, ...t}));
-  }
-
-  var gn = (trials) => ({
-    type: 'CircleGraphNavigation',
-    graph,
-    timeline: addShowMap(trials),
-    graphRenderOptions,
-    // planarOptions,
-  });
-
-  const makePracticeOver = () => makeSimpleInstruction(`
-    Now, we'll move on to the real questions.
-  `);
-  const trials = gn(config.timeline)
-
 
   var timeline = _.flatten([
-    trials
+    config
     // {
     //   type: 'FollowPath',
     //   graph,
@@ -161,7 +130,7 @@ async function initializeExperiment() {
     //   planarOptions,
     // },
     // gn(config.timeline),
-    // makePracticeOver(),
+    // makeSimpleInstruction(`Now, we'll move on to the real questions.`)
     // gnAdaptive(configuration.graph.ordering.navigation),
     // simpleDebrief(),
   ]);
