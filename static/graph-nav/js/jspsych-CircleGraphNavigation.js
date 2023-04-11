@@ -9,6 +9,7 @@ const BLOCK_SIZE = 100;
 
 export class CircleGraph {
   constructor(options) {
+    console.log('CircleGraph.options', options)
     this.options = options;
     options.edgeShow = options.edgeShow || (() => true);
     options.successorKeys = options.graphRenderOptions.successorKeys;
@@ -129,11 +130,12 @@ export class CircleGraph {
     const invalidStates = new Set(options.invalidStates || [this.state, this.options.goal]);
 
     for (const s of this.options.graph.states) {
-      if (invalidStates.has(s)) {
-        continue;
-      }
       const el = this.el.querySelector(`.GraphNavigation-State-${s}`);
-      el.classList.add('PathIdentification-selectable');
+      if (invalidStates.has(s)) {
+        el.classList.remove('PathIdentification-selectable');
+      } else {
+        el.classList.add('PathIdentification-selectable');
+      }
     }
 
     return new Promise((resolve, reject) => {
@@ -170,7 +172,13 @@ export class CircleGraph {
 
     while (true) { // eslint-disable-line no-constant-condition
       // State transition
-      const {state} = await this.clickTransition();
+      const g = this.options.graph;
+      console.log(g)
+      const {state} = await this.clickTransition({
+        invalidStates: new Set(
+          g.states.filter(s => !g.successors(this.state).includes(s))
+        ),
+      });
       // Record information
       data.states.push(state);
       data.times.push(Date.now() - startTime);
@@ -353,20 +361,20 @@ function renderCircleGraph(graph, gfx, goal, options) {
     });
   });
 
-  function addKey(key, state, successor, norm) {
-    const [x, y] = xy.scaled[state];
-    const [sx, sy] = xy.scaled[successor];
-    const [keyWidth, keyHeight] = [20, 28]; // HACK get from CSS
-    // We also add the key labels here
-    const mul = keyDistanceFactor * BLOCK_SIZE / 2;
-    keys.push(`
-      <div class="GraphNavigation-key GraphNavigation-key-${state}-${successor} GraphNavigation-key-${keyForCSSClass(key)}" style="
-        transform: translate(
-          ${x - keyWidth/2 + mul * (sx-x)/norm}px,
-          ${y - keyHeight/2 + mul * (sy-y)/norm}px)
-      ">${options.successorKeysRender(key)}</div>
-    `);
-  }
+  // function addKey(key, state, successor, norm) {
+  //   const [x, y] = xy.scaled[state];
+  //   const [sx, sy] = xy.scaled[successor];
+  //   const [keyWidth, keyHeight] = [20, 28]; // HACK get from CSS
+  //   // We also add the key labels here
+  //   const mul = keyDistanceFactor * BLOCK_SIZE / 2;
+  //   keys.push(`
+  //     <div class="GraphNavigation-key GraphNavigation-key-${state}-${successor} GraphNavigation-key-${keyForCSSClass(key)}" style="
+  //       transform: translate(
+  //         ${x - keyWidth/2 + mul * (sx-x)/norm}px,
+  //         ${y - keyHeight/2 + mul * (sy-y)/norm}px)
+  //     ">${options.successorKeysRender(key)}</div>
+  //   `);
+  // }
 
   const succ = [];
   const keys = [];
@@ -388,8 +396,8 @@ function renderCircleGraph(graph, gfx, goal, options) {
       `);
 
       // We also add the key labels here
-      addKey(successorKeys[state][idx], state, successor, e.norm);
-      addKey(successorKeys[successor][graph.successors(successor).indexOf(state)], successor, state, e.norm);
+      // addKey(successorKeys[state][idx], state, successor, e.norm);
+      // addKey(successorKeys[successor][graph.successors(successor).indexOf(state)], successor, state, e.norm);
     });
   }
 
@@ -433,10 +441,10 @@ function setCurrentState(display_element, graph, state, options) {
   }
   removeClass('GraphNavigation-current')
   removeClass('GraphNavigation-currentEdge')
-  removeClass('GraphNavigation-currentKey')
+  // removeClass('GraphNavigation-currentKey')
   for (const key of allKeys) {
     removeClass(`GraphNavigation-currentEdge-${keyForCSSClass(key)}`)
-    removeClass(`GraphNavigation-currentKey-${keyForCSSClass(key)}`)
+    // removeClass(`GraphNavigation-currentKey-${keyForCSSClass(key)}`)
   }
 
   // Can call this to clear out current state too.
@@ -452,7 +460,8 @@ function setCurrentState(display_element, graph, state, options) {
   }
 
   if (options.onlyShowCurrentEdges) {
-    for (const el of display_element.querySelectorAll('.GraphNavigation-edge,.GraphNavigation-key')) {
+    // for (const el of display_element.querySelectorAll('.GraphNavigation-edge,.GraphNavigation-key')) {
+    for (const el of display_element.querySelectorAll('.GraphNavigation-edge')) {
       el.style.opacity = 0;
     }
   }
@@ -465,18 +474,18 @@ function setCurrentState(display_element, graph, state, options) {
     // Set current edges
     let el = queryEdge(display_element, state, successor);
     el.classList.add('GraphNavigation-currentEdge');
-    el.classList.add(`GraphNavigation-currentEdge-${keyForCSSClass(successorKeys[idx])}`);
+    // el.classList.add(`GraphNavigation-currentEdge-${keyForCSSClass(successorKeys[idx])}`);
     if (options.onlyShowCurrentEdges) {
       el.style.opacity = 1;
     }
 
     // Now setting active keys
-    el = display_element.querySelector(`.GraphNavigation-key-${state}-${successor}`);
-    el.classList.add('GraphNavigation-currentKey');
-    el.classList.add(`GraphNavigation-currentKey-${keyForCSSClass(successorKeys[idx])}`);
-    if (options.onlyShowCurrentEdges) {
-      el.style.opacity = 1;
-    }
+    // el = display_element.querySelector(`.GraphNavigation-key-${state}-${successor}`);
+    // el.classList.add('GraphNavigation-currentKey');
+    // el.classList.add(`GraphNavigation-currentKey-${keyForCSSClass(successorKeys[idx])}`);
+    // if (options.onlyShowCurrentEdges) {
+    //   el.style.opacity = 1;
+    // }
   });
 }
 
