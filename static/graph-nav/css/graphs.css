@@ -81,7 +81,7 @@
   transform-origin: left center;
   position: absolute;
   background-color: black;
-  transition: opacity 300ms;
+/*  transition: opacity 300ms;*/
 }
 .GraphNavigation-edge.is-faded {
   background-color: white;
@@ -151,8 +151,6 @@
   font-size: 12pt;
 
   opacity: 0;
-  transition: opacity 300ms;
-
   z-index: 2;
 }
 .GraphNavigation-currentKey {
@@ -233,16 +231,18 @@
   display: none;
 }
 
-/* Implementing map view, with click-based reveal. */
+/* Process tracing on rewards */
 .GraphNavigation.hideStates .State > img {
+  transition: opacity 100ms;
   opacity: 0;
 }
 .GraphNavigation.hideStates .State.is-visible > img {
   opacity: 1;
 }
 
-/* Implementing map view, with click-based reveal. */
+/* Process tracing on edges */
 .GraphNavigation.hideEdges .GraphNavigation-edge {
+  transition: opacity 100ms;
   opacity: 0;
 }
 .GraphNavigation.hideEdges .GraphNavigation-edge.is-visible {

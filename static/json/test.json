@@ -4,7 +4,8 @@
    "rewardGraphics":{"-10":"🤡","-5":"📌","5":"🍫","10":"💰"},
 
    "n_steps":4,
-   "mouse_tracking": false,
+   "hover_edges": true,
+   "hover_rewards": true,
    "timeline": [
       {
          "start":2,

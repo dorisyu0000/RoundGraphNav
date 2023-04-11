@@ -33,49 +33,25 @@ export class CircleGraph {
     this.cancellables = [];
   }
 
-  async enableStateMouseTracking(logger) {
-    this.el.classList.add('hideStates');
+  enableMouseTracking(logger, edges=false, rewards=false) {
+    if (rewards) this.el.classList.add('hideStates');
+    if (edges) this.el.classList.add('hideEdges');
+
     for (const el of this.el.querySelectorAll('.State')) {
       const state = parseInt(el.getAttribute('data-state'), 10);
       el.addEventListener('mouseenter', (e) => {
+        logger('mouseenter', {state})
         el.classList.add('is-visible');
-        logger('mouseenter', {state})
+        for (const successor of this.options.graph.successors(state)) {
+          queryEdge(this.el, state, successor).classList.add('is-visible');
+        }
       });
       el.addEventListener('mouseleave', (e) => {
+        logger('mouseleave', {state})
         el.classList.remove('is-visible');
-        logger('mouseleave', {state})
-      });
-    }
-  }
-
-  enableEdgeMouseTracking(logger) {
-    // this.el.classList.add('hideStates');
-    for (const edge of this.el.querySelectorAll('.GraphNavigation-edge')) {
-      edge.classList.add('is-faded');
-    }
-
-
-    for (const el of this.el.querySelectorAll('.State')) {
-      const state = parseInt(el.getAttribute('data-state'), 10);
-      el.addEventListener('mouseenter', (e) => {
-        // el.classList.add('is-visible');
-        for (const edge of this.el.querySelectorAll('.GraphNavigation-edge')) {
-          edge.classList.add('is-faded');
-        }
         for (const successor of this.options.graph.successors(state)) {
-          const el = queryEdge(this.el, state, successor);
-          el.classList.remove('is-faded');
+          queryEdge(this.el, state, successor).classList.remove('is-visible');
         }
-
-        logger('mouseenter', {state})
-      });
-      el.addEventListener('mouseleave', (e) => {
-        // el.classList.remove('is-visible');
-        for (const successor of this.options.graph.successors(state)) {
-          const el = queryEdge(this.el, state, successor);
-          el.classList.add('is-faded');
-        }
-        logger('mouseleave', {state})
       });
     }
   }
@@ -384,11 +360,11 @@ function renderCircleGraph(graph, gfx, goal, options) {
         return;
       }
       const e = xy.edge(state, successor);
-      const opacity = options.edgeShow(state, successor) ? 1 : 0;
+      // const opacity = options.edgeShow(state, successor) ? 1 : 0;
+      // opacity: ${opacity};
       succ.push(`
         <div class="GraphNavigation-edge GraphNavigation-edge-${state}-${successor}" style="
         width: ${e.norm}px;
-        opacity: ${opacity};
         transform: translate(${x}px,${y}px) rotate(${e.rot}rad);
         "></div>
       `);
@@ -530,16 +506,7 @@ addPlugin('CircleGraphNavigation', trialErrorHandling(async function(root, trial
     });
   }
 
-  cg.enableEdgeMouseTracking(logger)
-
-  // switch (trial.mouse_tracking) {
-  //   case 'states':
-  //     cg.enableStateMouseTracking(logger);
-  //     break;
-  //   case 'edges':
-  //     cg.enableEdgeMouseTracking(logger);
-  //     break;
-  // }
+  cg.enableMouseTracking(logger, trial.hover_edges, trial.hover_rewards)
 
   let score = 0
   await cg.navigate({
