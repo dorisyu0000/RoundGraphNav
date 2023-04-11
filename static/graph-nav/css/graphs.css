@@ -1,5 +1,32 @@
 /* Graph-related style */
 
+
+.GraphNavigation-header-left {
+  float: left;
+  width: 30%;
+  text-align: left;
+  font-size: 16pt;
+  font-weight: 300;
+/*  vertical-align: middle;*/
+}
+
+.GraphNavigation-header-value {
+  font-size: 20pt;
+  font-weight: 500;
+/*  vertical-align: middle;*/
+}
+
+/*.GraphNavigation-header-right {
+    float: left;
+    width: 30%;
+    text-align: left;
+}
+.GraphNavigation-header-center {
+    float: left;
+    width: %;
+    text-align: center;
+}*/
+
 .GraphTraining-state {
   display: flex;
   justify-content: space-around;
@@ -57,12 +84,15 @@
   transition: opacity 300ms;
 }
 .GraphNavigation-edge.is-faded {
-  opacity: 0.1;
+  background-color: white;
+  z-index: -1;
+/*  background-color: red;*/
 }
 .GraphNavigation-currentEdge {
-  z-index: 1;
+/*  opacity: 1 !important;*/
+  z-index: 1 !important;
   height: 4px;
-  background-color: #1B79FF;
+  background-color: #1B79FF !important;
 }
 
 .GraphNavigation-current {
@@ -208,6 +238,14 @@
   opacity: 0;
 }
 .GraphNavigation.hideStates .State.is-visible > img {
+  opacity: 1;
+}
+
+/* Implementing map view, with click-based reveal. */
+.GraphNavigation.hideEdges .GraphNavigation-edge {
+  opacity: 0;
+}
+.GraphNavigation.hideEdges .GraphNavigation-edge.is-visible {
   opacity: 1;
 }
 

@@ -25,46 +25,59 @@ export class CircleGraph {
         ...options.graphRenderOptions,
       }
     ));
-
+    if (options.hide_states) {
+    }
     this.setCurrentState(options.start);
 
     // Making sure it is easy to clean up event listeners...
     this.cancellables = [];
   }
 
-  async showMap(options={}) {
-    const start = Date.now();
-    const data = {states: [], times: [], durations: []};
-
+  async enableStateMouseTracking(logger) {
     this.el.classList.add('hideStates');
-
     for (const el of this.el.querySelectorAll('.State')) {
       const state = parseInt(el.getAttribute('data-state'), 10);
-      let enter;
       el.addEventListener('mouseenter', (e) => {
         el.classList.add('is-visible');
-        // When visible, we mark state & time.
-        data.states.push(state);
-        data.times.push(Date.now() - start);
-        // Record time we show to compute a duration.
-        enter = Date.now();
-        // Event listener
-        options.onmouseenter && options.onmouseenter(state);
+        logger('mouseenter', {state})
       });
       el.addEventListener('mouseleave', (e) => {
         el.classList.remove('is-visible');
-        // When hiding, we record duration of visibility.
-        data.durations.push(Date.now() - enter);
-        // Event listener
-        options.onmouseleave && options.onmouseleave(state);
+        logger('mouseleave', {state})
       });
     }
+  }
 
-    if (!options.skipWait) {
-      await waitForSpace();
+  enableEdgeMouseTracking(logger) {
+    // this.el.classList.add('hideStates');
+    for (const edge of this.el.querySelectorAll('.GraphNavigation-edge')) {
+      edge.classList.add('is-faded');
     }
 
-    return data;
+
+    for (const el of this.el.querySelectorAll('.State')) {
+      const state = parseInt(el.getAttribute('data-state'), 10);
+      el.addEventListener('mouseenter', (e) => {
+        // el.classList.add('is-visible');
+        for (const edge of this.el.querySelectorAll('.GraphNavigation-edge')) {
+          edge.classList.add('is-faded');
+        }
+        for (const successor of this.options.graph.successors(state)) {
+          const el = queryEdge(this.el, state, successor);
+          el.classList.remove('is-faded');
+        }
+
+        logger('mouseenter', {state})
+      });
+      el.addEventListener('mouseleave', (e) => {
+        // el.classList.remove('is-visible');
+        for (const successor of this.options.graph.successors(state)) {
+          const el = queryEdge(this.el, state, successor);
+          el.classList.add('is-faded');
+        }
+        logger('mouseleave', {state})
+      });
+    }
   }
 
   cancel() {
@@ -156,20 +169,11 @@ export class CircleGraph {
 
   async navigate(options) {
     options = options || {};
-    const termination = options.termination || ((state, states) => state == this.options.goal);
+    const termination = options.termination || ((state) => state == this.options.goal);
     let stepsLeft = options.n_steps || -1;
     const onStateVisit = options.onStateVisit || ((s) => {});
-    /*
-    Higher-order function that stitches together other class methods
-    for an interactive key-based navigation.
-    */
-    const startTime = Date.now();
-    const data = {
-      times: [],
-      states: [this.state],
-    };
-    onStateVisit(this.state); // We have to log the initial state visit.
 
+    onStateVisit(this.state, stepsLeft); // We have to log the initial state visit.
     while (true) { // eslint-disable-line no-constant-condition
       // State transition
       const g = this.options.graph;
@@ -178,24 +182,17 @@ export class CircleGraph {
           g.states.filter(s => !g.successors(this.state).includes(s))
         ),
       });
-      // Record information
-      data.states.push(state);
-      data.times.push(Date.now() - startTime);
-      onStateVisit(state);
       stepsLeft -= 1;
-      console.log('stepsLeft', stepsLeft)
+      onStateVisit(state, stepsLeft);
 
       this.setCurrentState(state);
 
-      if (termination(state, data.states) || stepsLeft == 0) {
+      if (termination(state) || stepsLeft == 0) {
         $(".GraphNavigation-currentEdge").removeClass('GraphNavigation-currentEdge')
-        await setTimeoutPromise(2000);
         break;
       }
       await setTimeoutPromise(200);
     }
-
-    return data;
   }
 
   setXY(xy) {
@@ -382,7 +379,6 @@ function renderCircleGraph(graph, gfx, goal, options) {
   const keys = [];
   for (const state of graph.states) {
     let [x, y] = xy.scaled[state];
-    console.log('graph', graph)
     graph.successors(state).forEach((successor, idx) => {
       if (state >= successor) {
         return;
@@ -489,27 +485,6 @@ function setCurrentState(display_element, graph, state, options) {
   });
 }
 
-function enableHoverEdges(display_element, graph) {
-  for (const el of display_element.querySelectorAll('.GraphNavigation-State')) {
-    el.addEventListener('mouseenter', function(e) {
-      const state = parseInt(el.dataset.state, 10);
-      // hovers.push({state, time: Date.now() - startTime});
-
-      for (const edge of display_element.querySelectorAll('.GraphNavigation-edge')) {
-        edge.classList.add('is-faded');
-      }
-      for (const successor of graph.successors(state)) {
-        const el = queryEdge(display_element, state, successor);
-        el.classList.remove('is-faded');
-      }
-    });
-    el.addEventListener('mouseleave', function(e) {
-      for (const edge of display_element.querySelectorAll('.GraphNavigation-edge')) {
-        edge.classList.remove('is-faded');
-      }
-    });
-  }
-}
 
 async function waitForSpace() {
   return documentEventPromise('keypress', (e) => {
@@ -520,184 +495,7 @@ async function waitForSpace() {
   });
 }
 
-async function maybeShowMap(root, trial) {
-  const data = {showMap: trial.showMap};
-  if (!trial.showMap) {
-    return data;
-  }
-  const start = Date.now();
-
-  // Show map
-  const planar = new CircleGraph({...trial, graphRenderOptions: trial.planarOptions, start: null, goal: null, probe: null});
-  if (trial.planarOptions.type == 'graphviz') {
-    root.innerHTML = markdown(`
-      Here is an unscrambled map of all the connections you will use to navigate. **This has the exact same locations and connections as when you navigate.**
-
-      You will see this map every few trials. **Hover to reveal** the picture for it.
-
-      Take a moment to look at the map, then **press spacebar to continue**.
-    `);
-  } else {
-    root.innerHTML = markdown(`
-      Here is a map of all the connections you will use to navigate.
-
-      You will see this map every few trials. **Hover to reveal** the picture for it.
-
-      Take a moment to look at the map, then **press spacebar to continue**.
-    `);
-  }
-  root.appendChild(planar.el);
-
-  // Wait for map, collect data
-  const mapInteractions = await planar.showMap();
-  Object.assign(data, mapInteractions);
-  data.rt = Date.now() - start;
-
-  root.innerHTML = '';
-
-  return data;
-}
-
-async function simpleMapInstruction(root, trial) {
-  const limit = 3;
-
-  const cg = new CircleGraph({
-    ...trial,
-    start: null, goal: null, probe: null,
-  });
-
-  const inst = document.createElement('p');
-  inst.innerHTML = markdown(`Every few trials, we will show you a map with all the connections.<br /><br />You need to **hover to see the icons**. Hover over ${limit} different locations.`);
-  root.appendChild(inst);
-  root.appendChild(cg.el);
-
-  // Then we show map. We ask participants to hover over a few.
-  const locations = new Set();
-  const {promise, resolve} = makePromise();
-  await cg.showMap({
-    skipWait: true,
-    onmouseenter(s) {
-      locations.add(s);
-      if (locations.size >= limit) {
-        resolve();
-        return;
-      }
-      inst.innerHTML = `<br /><br />${limit-locations.size} left!`;
-    }
-  });
-  await promise;
-
-  // End
-  inst.innerHTML = '<br /><br />Great job! Now press spacebar to continue.'
-  await waitForSpace();
-  jsPsych.finishTrial();
-}
-
-addPlugin('MapInstruction', trialErrorHandling(async function(root, trial) {
-  if (_.isEqual(trial.graphRenderOptions.fixedXY, trial.planarOptions.fixedXY)) {
-    await simpleMapInstruction(root, trial);
-    return
-  }
-
-  const cg = new CircleGraph({
-    ...trial,
-    start: null, goal: null, probe: null,
-  });
-
-  // Start by pre-allocating the interpolated coordinates.
-  const interp = {
-    coordinate: new Array(trial.graph.states.length),
-    scaled: new Array(trial.graph.states.length),
-  };
-  for (const state of trial.graph.states) {
-    interp.coordinate[state] = [0, 0];
-    interp.scaled[state] = [0, 0];
-  }
-  // Compute our start and end coordinates.
-  const from = graphXY(trial.graph, trial.graphRenderOptions.width, trial.graphRenderOptions.height, trial.graphRenderOptions.scaleEdgeFactor || 0.95, trial.graphRenderOptions.fixedXY);
-  const to = graphXY(trial.graph, trial.planarOptions.width, trial.planarOptions.height, trial.planarOptions.scaleEdgeFactor || 0.95, trial.planarOptions.fixedXY);
-
-  function interpolateXY(percent) {
-    /*
-    We don't simply animate the transform/width
-    attributes since they lead to something strange looking;
-    Each attribute animates independently, but the mapping
-    from x/y to rot/width is not linear, so the edges don't
-    track the nodes. We're instead computing a frame-by-frame
-    linear interpolation of desired XY, then mapping that to
-    the necessary transform/width parameters for edges.
-    */
-    // Compute interpolation between the two positions.
-    for (const s of trial.graph.states) {
-      for (const key of ['coordinate', 'scaled']) {
-        interp[key][s][0] = (1-percent) * from[key][s][0] + percent * to[key][s][0];
-        interp[key][s][1] = (1-percent) * from[key][s][1] + percent * to[key][s][1];
-      }
-    }
-    cg.setXY(interp);
-  }
-  // Rendering
-  interpolateXY(0);
-  const inst = document.createElement('p');
-  inst.style.minHeight = '60px';
-//  inst.style.marginBottom = '-50px';
-  root.appendChild(inst);
-  root.appendChild(cg.el);
-
-  // Intro
-  inst.innerHTML = 'Every few trials, we will show you an unscrambled map.<br />Press spacebar to unscramble this map.';
-  await waitForSpace();
-
-  // Animating...
-  inst.textContent = '';
-  const animDuration = 2000;
-  const animStart = Date.now();
-  function animateFrame() {
-    let percent = (Date.now() - animStart) / animDuration;
-    if (percent >= 1) {
-      interpolateXY(1);
-      return
-    }
-    interpolateXY(percent);
-    window.requestAnimationFrame(animateFrame);
-  }
-  animateFrame();
-  window.requestAnimationFrame(animateFrame);
-  await setTimeoutPromise(animDuration);
-
-  // With interpolated animation over, we fade out opacity.
-  const fadeDur = 500;
-  cg.el.querySelectorAll('img').forEach(el => el.style.transition = `opacity ${fadeDur}ms`);
-  cg.el.classList.add('hideStates');
-  await setTimeoutPromise(fadeDur);
-  cg.el.querySelectorAll('img').forEach(el => el.style.transition = '');
-
-  // Then we show map. We ask participants to hover over a few.
-  const limit = 3;
-  const locations = new Set();
-  inst.innerHTML = markdown(`You need to **hover to see the icons**. Hover over ${limit} different locations.`);
-  const {promise, resolve} = makePromise();
-  await cg.showMap({
-    skipWait: true,
-    onmouseenter(s) {
-      locations.add(s);
-      if (locations.size >= limit) {
-        resolve();
-        return;
-      }
-      inst.textContent = `${limit-locations.size} left!`;
-    }
-  });
-  await promise;
-
-  // End
-  inst.textContent = 'Great job! Now press spacebar to continue.'
-  await waitForSpace();
-  jsPsych.finishTrial();
-}));
-
 addPlugin('CircleGraphNavigation', trialErrorHandling(async function(root, trial) {
-  trial.graphics = trial.reward.map(x => trial.rewardGraphics[x])
   console.log('trial', trial);
 
   let dynamicProperties;
@@ -706,26 +504,62 @@ addPlugin('CircleGraphNavigation', trialErrorHandling(async function(root, trial
     Object.assign(trial, dynamicProperties);
   }
 
-  // const mapData = await maybeShowMap(root, trial);
+  trial.graphics = trial.reward.map(x => trial.rewardGraphics[x])
 
   const cg = new CircleGraph(trial);
+
   root.innerHTML = `
-    Maximize reward over ${numString(trial.n_steps, "step")}
-  `;
+  <div class="GraphNavigation-header-left">
+    Steps: <span class="GraphNavigation-header-value" id="GraphNavigation-steps"></span> <br>
+    Points: <span class="GraphNavigation-header-value" id="GraphNavigation-points"></span>
+  </div>
+  `
   root.appendChild(cg.el);
-  const mapInteractions = cg.showMap();
-  const data = await cg.navigate({onStateVisit: trial.onStateVisit, n_steps: trial.n_steps});
-  console.log('mapInteractions')
 
+  let data = {
+    events: [],
+    trial: _.pick(trial, 'practice', 'start', 'reward')
+  }
+  let start_time = Date.now()
+  function logger(event, info={}) {
+    console.log(event, info)
+    data.events.push({
+      time: Date.now() - start_time,
+      event,
+      ...info
+    });
+  }
 
+  cg.enableEdgeMouseTracking(logger)
+
+  // switch (trial.mouse_tracking) {
+  //   case 'states':
+  //     cg.enableStateMouseTracking(logger);
+  //     break;
+  //   case 'edges':
+  //     cg.enableEdgeMouseTracking(logger);
+  //     break;
+  // }
+
+  let score = 0
+  await cg.navigate({
+    onStateVisit(state, stepsLeft) {
+      if (stepsLeft != trial.n_steps) {
+        score += trial.reward[state]
+      }
+      logger('visit', {state})
+      console.log(stepsLeft)
+      $("#GraphNavigation-steps").html(stepsLeft)
+      $("#GraphNavigation-points").html(score)
+
+    },
+    n_steps: trial.n_steps
+  });
+  logger('done')
+  await setTimeoutPromise(2000);
   await endTrialScreen(root);
 
   root.innerHTML = '';
-  data.practice = trial.practice;
-  data.mapData = mapData;
-  if (dynamicProperties) {
-    data.dynamicProperties = dynamicProperties;
-  }
   console.log(data);
   jsPsych.finishTrial(data);
 }));
