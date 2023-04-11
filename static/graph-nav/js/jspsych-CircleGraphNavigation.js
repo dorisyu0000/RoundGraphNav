@@ -2,7 +2,7 @@ import {numString, markdown, makePromise, parseHTML, trialErrorHandling, graphic
 import _ from '../../lib/underscore-min.js';
 import $ from '../../lib/jquery-min.js';
 import jsPsych from '../../lib/jspsych-exported.js';
-import {bfs, circleXY} from './graphs.js';
+import {bfs} from './graphs.js';
 
 const BLOCK_SIZE = 100;
 // replace BLOCK_SIZE with hi=parseHTML('<div class="State" style="display: block;position: fixed;left: 200vw;"></div>');document.body.append(hi);console.log(hi.offsetWidth);hi.remove();console.log(hi.offsetWidth)
@@ -697,21 +697,6 @@ addPlugin('MapInstruction', trialErrorHandling(async function(root, trial) {
 }));
 
 addPlugin('CircleGraphNavigation', trialErrorHandling(async function(root, trial) {
-
-  // TEMP
-  trial.rewardGraphics = {
-    "5": "🍪",
-    "10": "🌞",
-    "-5": "🎈",
-    "-10": "🧀",
-  }
-  trial.reward = [5, 5, 10, -5, -10, 5, -5, 10]
-  trial.goal = undefined
-  trial.n_steps = 2
-  // trial.
-  trial.graphRenderOptions.fixedXY = circleXY(trial.reward.length)
-  // END TEMP
-
   trial.graphics = trial.reward.map(x => trial.rewardGraphics[x])
   console.log('trial', trial);
 

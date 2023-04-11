@@ -8,6 +8,7 @@ import {handleError, psiturk, requestSaveData, startExperiment, CONDITION} from 
 import _ from '../../lib/underscore-min.js';
 import $ from '../../lib/jquery-min.js';
 import jsPsych from '../../lib/jspsych-exported.js';
+import {circleXY} from './graphs.js';
 
 function formWithValidation({stimulus, validate}) {
   return {
@@ -81,6 +82,7 @@ async function initializeExperiment() {
     width: 800,
     height: 450,
     scaleEdgeFactor: 0.95,
+    fixedXY: circleXY(config.graph.states.length)
   };
 
   // var inst = {
