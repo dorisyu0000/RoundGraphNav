@@ -10,7 +10,7 @@
   "devDependencies": {},
   "scripts": {
     "build": "parcel build --no-scope-hoist --public-url /dist",
-    "watch": "parcel watch --public-url /dist"
+    "watch": "parcel watch --public-url /dist --no-hmr"
   },
   "engines": {
     "node": "14.x"
