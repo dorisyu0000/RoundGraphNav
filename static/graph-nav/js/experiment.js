@@ -71,124 +71,62 @@ const makeSimpleInstruction = (text) => ({
 
 const QUERY = new URLSearchParams(location.search);
 
-function configForCondition(allconfig, condition, mapper=(f, v) => v) {
-  allconfig = jsPsych.utils.deepCopy(allconfig);
-  let keyidx = [];
-  for (const [factor, values] of Object.entries(allconfig.conditionToFactors)) {
-    const idx = mapper(factor, values[condition]); // condition is an index into this data structure that is column-wise.
-    keyidx.push([factor.split('.'), idx]);
-  }
-  // We sort to ensure that shorter keys appear first, so that their
-  // conditions are applied before any that are more nested.
-  keyidx = _.sortBy(keyidx, ([keys, idx]) => keys.length);
-  for (const [keys, idx] of keyidx) {
-    // We walk the configuration to reach the parent of the current key.
-    let c = allconfig;
-    for (const key of keys.slice(0, keys.length-1)) {
-      c = c[key];
-    }
-    // We assign the appropriate value to replace the array of potential values.
-    const key = keys[keys.length-1];
-    c[key] = c[key][idx];
-  }
-  return allconfig;
-}
-
 async function initializeExperiment() {
   psiturk.recordUnstructuredData('browser', window.navigator.userAgent);
-
-  const onlyShowCurrentEdges = true;
-
-  const configuration = configForCondition(allconfig, CONDITION, function(factorName, condValue) {
-    const key = 'condition.'+factorName;
-    return QUERY.has(key) ? QUERY.get(key) : condValue;
-  });
-
-  console.log('cond', CONDITION, 'configuration', configuration)
-
-  const graph = new Graph(configuration.graph.adjacency);
-
-  const gfx = configuration.icons;
 
   // TODO TODO TODO: for circle graphs, we can do scaleEdgeFactor, but for planar they look bad
   const graphRenderOptions = {
     onlyShowCurrentEdges: false,
-    fixedXY: configuration.embedding.coordinates,
     width: 800,
     height: 450,
     scaleEdgeFactor: 0.95,
-    // HACK Should think a bit more carefully about this one.
-    // Since the order doesn't necessarily match the xy projection, this won't
-    // exactly be the clockwise algorithm we've made. But it should still be
-    // consistent in the way it maps angles to keys relative to the original ordering.
-    successorKeys: clockwiseKeys(graph, configuration.embedding.order),
   };
   const planarOptions = {
-    type: configuration.embedding.type, // HACK
+    // type: 'circle', // HACK
     // For Solway planarization.
-    fixedXY: configuration.embedding.coordinates,
-//    keyDistanceFactor: 1.35, can we nix this?
-    width: 800,
-    height: 450,
-    scaleEdgeFactor: 1,
+    // fixedXY: configuration.embedding.coordinates,
+    // keyDistanceFactor: 1.35, can we nix this?
+    // width: 800,
+    // height: 450,
+    // scaleEdgeFactor: 1,
     // HACK we don't use this, but should really implement something more useful?????
-    successorKeys: clockwiseKeys(graph, configuration.embedding.order),
+    // successorKeys: clockwiseKeys(graph, configuration.embedding.order),
   };
+  const config = await $.getJSON('static/json/test.json');
+  console.log("TEST")
+  const graph = new Graph(config.adjacency)
 
-  var inst = {
-    type: 'CircleGraphNavigationInstruction',
-    graph,
-    graphics: gfx,
-    trialsLength: configuration.graph.ordering.navigation.length,
-    ...configuration.graph.ordering.navigation_practice_len2[0],
-    graphRenderOptions: {...graphRenderOptions, onlyShowCurrentEdges: false},
-    onlyShowCurrentEdges,
-  };
+  // var inst = {
+  //   type: 'CircleGraphNavigationInstruction',
+  //   graph,
+  //   trialsLength: 5,
+  //   // trialsLength: configuration.graph.ordering.navigation.length,
+  //   ...configuration.graph.ordering.navigation_practice_len2[0],
+  //   graphRenderOptions: {...graphRenderOptions, onlyShowCurrentEdges: false},
+  //   onlyShowCurrentEdges,
+  // };
 
   function addShowMap(trials) {
-    /*
-    For now, we show the map every other trial.
-    */
-    return trials.map((t, idx) => ({showMap: (idx % 2) == 0, ...t}));
+    return trials
+    // return trials.map((t, idx) => ({showMap: (idx % 2) == 0, ...t}));
   }
-
-  const at = new AdaptiveTasks(graph);
 
   var gn = (trials) => ({
     type: 'CircleGraphNavigation',
     graph,
-    graphics: gfx,
     timeline: addShowMap(trials),
     graphRenderOptions,
-    planarOptions,
+    // planarOptions,
   });
-
-  function gnAdaptive(trials) {
-    trials = addShowMap(trials);
-    const trialsAdaptive = [];
-    for (const t of trials) {
-      trialsAdaptive.push(t);
-      trialsAdaptive.push({
-        showMap: false, // Accidentally left this out before (so it was falsey), but adding now to be explicit.
-        dynamicProperties: () => at.sampleLowOccTrial(),
-      });
-    }
-    return {
-      type: 'CircleGraphNavigation',
-      graph,
-      graphics: gfx,
-      onStateVisit: (s) => at.onStateVisit(s),
-      timeline: trialsAdaptive,
-      graphRenderOptions,
-      planarOptions,
-    };
-  }
 
   const makePracticeOver = () => makeSimpleInstruction(`
     Now, we'll move on to the real questions.
   `);
+  const trials = gn(config.timeline)
+
 
   var timeline = _.flatten([
+    trials
     // {
     //   type: 'FollowPath',
     //   graph,
@@ -214,17 +152,17 @@ async function initializeExperiment() {
 
     // inst,
 
-    gn(configuration.graph.ordering.navigation_practice_len1.map(t => ({...t, showMap: false}))), // hACK do we need this showmap: False???
-    {
-      type: 'MapInstruction',
-      graph,
-      graphics: gfx,
-      graphRenderOptions,
-      planarOptions,
-    },
-    gn(configuration.graph.ordering.navigation_practice_len2),
-    makePracticeOver(),
-    gnAdaptive(configuration.graph.ordering.navigation),
+    // gn(configuration.graph.ordering.navigation_practice_len1.map(t => ({...t, showMap: false}))), // hACK do we need this showmap: False???
+    // {
+    //   type: 'MapInstruction',
+    //   graph,
+    //   // graphics: gfx,
+    //   graphRenderOptions,
+    //   planarOptions,
+    // },
+    // gn(config.timeline),
+    // makePracticeOver(),
+    // gnAdaptive(configuration.graph.ordering.navigation),
     // simpleDebrief(),
   ]);
 

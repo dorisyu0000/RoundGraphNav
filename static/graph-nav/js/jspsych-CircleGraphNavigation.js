@@ -1,15 +1,14 @@
-import {markdown, makePromise, parseHTML, trialErrorHandling, graphicsUrl, setTimeoutPromise, addPlugin, documentEventPromise, invariant} from './utils.js';
+import {numString, markdown, makePromise, parseHTML, trialErrorHandling, graphicsUrl, setTimeoutPromise, addPlugin, documentEventPromise, invariant} from './utils.js';
 import _ from '../../lib/underscore-min.js';
 import $ from '../../lib/jquery-min.js';
 import jsPsych from '../../lib/jspsych-exported.js';
-import {bfs} from './graphs.js';
+import {bfs, circleXY} from './graphs.js';
 
 const BLOCK_SIZE = 100;
 // replace BLOCK_SIZE with hi=parseHTML('<div class="State" style="display: block;position: fixed;left: 200vw;"></div>');document.body.append(hi);console.log(hi.offsetWidth);hi.remove();console.log(hi.offsetWidth)
 
 export class CircleGraph {
   constructor(options) {
-    console.log('CircleGraph.options', options)
     this.options = options;
     options.edgeShow = options.edgeShow || (() => true);
     options.successorKeys = options.graphRenderOptions.successorKeys;
@@ -158,6 +157,7 @@ export class CircleGraph {
   async navigate(options) {
     options = options || {};
     const termination = options.termination || ((state, states) => state == this.options.goal);
+    let stepsLeft = options.n_steps || -1;
     const onStateVisit = options.onStateVisit || ((s) => {});
     /*
     Higher-order function that stitches together other class methods
@@ -173,7 +173,6 @@ export class CircleGraph {
     while (true) { // eslint-disable-line no-constant-condition
       // State transition
       const g = this.options.graph;
-      console.log(g)
       const {state} = await this.clickTransition({
         invalidStates: new Set(
           g.states.filter(s => !g.successors(this.state).includes(s))
@@ -183,13 +182,16 @@ export class CircleGraph {
       data.states.push(state);
       data.times.push(Date.now() - startTime);
       onStateVisit(state);
-      // Termination condition, intentionally avoiding calling cg.setCurrentState() below to avoid rendering.
-      if (termination(state, data.states)) {
+      stepsLeft -= 1;
+      console.log('stepsLeft', stepsLeft)
+
+      this.setCurrentState(state);
+
+      if (termination(state, data.states) || stepsLeft == 0) {
+        $(".GraphNavigation-currentEdge").removeClass('GraphNavigation-currentEdge')
+        await setTimeoutPromise(2000);
         break;
       }
-      // Update state
-      this.setCurrentState(state);
-      // Taking a pause...
       await setTimeoutPromise(200);
     }
 
@@ -380,7 +382,7 @@ function renderCircleGraph(graph, gfx, goal, options) {
   const keys = [];
   for (const state of graph.states) {
     let [x, y] = xy.scaled[state];
-
+    console.log('graph', graph)
     graph.successors(state).forEach((successor, idx) => {
       if (state >= successor) {
         return;
@@ -429,8 +431,6 @@ function setCurrentState(display_element, graph, state, options) {
   // showCurrentEdges enables rendering of current edges/keys. This is off for PathIdentification and AcceptReject.
   options.showCurrentEdges = typeof(options.showCurrentEdges) === 'undefined' ? true : options.showCurrentEdges;
   const allKeys = _.unique(_.flatten(options.successorKeys));
-
-  const successorKeys = options.successorKeys[state];
 
   // Remove old classes!
   function removeClass(cls) {
@@ -697,7 +697,23 @@ addPlugin('MapInstruction', trialErrorHandling(async function(root, trial) {
 }));
 
 addPlugin('CircleGraphNavigation', trialErrorHandling(async function(root, trial) {
-  console.log(trial);
+
+  // TEMP
+  trial.rewardGraphics = {
+    "5": "🍪",
+    "10": "🌞",
+    "-5": "🎈",
+    "-10": "🧀",
+  }
+  trial.reward = [5, 5, 10, -5, -10, 5, -5, 10]
+  trial.goal = undefined
+  trial.n_steps = 2
+  // trial.
+  trial.graphRenderOptions.fixedXY = circleXY(trial.reward.length)
+  // END TEMP
+
+  trial.graphics = trial.reward.map(x => trial.rewardGraphics[x])
+  console.log('trial', trial);
 
   let dynamicProperties;
   if (trial.dynamicProperties) {
@@ -709,11 +725,11 @@ addPlugin('CircleGraphNavigation', trialErrorHandling(async function(root, trial
 
   const cg = new CircleGraph(trial);
   root.innerHTML = `
-    Maximize reward over three steps
+    Maximize reward over ${numString(trial.n_steps, "step")}
   `;
   root.appendChild(cg.el);
   const mapInteractions = cg.showMap();
-  const data = await cg.navigate({onStateVisit: trial.onStateVisit});
+  const data = await cg.navigate({onStateVisit: trial.onStateVisit, n_steps: trial.n_steps});
   console.log('mapInteractions')
 
 

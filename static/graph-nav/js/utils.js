@@ -4,6 +4,17 @@ import openmoji from '../images/openmoji/openmoji.js';
 import {handleError} from '../../js/setup.js';
 import showdown from '../../lib/showdown-min.js';
 
+export function numString(n, noun) {
+  let res = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"][n]
+  if (noun) {
+    if (n != 1) {
+      noun += "s"
+    }
+    res += " " + noun
+  }
+  return res
+}
+
 function deepCopy(obj) {
   /*
   This is a modest update to jsPsych.utils.deepCopy that uses ES6

@@ -1,5 +1,6 @@
 import {invariant,random} from './utils.js';
 import jsPsych from '../../lib/jspsych-exported.js';
+import _ from '../../lib/underscore-min.js';
 
 export function bfs(graph, start, goal, kwargs={}) {
   let successors = kwargs.successors || (state => graph.successors(state));
@@ -57,10 +58,11 @@ export class Graph {
     // Graph([[0, [1, 2]], [1, [3, 4]], [2, [5, 6]], ...]) // an example of a binary tree.
     this._adjacency = {}
     this.states = [];
-    for (const [state, successors] of adjacency) {
+    console.log('adjacency', adjacency)
+    adjacency.forEach((successors, state) => {
       this.states.push(state);
       this._adjacency[state] = [...successors]; // making a copy
-    }
+    })
     this.states.sort();
   }
 
@@ -177,9 +179,9 @@ export function clockwiseKeys(graph, stateOrder) {
   return mapping;
 }
 
-export function DEPRECATED_circleOrderToXY(stateOrder) {
-  return stateOrder.map((state, idx) => {
-    const angle = idx * 2 * Math.PI / stateOrder.length;
+export function circleXY(N) {
+  return _.range(N).map(idx => {
+    const angle = idx * 2 * Math.PI / N;
     let x = (Math.cos(angle) + 1) / 2;
     let y = (Math.sin(angle) + 1) / 2;
     return [x, y];
