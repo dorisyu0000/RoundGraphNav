@@ -9,6 +9,12 @@ const BLOCK_SIZE = 100;
 
 export class CircleGraph {
   constructor(options) {
+
+    if (options.dynamicProperties) {
+      Object.assign(options, options.dynamicProperties());
+    }
+    options.graphics = options.reward.map(x => options.rewardGraphics[x])
+
     this.options = options;
     options.edgeShow = options.edgeShow || (() => true);
     options.successorKeys = options.graphRenderOptions.successorKeys;
@@ -336,21 +342,6 @@ function renderCircleGraph(graph, gfx, goal, options) {
     });
   });
 
-  // function addKey(key, state, successor, norm) {
-  //   const [x, y] = xy.scaled[state];
-  //   const [sx, sy] = xy.scaled[successor];
-  //   const [keyWidth, keyHeight] = [20, 28]; // HACK get from CSS
-  //   // We also add the key labels here
-  //   const mul = keyDistanceFactor * BLOCK_SIZE / 2;
-  //   keys.push(`
-  //     <div class="GraphNavigation-key GraphNavigation-key-${state}-${successor} GraphNavigation-key-${keyForCSSClass(key)}" style="
-  //       transform: translate(
-  //         ${x - keyWidth/2 + mul * (sx-x)/norm}px,
-  //         ${y - keyHeight/2 + mul * (sy-y)/norm}px)
-  //     ">${options.successorKeysRender(key)}</div>
-  //   `);
-  // }
-
   const succ = [];
   const keys = [];
   for (const state of graph.states) {
@@ -375,9 +366,16 @@ function renderCircleGraph(graph, gfx, goal, options) {
     });
   }
 
-
   return `
   <div class="GraphNavigation withGraphic" style="width: ${width}px; height: ${height}px;">
+    <div class="GraphNavigation-header-left">
+      <div id="gn-steps" style="display: none;">
+        Steps: <span class="GraphNavigation-header-value" id="GraphNavigation-steps"></span> <br>
+      </div>
+      <div id="gn-points" style="display: none;">
+        Points: <span class="GraphNavigation-header-value" id="GraphNavigation-points"></span>
+      </div>
+    </div>
     ${keys.join('')}
     ${succ.join('')}
     ${states.join('')}
@@ -461,7 +459,6 @@ function setCurrentState(display_element, graph, state, options) {
   });
 }
 
-
 async function waitForSpace() {
   return documentEventPromise('keypress', (e) => {
     if (e.keyCode == 32) {
@@ -471,25 +468,29 @@ async function waitForSpace() {
   });
 }
 
-addPlugin('CircleGraphNavigation', trialErrorHandling(async function(root, trial) {
-  console.log('trial', trial);
+function endTrialScreen(root, msg) {
+  root.innerHTML = `<h2 style="margin-top: 20vh;margin-bottom:100vh;">${msg || ''}Press spacebar to continue.</h2>`;
+  return waitForSpace();
+}
 
-  let dynamicProperties;
-  if (trial.dynamicProperties) {
-    dynamicProperties = trial.dynamicProperties();
-    Object.assign(trial, dynamicProperties);
+function renderKeyInstruction(keys) {
+  function renderInputInstruction(inst) {
+    return `<span style="border: 1px solid black; border-radius: 3px; padding: 3px; font-weight: bold; display: inline-block;">${inst}</span>`;
   }
 
-  trial.graphics = trial.reward.map(x => trial.rewardGraphics[x])
+  if (keys.accept == 'Q') {
+    return `${renderInputInstruction('Yes (q)')} &nbsp; ${renderInputInstruction('No (p)')}`;
+  } else {
+    return `${renderInputInstruction('No (q)')} &nbsp; ${renderInputInstruction('Yes (p)')}`;
+  }
+}
 
+addPlugin('CircleGraphNavigation', trialErrorHandling(async function(root, trial) {
+  console.log('trial', trial);
   const cg = new CircleGraph(trial);
 
-  root.innerHTML = `
-  <div class="GraphNavigation-header-left">
-    Steps: <span class="GraphNavigation-header-value" id="GraphNavigation-steps"></span> <br>
-    Points: <span class="GraphNavigation-header-value" id="GraphNavigation-points"></span>
-  </div>
-  `
+
+  root.innerHTML = ""
   root.appendChild(cg.el);
 
   let data = {
@@ -518,7 +519,6 @@ addPlugin('CircleGraphNavigation', trialErrorHandling(async function(root, trial
       console.log(stepsLeft)
       $("#GraphNavigation-steps").html(stepsLeft)
       $("#GraphNavigation-points").html(score)
-
     },
     n_steps: trial.n_steps
   });
@@ -530,21 +530,3 @@ addPlugin('CircleGraphNavigation', trialErrorHandling(async function(root, trial
   console.log(data);
   jsPsych.finishTrial(data);
 }));
-
-
-function endTrialScreen(root, msg) {
-  root.innerHTML = `<h2 style="margin-top: 20vh;margin-bottom:100vh;">${msg || ''}Press spacebar to continue.</h2>`;
-  return waitForSpace();
-}
-
-function renderKeyInstruction(keys) {
-  function renderInputInstruction(inst) {
-    return `<span style="border: 1px solid black; border-radius: 3px; padding: 3px; font-weight: bold; display: inline-block;">${inst}</span>`;
-  }
-
-  if (keys.accept == 'Q') {
-    return `${renderInputInstruction('Yes (q)')} &nbsp; ${renderInputInstruction('No (p)')}`;
-  } else {
-    return `${renderInputInstruction('No (q)')} &nbsp; ${renderInputInstruction('Yes (p)')}`;
-  }
-}
