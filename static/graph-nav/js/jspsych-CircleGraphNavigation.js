@@ -1,4 +1,4 @@
-import {numString, markdown, makePromise, parseHTML, trialErrorHandling, graphicsUrl, setTimeoutPromise, addPlugin, documentEventPromise, invariant} from './utils.js';
+import {numString, markdown, makePromise, parseHTML, trialErrorHandling, graphicsUrl, setTimeoutPromise, addPlugin, documentEventPromise, invariant, makeButton} from './utils.js';
 import _ from '../../lib/underscore-min.js';
 import $ from '../../lib/jquery-min.js';
 import jsPsych from '../../lib/jspsych-exported.js';
@@ -38,7 +38,19 @@ export class CircleGraph {
         ...options.graphRenderOptions,
       }
     ));
-    root.innerHTML = ""
+
+    root.innerHTML = `
+    <div style="width: 800px;">
+      <div class="GraphNavigation-header-left">
+        <div id="gn-steps">
+          Steps: <span class="GraphNavigation-header-value" id="GraphNavigation-steps"></span> <br>
+        </div>
+        <div id="gn-points">
+          Points: <span class="GraphNavigation-header-value" id="GraphNavigation-points">0</span>
+        </div>
+      </div>
+    </div>
+    `
     root.appendChild(this.el);
 
     this.setupLogging()
@@ -169,7 +181,7 @@ export class CircleGraph {
   async navigate(options) {
     options = options || {};
     const termination = options.termination || ((state) => state == this.options.goal);
-    let stepsLeft = options.n_steps || -1;
+    let stepsLeft = options.n_steps || this.options.n_steps;
 
     $("#GraphNavigation-steps").html(stepsLeft)
     this.visitState(this.state, true)
@@ -193,6 +205,13 @@ export class CircleGraph {
       await setTimeoutPromise(200);
     }
   }
+
+  endTrialScreen(msg) {
+    this.el.innerHTML = `
+      <p >${msg || ''}Press spacebar to continue.</p>
+    `;
+    return waitForSpace();
+}
 }
 
 const stateTemplate = (state, graphic, options) => {
@@ -343,14 +362,6 @@ function renderCircleGraph(graph, gfx, goal, options) {
 
   return `
   <div class="GraphNavigation withGraphic" style="width: ${width}px; height: ${height}px;">
-    <div class="GraphNavigation-header-left">
-      <div id="gn-steps">
-        Steps: <span class="GraphNavigation-header-value" id="GraphNavigation-steps"></span> <br>
-      </div>
-      <div id="gn-points">
-        Points: <span class="GraphNavigation-header-value" id="GraphNavigation-points">0</span>
-      </div>
-    </div>
     ${keys.join('')}
     ${succ.join('')}
     ${states.join('')}
@@ -443,11 +454,6 @@ async function waitForSpace() {
   });
 }
 
-function endTrialScreen(root, msg) {
-  root.innerHTML = `<h2 style="margin-top: 20vh;margin-bottom:100vh;">${msg || ''}Press spacebar to continue.</h2>`;
-  return waitForSpace();
-}
-
 function renderKeyInstruction(keys) {
   function renderInputInstruction(inst) {
     return `<span style="border: 1px solid black; border-radius: 3px; padding: 3px; font-weight: bold; display: inline-block;">${inst}</span>`;
@@ -464,12 +470,12 @@ addPlugin('CircleGraphNavigation', trialErrorHandling(async function(root, trial
   console.log('trial', trial);
   const cg = new CircleGraph(root, trial);
 
-  await cg.navigate({
-    n_steps: trial.n_steps
-  });
+  await cg.navigate();
   // logger('done')
-  await setTimeoutPromise(2000);
-  await endTrialScreen(root);
+  await setTimeoutPromise(500);
+  cg.el.innerHTML = ""
+  await makeButton(root, "continue", {css: {'margin-top': '-600px'}})
+  // await cg.endTrialScreen();
 
   root.innerHTML = '';
   console.log(cg.data);

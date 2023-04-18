@@ -4,6 +4,32 @@ import openmoji from '../images/openmoji/openmoji.js';
 import {handleError} from '../../js/setup.js';
 import showdown from '../../lib/showdown-min.js';
 
+export function sleep(ms) {
+  return new Promise(function(resolve) {
+    return window.setTimeout(resolve, ms);
+  });
+};
+
+export async function makeButton(div, text, opts={}) {
+  let {pre_delay=0, post_delay=0.2, cls = 'btn center', css = {}} = opts;
+
+  let id = text.toLowerCase().replace(' ', '-')
+  let btn = $('<button>', {class: cls, id})
+  .text(text)
+  .css(css)
+  .appendTo(div)
+
+  if (pre_delay > 0) {
+    btn.prop('disabled', true)
+    await sleep(1000 * pre_delay)
+    btn.prop('disabled', false)
+  }
+  await new Promise(resolve => btn.click(resolve))
+  btn.prop('disabled', true)
+  await sleep(1000 * post_delay)
+  return text
+}
+
 export function numString(n, noun) {
   let res = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"][n]
   if (noun) {
