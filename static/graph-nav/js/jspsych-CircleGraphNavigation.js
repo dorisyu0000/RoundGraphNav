@@ -8,7 +8,7 @@ const BLOCK_SIZE = 100;
 // replace BLOCK_SIZE with hi=parseHTML('<div class="State" style="display: block;position: fixed;left: 200vw;"></div>');document.body.append(hi);console.log(hi.offsetWidth);hi.remove();console.log(hi.offsetWidth)
 
 export class CircleGraph {
-  constructor(options) {
+  constructor(root, options) {
 
     if (options.dynamicProperties) {
       Object.assign(options, options.dynamicProperties());
@@ -28,10 +28,22 @@ export class CircleGraph {
         ...options.graphRenderOptions,
       }
     ));
+    root.innerHTML = ""
+    root.appendChild(this.el);
 
     this.setupLogging()
     this.setupMouseTracking()
     this.setCurrentState(options.start);
+
+
+    options.show_steps = options.show_steps ?? options.n_steps > 0
+    if (!options.show_steps) {
+      $("#gn-steps").hide()
+    }
+    options.show_points = options.show_points ?? true
+    if (!options.show_points) {
+      $("#gn-points").hide()
+    }
 
     // Making sure it is easy to clean up event listeners...
     this.cancellables = [];
@@ -169,7 +181,10 @@ export class CircleGraph {
     let stepsLeft = options.n_steps || -1;
     const onStateVisit = options.onStateVisit || ((s) => {});
 
+    let score = 0
     onStateVisit(this.state, stepsLeft); // We have to log the initial state visit.
+    $("#GraphNavigation-steps").html(stepsLeft)
+
     while (true) { // eslint-disable-line no-constant-condition
       // State transition
       const g = this.options.graph;
@@ -178,9 +193,15 @@ export class CircleGraph {
           g.states.filter(s => !g.successors(this.state).includes(s))
         ),
       });
-      stepsLeft -= 1;
-      onStateVisit(state, stepsLeft);
+      this.logger('visit', {state})
 
+      stepsLeft -= 1;
+      $("#GraphNavigation-steps").html(stepsLeft)
+
+      score += this.options.reward[state]
+      $("#GraphNavigation-points").html(score)
+
+      onStateVisit(state, stepsLeft);
       this.setCurrentState(state);
 
       if (termination(state) || stepsLeft == 0) {
@@ -383,11 +404,11 @@ function renderCircleGraph(graph, gfx, goal, options) {
   return `
   <div class="GraphNavigation withGraphic" style="width: ${width}px; height: ${height}px;">
     <div class="GraphNavigation-header-left">
-      <div id="gn-steps" style="display: none;">
+      <div id="gn-steps">
         Steps: <span class="GraphNavigation-header-value" id="GraphNavigation-steps"></span> <br>
       </div>
-      <div id="gn-points" style="display: none;">
-        Points: <span class="GraphNavigation-header-value" id="GraphNavigation-points"></span>
+      <div id="gn-points">
+        Points: <span class="GraphNavigation-header-value" id="GraphNavigation-points">0</span>
       </div>
     </div>
     ${keys.join('')}
@@ -501,23 +522,9 @@ function renderKeyInstruction(keys) {
 
 addPlugin('CircleGraphNavigation', trialErrorHandling(async function(root, trial) {
   console.log('trial', trial);
-  const cg = new CircleGraph(trial);
+  const cg = new CircleGraph(root, trial);
 
-
-  root.innerHTML = ""
-  root.appendChild(cg.el);
-
-  let score = 0
   await cg.navigate({
-    onStateVisit(state, stepsLeft) {
-      if (stepsLeft != trial.n_steps) {
-        score += trial.reward[state]
-      }
-      // logger('visit', {state})
-      console.log(stepsLeft)
-      $("#GraphNavigation-steps").html(stepsLeft)
-      $("#GraphNavigation-points").html(score)
-    },
     n_steps: trial.n_steps
   });
   // logger('done')
@@ -525,6 +532,6 @@ addPlugin('CircleGraphNavigation', trialErrorHandling(async function(root, trial
   await endTrialScreen(root);
 
   root.innerHTML = '';
-  console.log(data);
-  jsPsych.finishTrial(data);
+  console.log(cg.data);
+  jsPsych.finishTrial(cg.data);
 }));
