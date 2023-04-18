@@ -76,28 +76,38 @@ async function initializeExperiment() {
   psiturk.recordUnstructuredData('browser', window.navigator.userAgent);
 
   const config = await $.getJSON('static/json/test.json');
-  config.graph = new Graph(config.adjacency)
-  config.graphRenderOptions = {
+  const params = config.parameters
+  params.graph = new Graph(params.adjacency)
+  params.graphRenderOptions = {
     onlyShowCurrentEdges: false,
     width: 800,
     height: 450,
     scaleEdgeFactor: 0.95,
-    fixedXY: circleXY(config.graph.states.length)
+    fixedXY: circleXY(params.graph.states.length)
   };
 
-  // var inst = {
+  // var instructions = {
   //   type: 'CircleGraphNavigationInstruction',
-  //   graph,
+  //   ...params,
   //   trialsLength: 5,
   //   // trialsLength: configuration.graph.ordering.navigation.length,
-  //   ...configuration.graph.ordering.navigation_practice_len2[0],
+  //   // ...configuration.graph.ordering.navigation_practice_len2[0],
   //   graphRenderOptions: {...graphRenderOptions, onlyShowCurrentEdges: false},
   //   onlyShowCurrentEdges,
   // };
 
+  var main = {
+    type: 'CircleGraphNavigation',
+    ...params,
+    timeline: config.trials.main
+  }
+
+  console.log('main', main)
+
 
   var timeline = _.flatten([
-    config
+    // instructions,
+    main,
     // {
     //   type: 'FollowPath',
     //   graph,
@@ -120,8 +130,6 @@ async function initializeExperiment() {
     //   graphRenderOptions,
     //   planarOptions,
     // },
-
-    // inst,
 
     // gn(configuration.graph.ordering.navigation_practice_len1.map(t => ({...t, showMap: false}))), // hACK do we need this showmap: False???
     // {
