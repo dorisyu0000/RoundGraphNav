@@ -139,6 +139,7 @@ export const graphics = [
 ];
 
 export function graphicsUrl(emoji) {
+  if (emoji == "") return ""
   const code = emoji.codePointAt(0).toString(16).toUpperCase();
   return 'data:image/svg+xml,'+encodeURIComponent(openmoji[code]);
 }

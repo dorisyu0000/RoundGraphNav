@@ -13,11 +13,21 @@ export class CircleGraph {
     if (options.dynamicProperties) {
       Object.assign(options, options.dynamicProperties());
     }
-    options.graphics = options.reward.map(x => options.rewardGraphics[x])
 
     this.options = options;
-    options.edgeShow = options.edgeShow || (() => true);
-    options.successorKeys = options.graphRenderOptions.successorKeys;
+    options.consume = options.consume ?? true
+    options.edgeShow = options.edgeShow ?? (() => true);
+    options.successorKeys = options.graphRenderOptions.successorKeys
+    this.onStateVisit = options.onStateVisit ?? ((s) => {})
+    this.score = options.score ?? 0
+
+    if (options.consume) {
+      console.log('options.start', options.start)
+      console.log('options.reward', options.reward)
+      options.reward[options.start] = 0
+    }
+    options.rewardGraphics[0] = options.rewardGraphics[0] ?? ""
+    options.graphics = options.reward.map(x => options.rewardGraphics[x])
 
     this.el = parseHTML(renderCircleGraph(
       options.graph, options.graphics, options.goal,
@@ -141,15 +151,28 @@ export class CircleGraph {
     });
   }
 
+  visitState(state, initial=false) {
+    this.logger('visit', {state})
+
+    if (!initial) {
+      this.score += this.options.reward[state]
+      if (this.options.consume) {
+        this.options.reward[state] = 0
+        this.el.querySelector(`.GraphNavigation-State-${state}`).innerHTML = ""
+      }
+    }
+    $("#GraphNavigation-points").html(this.score)
+    this.onStateVisit(state);
+    this.setCurrentState(state);
+  }
+
   async navigate(options) {
     options = options || {};
     const termination = options.termination || ((state) => state == this.options.goal);
     let stepsLeft = options.n_steps || -1;
-    const onStateVisit = options.onStateVisit || ((s) => {});
 
-    let score = 0
-    onStateVisit(this.state, stepsLeft); // We have to log the initial state visit.
     $("#GraphNavigation-steps").html(stepsLeft)
+    this.visitState(this.state, true)
 
     while (true) { // eslint-disable-line no-constant-condition
       // State transition
@@ -159,17 +182,10 @@ export class CircleGraph {
           g.states.filter(s => !g.successors(this.state).includes(s))
         ),
       });
-      this.logger('visit', {state})
+      this.visitState(state)
 
       stepsLeft -= 1;
       $("#GraphNavigation-steps").html(stepsLeft)
-
-      score += this.options.reward[state]
-      $("#GraphNavigation-points").html(score)
-
-      onStateVisit(state, stepsLeft);
-      this.setCurrentState(state);
-
       if (termination(state) || stepsLeft == 0) {
         $(".GraphNavigation-currentEdge").removeClass('GraphNavigation-currentEdge')
         break;
