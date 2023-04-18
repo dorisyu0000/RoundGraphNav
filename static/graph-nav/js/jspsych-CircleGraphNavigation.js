@@ -18,9 +18,6 @@ export class CircleGraph {
     this.options = options;
     options.edgeShow = options.edgeShow || (() => true);
     options.successorKeys = options.graphRenderOptions.successorKeys;
-    let gro = options.graphRenderOptions;
-    // We have a rendering function for keys. Defaults to identity for keys that can be rendered directly.
-    gro.successorKeysRender = gro.successorKeysRender || (key => key);
 
     this.el = parseHTML(renderCircleGraph(
       options.graph, options.graphics, options.goal,
@@ -31,29 +28,46 @@ export class CircleGraph {
         ...options.graphRenderOptions,
       }
     ));
-    if (options.hide_states) {
-    }
+
+    this.setupLogging()
+    this.setupMouseTracking()
     this.setCurrentState(options.start);
 
     // Making sure it is easy to clean up event listeners...
     this.cancellables = [];
   }
 
-  enableMouseTracking(logger, edges=false, rewards=false) {
-    if (rewards) this.el.classList.add('hideStates');
-    if (edges) this.el.classList.add('hideEdges');
+  setupLogging() {
+    this.data = {
+      events: [],
+      trial: _.pick(this.options, 'practice', 'start', 'reward')
+    }
+    let start_time = Date.now()
+    this.logger = function (event, info={}) {
+      console.log(event, info)
+      this.data.events.push({
+        time: Date.now() - start_time,
+        event,
+        ...info
+      });
+    }
+  }
+
+  setupMouseTracking() {
+    if (this.options.hover_rewards) this.el.classList.add('hideStates');
+    if (this.options.hover_edges) this.el.classList.add('hideEdges');
 
     for (const el of this.el.querySelectorAll('.State')) {
       const state = parseInt(el.getAttribute('data-state'), 10);
       el.addEventListener('mouseenter', (e) => {
-        logger('mouseenter', {state})
+        this.logger('mouseenter', {state})
         el.classList.add('is-visible');
         for (const successor of this.options.graph.successors(state)) {
           queryEdge(this.el, state, successor).classList.add('is-visible');
         }
       });
       el.addEventListener('mouseleave', (e) => {
-        logger('mouseleave', {state})
+        this.logger('mouseleave', {state})
         el.classList.remove('is-visible');
         for (const successor of this.options.graph.successors(state)) {
           queryEdge(this.el, state, successor).classList.remove('is-visible');
@@ -493,36 +507,20 @@ addPlugin('CircleGraphNavigation', trialErrorHandling(async function(root, trial
   root.innerHTML = ""
   root.appendChild(cg.el);
 
-  let data = {
-    events: [],
-    trial: _.pick(trial, 'practice', 'start', 'reward')
-  }
-  let start_time = Date.now()
-  function logger(event, info={}) {
-    console.log(event, info)
-    data.events.push({
-      time: Date.now() - start_time,
-      event,
-      ...info
-    });
-  }
-
-  cg.enableMouseTracking(logger, trial.hover_edges, trial.hover_rewards)
-
   let score = 0
   await cg.navigate({
     onStateVisit(state, stepsLeft) {
       if (stepsLeft != trial.n_steps) {
         score += trial.reward[state]
       }
-      logger('visit', {state})
+      // logger('visit', {state})
       console.log(stepsLeft)
       $("#GraphNavigation-steps").html(stepsLeft)
       $("#GraphNavigation-points").html(score)
     },
     n_steps: trial.n_steps
   });
-  logger('done')
+  // logger('done')
   await setTimeoutPromise(2000);
   await endTrialScreen(root);
 
