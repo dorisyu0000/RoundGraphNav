@@ -1,5 +1,40 @@
 /* Graph-related style */
 
+.pop {
+  font-weight: bold;
+  animation-fill-mode: forwards;
+  text-transform: uppercase;
+/*  padding: 0 0.5rem;*/
+  font-size: 40px;
+  animation: zoomup 1.2s ease forwards;
+/*  display: inline-block;*/
+  top: -50px;
+  left: 30px;
+  position: absolute;
+}
+
+.loss {
+  color: #9E0002;
+}
+.win {
+  color: #0F7003;
+}
+
+@keyframes zoomup {
+  0% {
+    opacity: 0;
+    transform: scale(0.1);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1) translateY(-50px);
+    filter: blur(1px);
+    opacity: 0;
+  }
+}
 
 .GraphNavigation-header-left {
   float: left;
@@ -13,6 +48,8 @@
 .GraphNavigation-header-value {
   font-size: 20pt;
   font-weight: 500;
+  display: inline-block;
+  width: 20px;
 /*  vertical-align: middle;*/
 }
 
@@ -75,6 +112,7 @@
 .GraphNavigation-State {
   /* HACK structuring this way so it's easier to have in text. */
   background-image: url('/static/graph-nav/images/openmoji/2B1B.svg');
+  text-align: center;
 }
 
 .GraphNavigation-edge {

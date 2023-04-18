@@ -162,14 +162,28 @@ export class CircleGraph {
     });
   }
 
+  addScore(points, state) {
+    if (points == 0) {
+      return
+    }
+    this.score += points
+    let cls = (points < 0) ? "loss" : "win"
+    let sign = (points < 0) ? "" : "+"
+    $("<span>")
+    .addClass('pop ' + cls)
+    .text(sign + points)
+    .appendTo($(`.GraphNavigation-State-${state}`))
+    // .appendTo($("#gn-points"))
+  }
+
   visitState(state, initial=false) {
     this.logger('visit', {state, initial})
 
     if (!initial) {
-      this.score += this.reward[state]
+      this.addScore(this.reward[state], state)
       if (this.options.consume) {
         this.reward[state] = 0
-        this.el.querySelector(`.GraphNavigation-State-${state}`).innerHTML = ""
+        $(`.GraphNavigation-State-${state} img`).remove()
       }
     }
     $("#GraphNavigation-points").html(this.score)
