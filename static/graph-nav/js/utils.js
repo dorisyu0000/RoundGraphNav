@@ -11,7 +11,7 @@ export function sleep(ms) {
 };
 
 export async function makeButton(div, text, opts={}) {
-  let {pre_delay=0, post_delay=0.2, cls = 'btn center', css = {}} = opts;
+  let {pre_delay=0, post_delay=0.2, cls = 'btn center btn-primary', css = {}} = opts;
 
   let id = text.toLowerCase().replace(' ', '-')
   let btn = $('<button>', {class: cls, id})
@@ -27,6 +27,7 @@ export async function makeButton(div, text, opts={}) {
   await new Promise(resolve => btn.click(resolve))
   btn.prop('disabled', true)
   await sleep(1000 * post_delay)
+  btn.remove()
   return text
 }
 

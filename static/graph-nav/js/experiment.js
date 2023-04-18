@@ -89,11 +89,16 @@ async function initializeExperiment() {
   // var instructions = {
   //   type: 'CircleGraphNavigationInstruction',
   //   ...params,
-  //   trialsLength: 5,
+  //   timeline: config.trials.instruction,
+  //   show_steps: false,
+  //   hover_edges: false,
+  //   hover_rewards: false,
+  //   n_steps: 10,
+  //   // trialsLength: 5,
   //   // trialsLength: configuration.graph.ordering.navigation.length,
   //   // ...configuration.graph.ordering.navigation_practice_len2[0],
-  //   graphRenderOptions: {...graphRenderOptions, onlyShowCurrentEdges: false},
-  //   onlyShowCurrentEdges,
+  //   // graphRenderOptions: {...graphRenderOptions, onlyShowCurrentEdges: false},
+  //   // onlyShowCurrentEdges,
   // };
 
   var main = {
@@ -102,47 +107,20 @@ async function initializeExperiment() {
     timeline: config.trials.main
   }
 
-  console.log('main', main)
-
+  var welcome = {
+    type: 'CircleGraphWelcome',
+    ...params,
+    show_steps: false,
+    show_points: false,
+    hover_edges: false,
+    hover_rewards: false,
+    n_steps: 2,
+    timeline: config.trials.welcome,
+  }
 
   var timeline = _.flatten([
-    // instructions,
+    welcome,
     main,
-    // {
-    //   type: 'FollowPath',
-    //   graph,
-    //   graphics: gfx,
-    //   timeline: [{
-    //     start: 0,
-    //     goal: 1,
-    //   }],
-    //   graphRenderOptions,
-    //   planarOptions,
-    // },
-    // {
-    //   type: 'CGTransition',
-    //   graph,
-    //   graphics: gfx,
-    //   timeline: [{
-    //     start: 0,
-    //     cues: [0, 1],
-    //   }],
-    //   graphRenderOptions,
-    //   planarOptions,
-    // },
-
-    // gn(configuration.graph.ordering.navigation_practice_len1.map(t => ({...t, showMap: false}))), // hACK do we need this showmap: False???
-    // {
-    //   type: 'MapInstruction',
-    //   graph,
-    //   // graphics: gfx,
-    //   graphRenderOptions,
-    //   planarOptions,
-    // },
-    // gn(config.timeline),
-    // makeSimpleInstruction(`Now, we'll move on to the real questions.`)
-    // gnAdaptive(configuration.graph.ordering.navigation),
-    // simpleDebrief(),
   ]);
 
   if (location.pathname == '/testexperiment') {
