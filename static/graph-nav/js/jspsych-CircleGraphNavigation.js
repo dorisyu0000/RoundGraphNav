@@ -107,40 +107,6 @@ export class CircleGraph {
     });
   }
 
-  keyCodeToState(keyCode) {
-    /*
-    Mapping keyCode to states.
-    */
-    const key = String.fromCharCode(keyCode).toUpperCase();
-    const idx = this.options.successorKeys[this.state].indexOf(key);
-    if (idx === -1) {
-      return null;
-    }
-    const succ = this.options.graph.successors(this.state)[idx];
-    if (!this.options.edgeShow(this.state, succ)) {
-      return null;
-    }
-    return succ;
-  }
-
-  keyTransition() {
-    /*
-    Returns a promise that is resolved with {state} when there is a keypress
-    corresponding to a valid state transition.
-    */
-    const p = documentEventPromise('keydown', (e) => {
-      const state = this.keyCodeToState(e.keyCode);
-      if (state !== null) {
-        e.preventDefault();
-        return {state};
-      }
-    });
-
-    this.cancellables.push(p.cancel);
-
-    return p;
-  }
-
   clickTransition(options) {
     options = options || {};
     /*
@@ -209,48 +175,6 @@ export class CircleGraph {
         break;
       }
       await setTimeoutPromise(200);
-    }
-  }
-
-  setXY(xy) {
-    /*
-    This function is a pretty big hack only intended for use when animating between
-    the two projections. Given an XY object with properties coordinate (for states) and scaled
-    (for edges/keys), it updates the coordinates of the rendered graph.
-    */
-
-    // We cache these references since we know this will be called many times.
-    if (!this._setXY_states) {
-      this._setXY_states = Array.from(this.el.querySelectorAll('.State'));
-      this._setXY_edges = {};
-      const graph = this.options.graph;
-      for (const s of graph.states) {
-        this._setXY_edges[s] = {};
-        for (const ns of this.options.graph.successors(s)) {
-          if (s >= ns) {
-            continue;
-          }
-          this._setXY_edges[s][ns] = this.el.querySelector(`.GraphNavigation-edge-${s}-${ns}`);
-        }
-      }
-    }
-
-    for (const el of this._setXY_states) {
-      // Set the coordinate for this state.
-      const s = parseInt(el.dataset.state, 10);
-      const [x, y] = xy.coordinate[s];
-      el.style.transform = `translate(${x-BLOCK_SIZE/2}px, ${y-BLOCK_SIZE/2}px)`;
-
-      // Set coordinates for edges
-      for (const ns of this.options.graph.successors(s)) {
-        if (s >= ns) {
-          continue;
-        }
-        const e = normrot(xy.scaled[s], xy.scaled[ns]); // HACK we assume that there's no `edge` property.
-        const edge = this._setXY_edges[s][ns];
-        edge.style.width = `${e.norm}px`;
-        edge.style.transform = `translate(${x}px,${y}px) rotate(${e.rot}rad)`;
-      }
     }
   }
 }
