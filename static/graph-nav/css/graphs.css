@@ -6,7 +6,7 @@
   text-transform: uppercase;
 /*  padding: 0 0.5rem;*/
   font-size: 40px;
-  animation: zoomup 1.2s ease forwards;
+  animation: zoomup 1s ease forwards;
 /*  display: inline-block;*/
   top: -50px;
   left: 30px;

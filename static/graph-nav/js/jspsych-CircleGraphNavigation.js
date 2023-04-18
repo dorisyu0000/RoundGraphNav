@@ -1,4 +1,4 @@
-import {numString, markdown, makePromise, parseHTML, trialErrorHandling, graphicsUrl, setTimeoutPromise, addPlugin, documentEventPromise, invariant, makeButton} from './utils.js';
+import {numString, markdown, makePromise, parseHTML, trialErrorHandling, graphicsUrl, sleep, addPlugin, documentEventPromise, invariant, makeButton} from './utils.js';
 import _ from '../../lib/underscore-min.js';
 import $ from '../../lib/jquery-min.js';
 import jsPsych from '../../lib/jspsych-exported.js';
@@ -22,15 +22,15 @@ export class CircleGraph {
     options.edgeShow = options.edgeShow ?? (() => true);
     options.successorKeys = options.graphRenderOptions.successorKeys
 
-    this.reward = options.reward ?? Array(options.adjacency.length).fill(0)
+    this.rewards = options.reward ?? Array(options.adjacency.length).fill(0)
     this.onStateVisit = options.onStateVisit ?? ((s) => {})
     this.score = options.score ?? 0
 
     if (options.consume) {
-      this.reward[options.start] = 0
+      this.rewards[options.start] = 0
     }
     options.rewardGraphics[0] = options.rewardGraphics[0] ?? ""
-    options.graphics = this.reward.map(x => options.rewardGraphics[x])
+    options.graphics = this.rewards.map(x => options.rewardGraphics[x])
 
     this.el = parseHTML(renderCircleGraph(
       options.graph, options.graphics, options.goal,
@@ -49,7 +49,7 @@ export class CircleGraph {
           Points: <span class="GraphNavigation-header-value" id="GraphNavigation-points">0</span>
         </div>
         <div id="gn-steps">
-          Steps: <span class="GraphNavigation-header-value" id="GraphNavigation-steps"></span> <br>
+          Moves: <span class="GraphNavigation-header-value" id="GraphNavigation-steps"></span> <br>
         </div>
       </div>
     </div>
@@ -90,7 +90,7 @@ export class CircleGraph {
     if (this.options.hover_rewards) this.el.classList.add('hideStates');
     if (this.options.hover_edges) this.el.classList.add('hideEdges');
 
-    for (const el of this.el.querySelectorAll('.State')) {
+    for (const el of this.el.querySelectorAll('.State:not(.ShadowState)')) {
       const state = parseInt(el.getAttribute('data-state'), 10);
       el.addEventListener('mouseenter', (e) => {
         this.logger('mouseenter', {state})
@@ -166,27 +166,35 @@ export class CircleGraph {
     if (points == 0) {
       return
     }
-    this.score += points
+    this.setScore(this.score + points)
     let cls = (points < 0) ? "loss" : "win"
     let sign = (points < 0) ? "" : "+"
-    $("<span>")
+    let pop = $("<span>")
     .addClass('pop ' + cls)
     .text(sign + points)
-    .appendTo($(`.GraphNavigation-State-${state}`))
+    .appendTo($(`.GraphNavigation-ShadowState-${state}`))
+
+    // await sleep(1000)
+    // pop.remove()
     // .appendTo($("#gn-points"))
+  }
+
+  setScore(score) {
+    this.score = score;
+    $("#GraphNavigation-points").html(this.score)
   }
 
   visitState(state, initial=false) {
     this.logger('visit', {state, initial})
 
     if (!initial) {
-      this.addScore(this.reward[state], state)
+      this.addScore(this.rewards[state], state)
       if (this.options.consume) {
-        this.reward[state] = 0
+        this.rewards[state] = 0
         $(`.GraphNavigation-State-${state} img`).remove()
+        // $(`.GraphNavigation-State-${state} img`).remove()
       }
     }
-    $("#GraphNavigation-points").html(this.score)
     this.onStateVisit(state);
     this.setCurrentState(state);
   }
@@ -219,16 +227,28 @@ export class CircleGraph {
         $(".GraphNavigation-currentEdge").removeClass('GraphNavigation-currentEdge')
         break;
       }
-      await setTimeoutPromise(200);
+      await sleep(200);
     }
   }
 
-  updateReward(state, reward) {
-    this.reward[state] = parseFloat(reward)
+  loadTrial(trial) {
+    this.setCurrentState(trial.start)
+    this.setRewards(trial.rewards)
+    this.options.n_steps = trial.n_steps ?? this.options.n_steps
+  }
+
+  setReward(state, reward) {
+    this.rewards[state] = parseFloat(reward)
     let graphic = this.options.rewardGraphics[reward]
     $(`.GraphNavigation-State-${state}`).html(`
       <img src="${graphicsUrl(graphic)}" />
     `)
+  }
+
+  setRewards(rewards) {
+    for (let s of _.range(this.rewards.length)) {
+      this.setReward(s, s == this.state ? 0 : rewards[s])
+    }
   }
 
   endTrialScreen(msg) {
@@ -363,6 +383,15 @@ function renderCircleGraph(graph, gfx, goal, options) {
     });
   });
 
+  // HACK for the score animation
+  let shadowStates = states.map(state => {
+    return state
+    .replaceAll("-State-", "-ShadowState-")
+    .replaceAll("\"State ", "\"State ShadowState ")
+  })
+  window.states = states
+  window.shadowStates = shadowStates
+
   const succ = [];
   const keys = [];
   for (const state of graph.states) {
@@ -391,6 +420,7 @@ function renderCircleGraph(graph, gfx, goal, options) {
   <div class="GraphNavigation withGraphic" style="width: ${width}px; height: ${height}px;">
     ${keys.join('')}
     ${succ.join('')}
+    ${shadowStates.join('')}
     ${states.join('')}
   </div>
   `;
@@ -498,7 +528,7 @@ addPlugin('CircleGraphNavigation', trialErrorHandling(async function(root, trial
 
   await cg.navigate();
   // logger('done')
-  await setTimeoutPromise(500);
+  await sleep(500);
   cg.el.innerHTML = ""
   await makeButton(root, "continue", {css: {'margin-top': '-600px'}})
   // await cg.endTrialScreen();

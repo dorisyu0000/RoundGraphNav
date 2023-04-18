@@ -108,13 +108,12 @@ async function initializeExperiment() {
   }
 
   var welcome = {
-    type: 'CircleGraphWelcome',
+    type: 'CircleGraphInstructions',
     ...params,
     show_steps: false,
     show_points: false,
     hover_edges: false,
     hover_rewards: false,
-    n_steps: 2,
     timeline: config.trials.welcome,
   }
 
