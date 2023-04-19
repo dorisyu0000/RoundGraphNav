@@ -191,17 +191,19 @@ export class CircleGraph {
 
     if (!initial) {
       this.addScore(this.rewards[state], state)
-      if (this.options.consume) {
-        this.rewards[state] = 0
-        $(`.GraphNavigation-State-${state} img`).remove()
-        // $(`.GraphNavigation-State-${state} img`).remove()
-      }
+    }
+    if (this.options.consume) {
+      this.rewards[state] = 0
+      $(`.GraphNavigation-State-${state} img`).remove()
+      // $(`.GraphNavigation-State-${state} img`).remove()
     }
     this.onStateVisit(state);
     this.setCurrentState(state);
   }
 
   async navigate(options) {
+    $(`.GraphNavigation-State`).css({opacity: 1})
+    $('img').css({opacity: 1})
     // $(`.GraphNavigation-terminated`).removeClass('GraphNavigation-terminated');
     options = options || {};
     if (this.state === undefined) {
@@ -232,18 +234,23 @@ export class CircleGraph {
       if (termination(this, state) || stepsLeft == 0) {
         await sleep(500)
         $(".GraphNavigation-currentEdge").removeClass('GraphNavigation-currentEdge')
-        if (options.leave_open) {
+        if (options.leave_state) {
+          // $(`.GraphNavigation-State-${state}`).animate({opacity: .1}, 500)
+        } else if (options.leave_open) {
           $(`.GraphNavigation-State-${state}`).animate({opacity: 0}, 500)  // works because shadow state
           $('img').animate({opacity: 0}, 500)
           await sleep(1000)
           // $(this.el).animate({opacity: 0}, 500); await sleep(500)
           // $(this.el).empty()
+        } else {
+          $(this.el).animate({opacity: 0}, 500)
+          await sleep(1000)
         }
         // $(this.el).addClass('.GraphNavigation-terminated')
 
 
         $(`.GraphNavigation-current`).removeClass('GraphNavigation-current');
-        this.setCurrentState(undefined)
+        // this.setCurrentState(undefined)
         break;
       }
       await sleep(200);
