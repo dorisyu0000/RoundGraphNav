@@ -3,7 +3,7 @@
 .pop {
   font-weight: bold;
   animation-fill-mode: forwards;
-  text-transform: uppercase;
+/*  text-transform: uppercase;*/
 /*  padding: 0 0.5rem;*/
   font-size: 40px;
   animation: zoomup 1.5s ease forwards;
@@ -31,7 +31,7 @@
   }
   100% {
     transform: scale(1) translateY(-50px);
-    filter: blur(1px);
+/*    filter: blur(1px);*/
     opacity: 0;
   }
 }
