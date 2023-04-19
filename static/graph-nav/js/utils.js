@@ -11,7 +11,7 @@ export function sleep(ms) {
 };
 
 export async function makeButton(div, text, opts={}) {
-  let {pre_delay=0, post_delay=0.2, cls = 'btn center btn-primary', css = {}} = opts;
+  let {pre_delay=0, post_delay=0.2, cls = 'btn center btn-purple', css = {}} = opts;
 
   let id = text.toLowerCase().replace(' ', '-')
   let btn = $('<button>', {class: cls, id})

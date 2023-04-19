@@ -9,7 +9,7 @@ const BLOCK_SIZE = 100;
 window.$ = $
 export class CircleGraph {
   constructor(root, options) {
-    root = $(root)
+    this.root = $(root)
     window.cg = this
     console.log('CircleGraph', options)
 
@@ -21,6 +21,9 @@ export class CircleGraph {
     options.consume = options.consume ?? true
     options.edgeShow = options.edgeShow ?? (() => true);
     options.successorKeys = options.graphRenderOptions.successorKeys
+    options.show_steps = options.show_steps ?? options.n_steps > 0
+    options.show_points = options.show_points ?? true
+
 
     this.rewards = options.rewards ?? Array(options.graph.length).fill(0)
     this.onStateVisit = options.onStateVisit ?? ((s) => {})
@@ -43,7 +46,7 @@ export class CircleGraph {
       }
     ));
 
-    root.html(`
+    this.wrapper = $("<div>").html(`
     <div style="width: 800px;">
       <div class="GraphNavigation-header-left">
         <div id="gn-points">
@@ -55,20 +58,47 @@ export class CircleGraph {
       </div>
     </div>
     `)
-    root.append(this.el);
-    $(`.ShadowState img`).remove()
-
-    options.show_steps = options.show_steps ?? options.n_steps > 0
-    if (!options.show_steps) {
-      $("#gn-steps").hide()
-    }
-    options.show_points = options.show_points ?? true
-    if (!options.show_points) {
-      $("#gn-points").hide()
-    }
+    this.wrapper.append(this.el)
 
     // Making sure it is easy to clean up event listeners...
     this.cancellables = [];
+  }
+
+  showGraph() {
+    this.root.append(this.wrapper)
+
+    $(`.ShadowState img`).remove()
+    if (!this.options.show_steps) {
+      $("#gn-steps").hide()
+    }
+    if (!this.options.show_points) {
+      $("#gn-points").hide()
+    }
+  }
+
+  async removeGraph() {
+    $(this.el).animate({opacity: 0}, 300);
+    await sleep(300)
+    this.el.innerHTML = ""
+    $(this.el).css({opacity: 1});
+  }
+
+  async showStartScreen(trial) {
+    await makeButton(this.root, 'start', {css: {'margin-top': '210px'}})
+    let moves = $('<p>')
+    .text(numString(trial.n_steps, "move"))
+    .addClass('Graph-moves')
+    .appendTo(this.root)
+    await sleep(1000)
+    moves.remove()
+    this.showGraph()
+  }
+
+  showEndScreen(msg) {
+    this.el.innerHTML = `
+      <p >${msg || ''}Press spacebar to continue.</p>
+    `;
+    return waitForSpace();
   }
 
   setupLogging() {
@@ -277,21 +307,8 @@ export class CircleGraph {
       this.setReward(s, s == this.state ? 0 : rewards[s])
     }
   }
-
-  async removeGraph() {
-    $(this.el).animate({opacity: 0}, 300);
-    await sleep(300)
-    this.el.innerHTML = ""
-    $(this.el).css({opacity: 1});
-  }
-
-  endTrialScreen(msg) {
-    this.el.innerHTML = `
-      <p >${msg || ''}Press spacebar to continue.</p>
-    `;
-    return waitForSpace();
 }
-}
+
 
 const stateTemplate = (state, graphic, options) => {
   let cls = `GraphNavigation-State-${state}`;
@@ -562,7 +579,7 @@ addPlugin('CircleGraphNavigation', trialErrorHandling(async function(root, trial
   await sleep(500);
   cg.el.innerHTML = ""
   await makeButton(root, "continue", {css: {'margin-top': '-600px'}})
-  // await cg.endTrialScreen();
+  // await cg.showEndScreen();
 
   root.innerHTML = '';
   console.log('cg.data', cg.data);

@@ -1,5 +1,24 @@
 /* Graph-related style */
 
+.Graph-moves {
+  animation: scale 0.5s ease forwards;
+  font-size: 40pt;
+  font-weight: bold;
+  margin-top: 180px;
+/*  vertical-align: middle*/
+}
+
+@keyframes scale {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  100% {
+    transform: scale(1)
+    opacity: 1;
+  }
+}
+
 .pop {
   font-weight: bold;
   animation-fill-mode: forwards;

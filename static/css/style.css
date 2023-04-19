@@ -1,4 +1,21 @@
 
+.btn-purple {
+  border: none;
+  color: white;
+  background-color: #9757F2;
+  border-color: #4E08B2;
+}
+.btn-purple:hover {
+  color: white;
+  background-color: #9F5BFF;
+  border-color: #4E08B2;
+}
+.btn-purple:active {
+  background-color: #A082CB;
+  border-color: #4E08B2;
+}
+
+
 #timer {
   font-size: 20pt;
   font-weight: bold;

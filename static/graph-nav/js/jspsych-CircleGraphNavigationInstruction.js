@@ -184,49 +184,12 @@ addPlugin('practice', async function(root, trial) {
     hover_rewards: false,
   }
   setup(root, trial)
-
   message(trial.message)
-  if (trial.first) await button()
+  // if (trial.first) await button()
 
   cg = new CircleGraph($("#cgi-root"), trial);
+  await cg.showStartScreen(trial)
   await cg.navigate()
   $(root).empty()
   jsPsych.finishTrial(cg.data)
-
-
-  // message("OK, let's step it up a notch. Try a few two-move games.")
-  // // $(cg.el).animate({opacity: 0.2}, 300);
-  // await button()
-
-  // for (let trial of trials.move2) {
-  //   cg = new CircleGraph(cg_root, {...info, ...trial});
-  //   await cg.navigate({leave_open: true})
-  // }
-
-  // message("How about three moves?")
-  // // $(cg.el).animate({opacity: 0.2}, 300);
-  // await button()
-
-  // for (let trial of trials.move3) {
-  //   cg = new CircleGraph(cg_root, {...info, ...trial});
-  //   await cg.navigate({leave_open: true})
-  // }
-
-  // $(this.el).animate({opacity: 0}, 500)
-
 })
-
-
-  // message(`
-  //   Nice work! But now we're going to make things a little harder...
-  // `)
-  // fillRewards()
-  // await button()
-
-  // cg.el.classList.add('hideStates')
-  // cg.el.classList.add('hideEdges')
-
-  // message(`
-  //   In the real game, you don't get to see
-  // `)
-// });
