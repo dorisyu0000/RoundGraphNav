@@ -114,16 +114,21 @@ function make_instructions()
     move3 = [sample_problem(;n_steps=3, first.graph) for i in 1:3]
 
     (;
-        trials = (;
-            first,
-            collect_all,
-            easy,
-            move1,
-            move2,
-            move3,
-        ),
-        first10, first5, easy_max
+        intro = [first],
+        collect_all = [collect_all],
+        easy = [(;JSON.lower(easy)..., max_val = easy_max)],
+        move1, move2, move3
     )
+        # trials = (;
+        #     first,
+        #     collect_all,
+        #     easy,
+        #     move1,
+        #     move2,
+        #     move3,
+        # ),
+        # first10, first5, easy_max
+    # )
 end
 
 parameters = (

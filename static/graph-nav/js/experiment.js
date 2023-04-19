@@ -75,6 +75,7 @@ async function initializeExperiment() {
   psiturk.recordUnstructuredData('browser', window.navigator.userAgent);
 
   const config = await $.getJSON('static/json/test2.json');
+  window.config = config
   const params = config.parameters
 
   params.graphRenderOptions = {
@@ -101,23 +102,44 @@ async function initializeExperiment() {
   //   // onlyShowCurrentEdges,
   // };
 
-  var main = {
-    type: 'CircleGraphNavigation',
-    ...params,
-    timeline: config.trials
+  function instruct_block(name) {
+    return {
+      type: name,
+      ...params,
+      timeline: config.instructions[name],
+    }
   }
-
-  var instructions = {
-    type: 'CircleGraphInstructions',
-    ...params,
-    hover_edges: false,
-    hover_rewards: false,
-    ...config.instructions,
+  function practice_block(name, type, message, options={}) {
+    let timeline  = config.instructions[type]
+    timeline[0].first = true
+    return {
+      type: name,
+      ...params,
+      ...options,
+      message,
+      timeline,
+    }
   }
+  console.log('instruct_block("practice")', instruct_block("practice"))
 
   var timeline = [
-    instructions,
-    main,
+    instruct_block('intro'),
+    instruct_block('collect_all'),
+    instruct_block('easy'),
+    practice_block('practice', 'move1', `
+      Let's try a few more easy ones. Try to make as many points as you can!
+    `),
+    practice_block('practice', 'move2', `
+      OK, let's step it up a notch. Try a few two-move games.
+    `),
+    practice_block('practice', 'move3', `
+      How about three moves?
+    `),
+    {
+      type: 'CircleGraphNavigation',
+      ...params,
+      timeline: config.trials
+    }
   ];
 
   if (location.pathname == '/testexperiment') {

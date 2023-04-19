@@ -238,13 +238,13 @@ export class CircleGraph {
           // $(`.GraphNavigation-State-${state}`).animate({opacity: .1}, 500)
         } else if (options.leave_open) {
           $(`.GraphNavigation-State-${state}`).animate({opacity: 0}, 500)  // works because shadow state
-          $('img').animate({opacity: 0}, 500)
+          $('.State img').animate({opacity: 0}, 500)
           await sleep(1000)
           // $(this.el).animate({opacity: 0}, 500); await sleep(500)
           // $(this.el).empty()
         } else {
-          $(this.el).animate({opacity: 0}, 500)
-          await sleep(1000)
+          $(this.el).animate({opacity: 0}, 200)
+          await sleep(500)
         }
         // $(this.el).addClass('.GraphNavigation-terminated')
 
@@ -276,6 +276,13 @@ export class CircleGraph {
     for (let s of _.range(this.rewards.length)) {
       this.setReward(s, s == this.state ? 0 : rewards[s])
     }
+  }
+
+  async removeGraph() {
+    $(this.el).animate({opacity: 0}, 300);
+    await sleep(300)
+    this.el.innerHTML = ""
+    $(this.el).css({opacity: 1});
   }
 
   endTrialScreen(msg) {
@@ -552,7 +559,6 @@ addPlugin('CircleGraphNavigation', trialErrorHandling(async function(root, trial
   const cg = new CircleGraph(root, trial);
 
   await cg.navigate();
-  // logger('done')
   await sleep(500);
   cg.el.innerHTML = ""
   await makeButton(root, "continue", {css: {'margin-top': '-600px'}})
