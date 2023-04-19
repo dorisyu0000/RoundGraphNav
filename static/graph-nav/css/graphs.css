@@ -6,7 +6,7 @@
   text-transform: uppercase;
 /*  padding: 0 0.5rem;*/
   font-size: 40px;
-  animation: zoomup 1s ease forwards;
+  animation: zoomup 1.5s ease forwards;
 /*  display: inline-block;*/
   top: -50px;
   left: 30px;
@@ -286,6 +286,13 @@
 }
 .GraphNavigation.hideEdges .GraphNavigation-edge.is-visible {
   opacity: 1;
+}
+
+.GraphNavigation-terminated {
+/*  transition: background-color 500ms;*/
+/*  background-color: #949494 !important;*/
+  transition: opacity 500ms;
+  opacity: 0 !important;
 }
 
 .SuccState {

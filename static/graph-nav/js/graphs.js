@@ -59,10 +59,9 @@ export class Graph {
 
     this._adjacency = {}
     this.states = [];
-    console.log('adjacency', adjacency)
     adjacency.forEach((successors, state) => {
       this.states.push(state);
-      this._adjacency[state] = successors.map(x => x - 1) // one to zero indexing
+      this._adjacency[state] = [...successors] // copy
     })
     this.states.sort();
   }

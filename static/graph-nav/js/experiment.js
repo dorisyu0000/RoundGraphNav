@@ -104,23 +104,23 @@ async function initializeExperiment() {
   var main = {
     type: 'CircleGraphNavigation',
     ...params,
-    timeline: config.trials.main
+    timeline: config.trials
   }
 
-  var welcome = {
+  var instructions = {
     type: 'CircleGraphInstructions',
     ...params,
     show_steps: false,
     show_points: false,
     hover_edges: false,
     hover_rewards: false,
-    timeline: config.trials.instruct1,
+    ...config.instructions,
   }
 
-  var timeline = _.flatten([
-    welcome,
+  var timeline = [
+    instructions,
     main,
-  ]);
+  ];
 
   if (location.pathname == '/testexperiment') {
     const type = QUERY.get('type');

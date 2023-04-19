@@ -6,8 +6,7 @@ import jsPsych from '../../lib/jspsych-exported.js';
 import {bfs} from './graphs.js';
 
 const BLOCK_SIZE = 100;
-// replace BLOCK_SIZE with hi=parseHTML('<div class="State" style="display: block;position: fixed;left: 200vw;"></div>');document.body.append(hi);console.log(hi.offsetWidth);hi.remove();console.log(hi.offsetWidth)
-
+window.$ = $
 export class CircleGraph {
   constructor(root, options) {
     root = $(root)
@@ -23,7 +22,7 @@ export class CircleGraph {
     options.edgeShow = options.edgeShow ?? (() => true);
     options.successorKeys = options.graphRenderOptions.successorKeys
 
-    this.rewards = options.reward ?? Array(options.graph.length).fill(0)
+    this.rewards = options.rewards ?? Array(options.graph.length).fill(0)
     this.onStateVisit = options.onStateVisit ?? ((s) => {})
     this.score = options.score ?? 0
 
@@ -33,7 +32,6 @@ export class CircleGraph {
     options.rewardGraphics[0] = options.rewardGraphics[0] ?? ""
     options.graphics = this.rewards.map(x => options.rewardGraphics[x])
 
-    console.log('options.graph', options.graph)
     this.graph = new Graph(options.graph)
     this.el = parseHTML(renderCircleGraph(
       this.graph, options.graphics, options.goal,
@@ -58,6 +56,7 @@ export class CircleGraph {
     </div>
     `)
     root.append(this.el);
+    $(`.ShadowState img`).remove()
 
     options.show_steps = options.show_steps ?? options.n_steps > 0
     if (!options.show_steps) {
@@ -79,8 +78,8 @@ export class CircleGraph {
     }
     let start_time = Date.now()
     this.logger = function (event, info={}) {
-      // if (!event.startsWith('mouse')) console.log(event, info)
-      console.log(event, info)
+      if (!event.startsWith('mouse')) console.log(event, info)
+      // console.log(event, info)
       this.data.events.push({
         time: Date.now() - start_time,
         event,
@@ -177,7 +176,7 @@ export class CircleGraph {
     .text(sign + points)
     .appendTo($(`.GraphNavigation-ShadowState-${state}`))
 
-    await sleep(1000)
+    await sleep(1500)
     pop.remove()
   }
 
@@ -203,7 +202,11 @@ export class CircleGraph {
   }
 
   async navigate(options) {
+    // $(`.GraphNavigation-terminated`).removeClass('GraphNavigation-terminated');
     options = options || {};
+    if (this.state === undefined) {
+      this.setCurrentState(this.options.start)
+    }
     let goal = options.goal ?? this.options.goal
     const termination = options.termination || ((cg, state) => state == goal);
     let stepsLeft = options.n_steps ?? this.options.n_steps;
@@ -227,15 +230,29 @@ export class CircleGraph {
       stepsLeft -= 1;
       $("#GraphNavigation-steps").html(stepsLeft)
       if (termination(this, state) || stepsLeft == 0) {
+        await sleep(500)
         $(".GraphNavigation-currentEdge").removeClass('GraphNavigation-currentEdge')
+        if (options.leave_open) {
+          $(`.GraphNavigation-State-${state}`).animate({opacity: 0}, 500)  // works because shadow state
+          $('img').animate({opacity: 0}, 500)
+          await sleep(1000)
+          // $(this.el).animate({opacity: 0}, 500); await sleep(500)
+          // $(this.el).empty()
+        }
+        // $(this.el).addClass('.GraphNavigation-terminated')
+
+
+        $(`.GraphNavigation-current`).removeClass('GraphNavigation-current');
+        this.setCurrentState(undefined)
         break;
       }
       await sleep(200);
+      // await sleep(5)
     }
   }
 
   loadTrial(trial) {
-    this.setCurrentState(trial.start)
+    if (trial.start != undefined) this.setCurrentState(trial.start)
     this.setRewards(trial.rewards)
     this.options.n_steps = trial.n_steps ?? this.options.n_steps
   }
@@ -278,9 +295,7 @@ const stateTemplate = (state, graphic, options) => {
 };
 
 export const renderSmallEmoji = (graphic, cls) => `
-<span class="GraphNavigation withGraphic">
-  <span style="position: relative; border-width:1px !important;width:4rem;height:4rem;display:inline-block;margin: 0 0 -0.5rem 0;" class="GraphNavigation-State State ${cls||''}">${graphic?`<img src="${graphicsUrl(graphic)}" />`:''}</span>
-</span>
+<img style="height:40px" src="${graphicsUrl(graphic)}" />
 `;
 
 function keyForCSSClass(key) {
