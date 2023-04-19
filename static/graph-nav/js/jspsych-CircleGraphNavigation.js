@@ -85,12 +85,14 @@ export class CircleGraph {
 
   async showStartScreen(trial) {
     await makeButton(this.root, 'start', {css: {'margin-top': '210px'}})
-    let moves = $('<p>')
-    .text(numString(trial.n_steps, "move"))
-    .addClass('Graph-moves')
-    .appendTo(this.root)
-    await sleep(1000)
-    moves.remove()
+    if (trial.n_steps > 0) {
+      let moves = $('<p>')
+      .text(numString(trial.n_steps, "move"))
+      .addClass('Graph-moves')
+      .appendTo(this.root)
+      await sleep(1000)
+      moves.remove()
+    }
     this.showGraph()
   }
 

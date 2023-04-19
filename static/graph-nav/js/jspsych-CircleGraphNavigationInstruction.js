@@ -30,7 +30,7 @@ function setup(root, trial) {
   $('<div>', {id: "cgi-root"}).appendTo(root)
 }
 
-addPlugin('intro', async function(root, trial) {
+addPlugin('intro', async function intro(root, trial) {
   trial = {
     ...trial,
     hover_edges: false,
@@ -41,17 +41,20 @@ addPlugin('intro', async function(root, trial) {
   }
   setup(root, trial)
   let cg = new CircleGraph($("#cgi-root"), trial);
+  cg.showGraph()
 
   message(`Welcome! In this experiment, you will play a game on the board shown below.`)
-  await button()
+  // await button()
 
   message(`Your current location on the board is highlighted in blue.`)
   cg.setCurrentState(trial.start)
   // $(".GraphNavigation-currentEdge").removeClass('GraphNavigation-currentEdge')
-  await button()
+  // await button()
 
   message(`You can move between locations that are connected by a line.`)
+  $(cg.el).addClass('GraphNavigation-highlight-current-edge')
   await button()
+  $(cg.el).removeClass('GraphNavigation-highlight-current-edge')
 
   message(`You move to a location by clicking on it. Try it now!`)
   console.log('cg.graph', cg.graph)
@@ -84,9 +87,10 @@ addPlugin('intro', async function(root, trial) {
 })
 
 
-addPlugin('collect_all', async function(root, trial) {
+addPlugin('collect_all', async function collect_all(root, trial) {
   trial = {
     ...trial,
+    n_steps: -1,
     hover_edges: false,
     hover_rewards: false,
     show_steps: false,
@@ -105,8 +109,9 @@ addPlugin('collect_all', async function(root, trial) {
     Try collecting all the items (even the bad ones for now).
   `)
   let cg = new CircleGraph($("#cgi-root"), trial);
+  // cg.showGraph(trial)
+  await cg.showStartScreen(trial)
   await cg.navigate({
-    n_steps: -1,
     leave_open: true,
     termination: (cg, s) => !_.some(cg.rewards)
   })
@@ -122,7 +127,7 @@ addPlugin('collect_all', async function(root, trial) {
 })
 
 
-addPlugin('easy', async function(root, trial) {
+addPlugin('easy', async function easy(root, trial) {
   trial = {
     ...trial,
     hover_edges: false,
@@ -131,19 +136,17 @@ addPlugin('easy', async function(root, trial) {
   setup(root, trial)
   message(`
     On each turn, you have to make some number of moves.<br>
-    The number of moves left is shown on the left, under your score.
+    The number of moves for the current turn is shown after you click the start button.
   `)
-  let cg = new CircleGraph($("#cgi-root"), trial);
-  $(cg.el).hide()
-  $("#GraphNavigation-steps").html(trial.n_steps)
-
   await button()
-  $(cg.el).show()
 
+  message(`Let's start with an easy one...<br> Try to make as many points as you can in just one move!`)
+  let cg = new CircleGraph($("#cgi-root"), trial);
 
-  message(`Let's try an easy one. Try to make as many points as you can in just one move!`)
+  $("#GraphNavigation-steps").html(trial.n_steps)
+  await cg.showStartScreen(trial)
 
-  await cg.navigate({leave_open: true})
+  await cg.navigate() // {leave_open: true}
 
   let best_item = renderSmallEmoji(trial.rewardGraphics[10])
   if (cg.score == trial.max_val) {
@@ -160,7 +163,7 @@ addPlugin('easy', async function(root, trial) {
     $(cg.el).animate({opacity: 1}, 100);
     cg.setScore(0)
     cg.loadTrial(trial)
-    await cg.navigate({leave_open: true})
+    await cg.navigate() // {leave_open: true}
 
     // $(cg.el).animate({opacity: 0.2}, 300);
     if (cg.score == trial.max_val) {
@@ -177,7 +180,7 @@ addPlugin('easy', async function(root, trial) {
 });
 
 
-addPlugin('practice', async function(root, trial) {
+addPlugin('practice', async function practice(root, trial) {
   trial = {
     ...trial,
     hover_edges: false,

@@ -149,10 +149,12 @@
 .GraphNavigation-currentEdge {
 /*  opacity: 1 !important;*/
   z-index: 1 !important;
-/*  height: 4px;*/
-/*  background-color: #1B79FF !important;*/
 }
 
+.GraphNavigation-highlight-current-edge .GraphNavigation-currentEdge {
+  height: 4px;
+  background-color: #F7A100 !important;
+}
 .GraphNavigation-current {
   background-image: url('/static/graph-nav/images/openmoji/2733.svg');
 }
