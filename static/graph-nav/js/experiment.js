@@ -155,6 +155,10 @@ async function initializeExperiment() {
         return t;
       });
     }
+    let skip = QUERY.get('skip');
+    if (skip != null) {
+      timeline = timeline.slice(skip);
+    }
   }
 
   configureProgress(timeline);
