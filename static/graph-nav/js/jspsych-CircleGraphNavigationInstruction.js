@@ -8,7 +8,7 @@ import {queryEdge, CircleGraph, renderSmallEmoji} from './jspsych-CircleGraphNav
 window._ = _
 addPlugin('CircleGraphInstructions', async function(root, info) {
   let top = $('<div>').appendTo(root).css({
-    'height': '110px',
+    'height': '120px',
     'width': '800px'
   })
   let msg = $('<p>').appendTo(top).css('font-size', '16pt')
@@ -17,6 +17,8 @@ addPlugin('CircleGraphInstructions', async function(root, info) {
   let trials = info.trials
 
   trials.first.rewards = Array(8).fill(0)
+  trials.first.show_points = false
+  trials.first.show_steps = false
   cg = new CircleGraph(cg_root, {...info, ...trials.first});
   console.log('trials.first.start', trials.first.start)
 
@@ -35,7 +37,7 @@ addPlugin('CircleGraphInstructions', async function(root, info) {
 
   msg.text(`Your current location on the board is highlighted in blue.`)
   cg.setCurrentState(trials.first.start)
-  $(".GraphNavigation-currentEdge").removeClass('GraphNavigation-currentEdge')
+  // $(".GraphNavigation-currentEdge").removeClass('GraphNavigation-currentEdge')
   await button()
 
   msg.text(`You can move between locations that are connected by a line.`)
@@ -66,13 +68,23 @@ addPlugin('CircleGraphInstructions', async function(root, info) {
 
   msg.html(`<i>Ouch!</i> You lost 5 points for collecting that one!`)
   await button()
+
+  let vals = _.sortBy(_.without(_.keys(info.rewardGraphics), "0"), parseFloat)
+  let descriptions = vals.map(reward => {
+    return `${renderSmallEmoji(info.rewardGraphics[reward])} is worth ${reward}`
+  })
+  let spec = descriptions.slice(0, -1).join(', ') + ', and ' + descriptions.slice(-1)
+
+  msg.html(`Each kind of item is worth a different number of points:<br>` + spec)
+
+  await button()
+
   // $(cg.el).animate({opacity: 0.2}, 300);
 
   msg.html(`
-    Each kind of item is worth a different number of points.<br>
-    Try collecting all of them (even the bad ones for now).
+    Try collecting all the items (even the bad ones for now).
   `)
-  await button()
+
   $(cg.el).animate({opacity: 1}, 100);
   trials.collect_all.start = undefined
   cg.loadTrial(trials.collect_all)
@@ -126,8 +138,6 @@ addPlugin('CircleGraphInstructions', async function(root, info) {
   }
   await button()
 
-  $("#gn-points").show()
-  $("#gn-steps").show()
 
   msg.html("Let's try a few more easy ones. Try to make as many points as you can!")
   // await button()
@@ -136,9 +146,8 @@ addPlugin('CircleGraphInstructions', async function(root, info) {
     cg = new CircleGraph(cg_root, {...info, ...trial});
     await cg.navigate({leave_open: true})
   }
-  msg.html("OK, let's step it up a notch. Let's try a few two-move games.")
+  msg.html("OK, let's step it up a notch. Try a few two-move games.")
   // $(cg.el).animate({opacity: 0.2}, 300);
-
   await button()
 
   for (let trial of trials.move2) {
@@ -146,14 +155,16 @@ addPlugin('CircleGraphInstructions', async function(root, info) {
     await cg.navigate({leave_open: true})
   }
 
+  msg.html("How about three moves?")
+  // $(cg.el).animate({opacity: 0.2}, 300);
+  await button()
 
+  for (let trial of trials.move3) {
+    cg = new CircleGraph(cg_root, {...info, ...trial});
+    await cg.navigate({leave_open: true})
+  }
 
-
-
-
-
-
-
+  $(this.el).animate({opacity: 0}, 500)
 
 
 

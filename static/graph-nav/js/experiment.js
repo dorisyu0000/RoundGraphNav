@@ -110,8 +110,6 @@ async function initializeExperiment() {
   var instructions = {
     type: 'CircleGraphInstructions',
     ...params,
-    show_steps: false,
-    show_points: false,
     hover_edges: false,
     hover_rewards: false,
     ...config.instructions,
