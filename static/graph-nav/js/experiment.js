@@ -77,9 +77,9 @@ async function initializeExperiment() {
   const config = await $.getJSON('static/json/test2.json');
   window.config = config
   const params = config.parameters
-  params.show_steps = false
+  // params.show_steps = false
   params.show_points = false
-  
+
   params.graphRenderOptions = {
     onlyShowCurrentEdges: false,
     width: 800,
@@ -105,42 +105,56 @@ async function initializeExperiment() {
   // };
 
   function instruct_block(name) {
+    if (!_.has(config.trials, name)) throw new Error(`${name} not in config.trials`)
     return {
-      type: name,
       ...params,
-      timeline: config.instructions[name],
+      type: name,
+      hover_edges: false,
+      hover_rewards: false,
+      timeline: config.trials[name],
     }
   }
-  function practice_block(name, type, message, options={}) {
-    let timeline  = config.instructions[type]
-    timeline[0].first = true
+  function practice_block(name, message, options={}) {
+    if (!_.has(config.trials, name)) throw new Error(`${name} not in config.trials`)
     return {
-      type: name,
       ...params,
+      type: 'practice',
+      hover_edges: false,
+      hover_rewards: false,
       ...options,
       message,
-      timeline,
+      timeline: config.trials[name],
     }
   }
-  console.log('instruct_block("practice")', instruct_block("practice"))
-
   var timeline = [
     instruct_block('intro'),
     instruct_block('collect_all'),
     instruct_block('easy'),
-    practice_block('practice', 'move1', `
+    practice_block('move1', `
       Let's try a few more easy ones. Try to make as many points as you can!
     `),
-    practice_block('practice', 'move2', `
+    practice_block('move2', `
       OK, let's step it up a notch. Try a few two-move games.
     `),
-    practice_block('practice', 'move3', `
+    practice_block('move3', `
       How about three moves?
     `),
+    practice_block('vary_transition', `
+      So far we've been playing with one set of connections (lines).<br>
+      But in the real game, the connections change on every round.
+    `),
+    instruct_block('intro_hover'),
+    practice_block('practice_hover', `
+      Try three more practice games. Then we can begin the main section<br>
+      (where you can earn money!)
+    `, {
+      hover_edges: true,
+      hover_rewards: true,
+    }),
     {
-      type: 'CircleGraphNavigation',
+      type: 'main',
       ...params,
-      timeline: config.trials
+      timeline: config.trials.main
     }
   ];
 
@@ -149,18 +163,24 @@ async function initializeExperiment() {
     if (type) {
       timeline = timeline.filter(t => t.type == type);
     } else {
-      // If we aren't filtering by a type, we'll cut down the number of trials per type at least.
-      timeline = timeline.map(t => {
-        if (t.timeline) {
-          t.timeline = t.timeline.slice(0, 2);
-        }
-        return t;
-      });
+      // // If we aren't filtering by a type, we'll cut down the number of trials per type at least.
+      // timeline = timeline.map(t => {
+      //   if (t.timeline) {
+      //     t.timeline = t.timeline.slice(0, 3);
+      //   }
+      //   return t;
+      // });
     }
     let skip = QUERY.get('skip');
     if (skip != null) {
       timeline = timeline.slice(skip);
+      console.log('timeline', timeline)
     }
+  }
+
+  window.timeline = timeline
+  if (timeline.length <= 0) {
+    throw new Error("Timeline is empty")
   }
 
   configureProgress(timeline);

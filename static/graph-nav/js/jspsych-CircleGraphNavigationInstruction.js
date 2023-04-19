@@ -33,10 +33,6 @@ function setup(root, trial) {
 addPlugin('intro', async function intro(root, trial) {
   trial = {
     ...trial,
-    hover_edges: false,
-    hover_rewards: false,
-    show_points: false,
-    show_steps: false,
     rewards: Array(8).fill(0)
   }
   setup(root, trial)
@@ -44,12 +40,11 @@ addPlugin('intro', async function intro(root, trial) {
   cg.showGraph()
 
   message(`Welcome! In this experiment, you will play a game on the board shown below.`)
-  // await button()
+  await button()
 
   message(`Your current location on the board is highlighted in blue.`)
   cg.setCurrentState(trial.start)
-  // $(".GraphNavigation-currentEdge").removeClass('GraphNavigation-currentEdge')
-  // await button()
+  await button()
 
   message(`You can move between locations that are connected by a line.`)
   $(cg.el).addClass('GraphNavigation-highlight-current-edge')
@@ -58,7 +53,6 @@ addPlugin('intro', async function intro(root, trial) {
 
   message(`You move to a location by clicking on it. Try it now!`)
   console.log('cg.graph', cg.graph)
-  // cg.setCurrentState(trial.start)
   await cg.navigate({n_steps: 1, leave_state: true})
 
   message(`
@@ -66,14 +60,25 @@ addPlugin('intro', async function intro(root, trial) {
     Try collecting this item!
   `)
   let goal = _.sample(cg.graph.successors(cg.state))
-  $("#gn-points").show()
+  // $("#gn-points").show()
   cg.setReward(goal, 10)
   console.log('goal', goal)
   await cg.navigate({n_steps: -1, goal, leave_state: true})
 
   message(`
-    Nice! You got 10 points for collecting that item. What about this one?
+    Nice! You got 10 points for collecting that item.
   `)
+  await button()
+
+  message(`
+    In the non-practice games, those points will become a cash bonus!
+  `)
+  await button()
+
+  message(`
+    Now try collecting this item.
+  `)
+
   goal = _.sample(cg.graph.successors(cg.state))
   cg.setReward(goal, -5)
   await cg.navigate({n_steps: -1, goal, leave_open: true})
@@ -91,9 +96,6 @@ addPlugin('collect_all', async function collect_all(root, trial) {
   trial = {
     ...trial,
     n_steps: -1,
-    hover_edges: false,
-    hover_rewards: false,
-    show_steps: false,
   }
   setup(root, trial)
 
@@ -106,7 +108,7 @@ addPlugin('collect_all', async function collect_all(root, trial) {
   await button()
 
   message(`
-    Try collecting all the items (even the bad ones for now).
+    Try collecting all the items <b>(even the bad ones for now)</b>.
   `)
   let cg = new CircleGraph($("#cgi-root"), trial);
   // cg.showGraph(trial)
@@ -128,11 +130,6 @@ addPlugin('collect_all', async function collect_all(root, trial) {
 
 
 addPlugin('easy', async function easy(root, trial) {
-  trial = {
-    ...trial,
-    hover_edges: false,
-    hover_rewards: false,
-  }
   setup(root, trial)
   message(`
     On each turn, you have to make some number of moves.<br>
@@ -179,13 +176,7 @@ addPlugin('easy', async function easy(root, trial) {
   jsPsych.finishTrial(cg.data)
 });
 
-
 addPlugin('practice', async function practice(root, trial) {
-  trial = {
-    ...trial,
-    hover_edges: false,
-    hover_rewards: false,
-  }
   setup(root, trial)
   message(trial.message)
   // if (trial.first) await button()
@@ -193,6 +184,77 @@ addPlugin('practice', async function practice(root, trial) {
   cg = new CircleGraph($("#cgi-root"), trial);
   await cg.showStartScreen(trial)
   await cg.navigate()
+  $(root).empty()
+  jsPsych.finishTrial(cg.data)
+})
+
+
+addPlugin('intro_hover', async function practice(root, trial) {
+  setup(root, trial)
+  message("Just one more thing...")
+  // await button()
+
+  message("So far we've been showing you all the items and connections.")
+  cg = new CircleGraph($("#cgi-root"), trial);
+  cg.showGraph()
+  cg.setCurrentState(trial.start)
+  await button()
+
+  message("But in the real game, they're hidden!")
+  await sleep(1000)
+  $(".State > img").animate({'opacity': 0}, 1000)
+  $(".GraphNavigation-edge").animate({'opacity': 0}, 1000)
+  await sleep(1300)
+
+  await button()
+
+  message(`
+    You can reveal the item and connections at a location by hovering over it.<br>
+    <b>Hover over every location to continue.</b>
+  `)
+  cg.el.classList.add('hideStates')
+  cg.el.classList.add('hideEdges')
+  $(".State > img").css({'opacity': ''})
+  $(".GraphNavigation-edge").css({'opacity': ''})
+  cg.setupMouseTracking()
+
+  let {promise, resolve} = makePromise();
+
+  let setEqual = (xs, ys) => xs.size === ys.size && [...xs].every((x) => ys.has(x));
+  let hovered = new Set()
+  let all_states = new Set(cg.graph.states)
+  let done = false
+
+  cg.logger_callback = (event, info) => {
+    if (event == 'mouseenter') {
+      hovered.add(info.state)
+      window.hovered = hovered
+      window.all_states = all_states
+      if (setEqual(hovered, all_states)) {
+        done = true
+        resolve()
+      }
+    }
+  }
+  sleep(15000).then(() => {
+    if (done) return
+  message(`
+    <b>Hover over every location to continue.</b><br>
+    <i>Your current location counts too!</i>
+  `)
+  })
+  await promise
+
+  message(`
+    You still move around by clicking on a location.<br>
+    <b>Collect all the items to continue</b>.
+  `)
+  cg.options.hover_edges = cg.options.hover_rewards = true
+  await cg.navigate({
+    n_steps: -1,
+    termination: (cg, s) => !_.some(cg.rewards)
+  })
+
   $(root).empty()
   jsPsych.finishTrial(cg.data)
 })

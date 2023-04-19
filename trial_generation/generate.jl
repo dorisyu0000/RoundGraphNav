@@ -86,49 +86,39 @@ end
 
 # %% --------
 
-function make_instructions()
-    # first problem shows a 10 and -5 somewhere
-    requirement = (problem) -> begin
-        step1_rewards = problem.rewards[problem.graph[problem.start]]
-        any(neighbors -> length(neighbors) == 3, problem.graph)
-        10 in step1_rewards && -5 in step1_rewards
-    end
-    first = sample_problem(;requirement, n_steps=-1)
-    first.rewards[first.start] = 0
-    first10 = findfirst(isequal(10), first.rewards)
-    first5 = findfirst(isequal(-5), first.rewards)
-
-    # collect all problem
-    collect_all = mutate(first; rewards = shuffle(repeat([-10, -5, 5, 10], 2)))
-
+function make_trials()
     # easy choice problem between -10, -5, and 10
     requirement = (problem) -> begin
         step1_rewards = problem.rewards[problem.graph[problem.start]]
         sort(step1_rewards) == [-10, -5, 10]
     end
-    easy = sample_problem(;n_steps=1, requirement, first.graph)
+    easy = sample_problem(;n_steps=1, requirement)
     easy_max = 10
+    graph = easy.graph
+    k = length(graph)
 
-    move1 = [sample_problem(;n_steps=1, first.graph) for i in 1:3]
-    move2 = [sample_problem(;n_steps=2, first.graph) for i in 1:3]
-    move3 = [sample_problem(;n_steps=3, first.graph) for i in 1:3]
+    intro = mutate(easy; n_steps=-1, start = rand(setdiff(1:k, easy.start)), rewards=zeros(k))
+    collect_all = mutate(intro; n_steps=-1, rewards = shuffle(repeat([-10, -5, 5, 10], 2)))
+    move1 = [sample_problem(;n_steps=1, graph) for i in 1:3]
+    move2 = [sample_problem(;n_steps=2, graph) for i in 1:3]
+    move3 = [sample_problem(;n_steps=3, graph) for i in 1:3]
+
+    vary_transition = [sample_problem(;n_steps) for n_steps in shuffle(2:4)]
+    intro_hover = [sample_problem(;n_steps = -1)]
+    practice_hover = [sample_problem(;n_steps) for n_steps in shuffle(2:4)]
+
+    main = [sample_problem(;n_steps) for n_steps in shuffle(repeat(2:4, 10))]
 
     (;
-        intro = [first],
+        intro = [intro],
         collect_all = [collect_all],
         easy = [(;JSON.lower(easy)..., max_val = easy_max)],
-        move1, move2, move3
+        move1, move2, move3,
+        vary_transition,
+        intro_hover,
+        practice_hover,
+        main
     )
-        # trials = (;
-        #     first,
-        #     collect_all,
-        #     easy,
-        #     move1,
-        #     move2,
-        #     move3,
-        # ),
-        # first10, first5, easy_max
-    # )
 end
 
 parameters = (
@@ -138,8 +128,6 @@ parameters = (
     hover_rewards =  true,
 )
 
-instructions = make_instructions()
-trials = []
-
+trials = make_trials()
 fp = "/Users/fred/heroku/graph-nav/static/json/test2.json"
-write(fp, json((;parameters, instructions, trials)))
+write(fp, json((;parameters, trials)))

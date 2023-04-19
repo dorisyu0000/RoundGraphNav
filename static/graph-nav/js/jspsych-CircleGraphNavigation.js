@@ -62,10 +62,12 @@ export class CircleGraph {
 
     // Making sure it is easy to clean up event listeners...
     this.cancellables = [];
+    this.setupLogging()
   }
 
   showGraph() {
     this.root.append(this.wrapper)
+    this.setupMouseTracking()
 
     $(`.ShadowState img`).remove()
     if (!this.options.show_steps) {
@@ -110,8 +112,9 @@ export class CircleGraph {
     }
     let start_time = Date.now()
     this.logger = function (event, info={}) {
-      if (!event.startsWith('mouse')) console.log(event, info)
-      // console.log(event, info)
+      if (this.logger_callback) this.logger_callback(event, info)
+      // if (!event.startsWith('mouse')) console.log(event, info)
+      console.log(event, info)
       this.data.events.push({
         time: Date.now() - start_time,
         event,
@@ -123,6 +126,10 @@ export class CircleGraph {
   setupMouseTracking() {
     if (this.options.hover_rewards) this.el.classList.add('hideStates');
     if (this.options.hover_edges) this.el.classList.add('hideEdges');
+
+    // don't double up the event listeners
+    if (this.mouseTrackingEnabled) return
+    this.mouseTrackingEnabled = true
 
     for (const el of this.el.querySelectorAll('.State:not(.ShadowState)')) {
       const state = parseInt(el.getAttribute('data-state'), 10);
@@ -234,8 +241,9 @@ export class CircleGraph {
   }
 
   async navigate(options) {
-    $(`.GraphNavigation-State`).css({opacity: 1})
-    $('img').css({opacity: 1})
+    this.logger('navigate', options)
+    // $(`.GraphNavigation-State`).css({opacity: 1})
+    // $('img').css({opacity: 1})
     // $(`.GraphNavigation-terminated`).removeClass('GraphNavigation-terminated');
     options = options || {};
     if (this.state === undefined) {
@@ -244,9 +252,6 @@ export class CircleGraph {
     let goal = options.goal ?? this.options.goal
     const termination = options.termination || ((cg, state) => state == goal);
     let stepsLeft = options.n_steps ?? this.options.n_steps;
-
-    this.setupLogging()
-    this.setupMouseTracking()
 
     $("#GraphNavigation-steps").html(stepsLeft)
     this.visitState(this.state, true)
@@ -574,16 +579,12 @@ function renderKeyInstruction(keys) {
   }
 }
 
-addPlugin('CircleGraphNavigation', trialErrorHandling(async function(root, trial) {
-  const cg = new CircleGraph(root, trial);
+addPlugin('main', trialErrorHandling(async function main(root, trial) {
 
-  await cg.navigate();
-  await sleep(500);
-  cg.el.innerHTML = ""
-  await makeButton(root, "continue", {css: {'margin-top': '-600px'}})
-  // await cg.showEndScreen();
-
-  root.innerHTML = '';
+  cg = new CircleGraph($(root), trial);
+  await cg.showStartScreen(trial)
+  await cg.navigate()
+  $(root).empty()
   console.log('cg.data', cg.data);
-  jsPsych.finishTrial(cg.data);
+  jsPsych.finishTrial(cg.data)
 }));
