@@ -77,7 +77,9 @@ async function initializeExperiment() {
   const config = await $.getJSON('static/json/test2.json');
   window.config = config
   const params = config.parameters
-
+  params.show_steps = false
+  params.show_points = false
+  
   params.graphRenderOptions = {
     onlyShowCurrentEdges: false,
     width: 800,
