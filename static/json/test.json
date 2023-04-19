@@ -7,6 +7,9 @@
       "hover_rewards": true
    },
    "trials": {
+      "instruct1": [],
+      "instruct2": [],
+      "instruct3": [],
       "main": [
          {
             "start":2,
@@ -17,10 +20,5 @@
             "rewards":[-10,-10,-10,-10,-10,-10,-10,-5]
          }
       ],
-      "welcome": [
-         {
-            "start": 2
-         }
-      ]
    }
 }

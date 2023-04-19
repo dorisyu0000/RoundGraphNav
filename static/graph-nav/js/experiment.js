@@ -1,4 +1,3 @@
-import {Graph, clockwiseKeys} from './graphs.js';
 import {AdaptiveTasks} from './adaptive.js';
 import {invariant, markdown, graphics, graphicsLoading, random} from './utils.js';
 import {renderSmallEmoji} from './jspsych-CircleGraphNavigation.js';
@@ -75,15 +74,16 @@ const QUERY = new URLSearchParams(location.search);
 async function initializeExperiment() {
   psiturk.recordUnstructuredData('browser', window.navigator.userAgent);
 
-  const config = await $.getJSON('static/json/test.json');
+  const config = await $.getJSON('static/json/test2.json');
   const params = config.parameters
-  params.graph = new Graph(params.adjacency)
+
   params.graphRenderOptions = {
     onlyShowCurrentEdges: false,
     width: 800,
     height: 450,
     scaleEdgeFactor: 0.95,
-    fixedXY: circleXY(params.graph.states.length)
+    // fixedXY: circleXY(params.graph.states.length)
+    fixedXY: circleXY(8)
   };
 
   // var instructions = {
@@ -114,7 +114,7 @@ async function initializeExperiment() {
     show_points: false,
     hover_edges: false,
     hover_rewards: false,
-    timeline: config.trials.welcome,
+    timeline: config.trials.instruct1,
   }
 
   var timeline = _.flatten([

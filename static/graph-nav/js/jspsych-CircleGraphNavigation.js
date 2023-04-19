@@ -1,4 +1,5 @@
 import {numString, markdown, makePromise, parseHTML, trialErrorHandling, graphicsUrl, sleep, addPlugin, documentEventPromise, invariant, makeButton} from './utils.js';
+import {Graph} from './graphs.js';
 import _ from '../../lib/underscore-min.js';
 import $ from '../../lib/jquery-min.js';
 import jsPsych from '../../lib/jspsych-exported.js';
@@ -22,7 +23,7 @@ export class CircleGraph {
     options.edgeShow = options.edgeShow ?? (() => true);
     options.successorKeys = options.graphRenderOptions.successorKeys
 
-    this.rewards = options.reward ?? Array(options.adjacency.length).fill(0)
+    this.rewards = options.reward ?? Array(options.graph.length).fill(0)
     this.onStateVisit = options.onStateVisit ?? ((s) => {})
     this.score = options.score ?? 0
 
@@ -32,8 +33,10 @@ export class CircleGraph {
     options.rewardGraphics[0] = options.rewardGraphics[0] ?? ""
     options.graphics = this.rewards.map(x => options.rewardGraphics[x])
 
+    console.log('options.graph', options.graph)
+    this.graph = new Graph(options.graph)
     this.el = parseHTML(renderCircleGraph(
-      options.graph, options.graphics, options.goal,
+      this.graph, options.graphics, options.goal,
       {
         edgeShow: options.edgeShow,
         successorKeys: options.successorKeys,
@@ -95,14 +98,14 @@ export class CircleGraph {
       el.addEventListener('mouseenter', (e) => {
         this.logger('mouseenter', {state})
         el.classList.add('is-visible');
-        for (const successor of this.options.graph.successors(state)) {
+        for (const successor of this.graph.successors(state)) {
           queryEdge(this.el, state, successor).classList.add('is-visible');
         }
       });
       el.addEventListener('mouseleave', (e) => {
         this.logger('mouseleave', {state})
         el.classList.remove('is-visible');
-        for (const successor of this.options.graph.successors(state)) {
+        for (const successor of this.graph.successors(state)) {
           queryEdge(this.el, state, successor).classList.remove('is-visible');
         }
       });
@@ -120,7 +123,7 @@ export class CircleGraph {
 
   setCurrentState(state, options) {
     this.state = state;
-    setCurrentState(this.el, this.options.graph, this.state, {
+    setCurrentState(this.el, this.graph, this.state, {
       edgeShow: this.options.edgeShow,
       successorKeys: this.options.successorKeys,
       onlyShowCurrentEdges: this.options.graphRenderOptions.onlyShowCurrentEdges,
@@ -136,7 +139,7 @@ export class CircleGraph {
     */
     const invalidStates = new Set(options.invalidStates || [this.state, this.options.goal]);
 
-    for (const s of this.options.graph.states) {
+    for (const s of this.graph.states) {
       const el = this.el.querySelector(`.GraphNavigation-State-${s}`);
       if (invalidStates.has(s)) {
         el.classList.remove('PathIdentification-selectable');
@@ -162,7 +165,7 @@ export class CircleGraph {
     });
   }
 
-  addScore(points, state) {
+  async addScore(points, state) {
     if (points == 0) {
       return
     }
@@ -174,9 +177,8 @@ export class CircleGraph {
     .text(sign + points)
     .appendTo($(`.GraphNavigation-ShadowState-${state}`))
 
-    // await sleep(1000)
-    // pop.remove()
-    // .appendTo($("#gn-points"))
+    await sleep(1000)
+    pop.remove()
   }
 
   setScore(score) {
@@ -185,6 +187,7 @@ export class CircleGraph {
   }
 
   visitState(state, initial=false) {
+    invariant(typeof(1) == 'number')
     this.logger('visit', {state, initial})
 
     if (!initial) {
@@ -213,7 +216,7 @@ export class CircleGraph {
 
     while (true) { // eslint-disable-line no-constant-condition
       // State transition
-      const g = this.options.graph;
+      const g = this.graph;
       const {state} = await this.clickTransition({
         invalidStates: new Set(
           g.states.filter(s => !g.successors(this.state).includes(s))

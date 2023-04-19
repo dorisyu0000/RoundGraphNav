@@ -56,12 +56,13 @@ export class Graph {
     // work well as long as the input doesn't contain the same state repeated with different
     // data types.
     // Graph([[0, [1, 2]], [1, [3, 4]], [2, [5, 6]], ...]) // an example of a binary tree.
+
     this._adjacency = {}
     this.states = [];
     console.log('adjacency', adjacency)
     adjacency.forEach((successors, state) => {
       this.states.push(state);
-      this._adjacency[state] = [...successors]; // making a copy
+      this._adjacency[state] = successors.map(x => x - 1) // one to zero indexing
     })
     this.states.sort();
   }
