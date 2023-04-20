@@ -108,6 +108,7 @@ function make_trials()
     move1 = [sample_problem(;n_steps=1, graph) for i in 1:3]
     move2 = [sample_problem(;n_steps=2, graph) for i in 1:3]
     move3 = [sample_problem(;n_steps=3, graph) for i in 1:3]
+    learn_rewards = [sample_problem(;n_steps=1, graph) for i in 1:15]
 
     vary_transition = [sample_problem(;n_steps) for n_steps in shuffle(2:4)]
     intro_hover = [sample_problem(;n_steps = -1)]
@@ -120,6 +121,7 @@ function make_trials()
         collect_all = [collect_all],
         easy = [(;JSON.lower(easy)..., max_val = easy_max)],
         move1, move2, move3,
+        learn_rewards,
         vary_transition,
         intro_hover,
         practice_hover,

@@ -145,7 +145,6 @@ addPlugin('easy', async function easy(root, trial) {
 
   await cg.navigate() // {leave_open: true}
 
-  let best_item = renderSmallEmoji(trial.rewardGraphics[10])
   if (cg.score == trial.max_val) {
     message("Awesome! That was the most points you could have made.")
     // $(cg.el).animate({opacity: 0.2}, 300);
@@ -156,7 +155,7 @@ addPlugin('easy', async function easy(root, trial) {
     $(cg.el).animate({opacity: 0.2}, 300);
     await button("reset")
 
-    message(`Hint: the ${best_item} is worth the most!`)
+    message(`Hint: the ${renderSmallEmoji(trial.rewardGraphics[10])} is worth the most!`)
     $(cg.el).animate({opacity: 1}, 100);
     cg.setScore(0)
     cg.loadTrial(trial)
@@ -188,8 +187,29 @@ addPlugin('practice', async function practice(root, trial) {
   jsPsych.finishTrial(cg.data)
 })
 
+addPlugin('learn_rewards', async function practice(root, trial) {
+  setup(root, trial)
+  message(`
+    Let's check to see if you've learned how much each item is worth.<br>
+  `)
 
-addPlugin('intro_hover', async function practice(root, trial) {
+  `
+
+  `
+
+
+  // if (trial.first) await button()
+
+  cg = new CircleGraph($("#cgi-root"), trial);
+  await cg.showStartScreen(trial)
+  await cg.navigate()
+  $(root).empty()
+  jsPsych.finishTrial(cg.data)
+})
+
+
+
+addPlugin('intro_hover', async function intro_hover(root, trial) {
   setup(root, trial)
   message("Just one more thing...")
   await button()

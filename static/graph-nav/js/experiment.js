@@ -115,6 +115,7 @@ async function initializeExperiment() {
     practice_block('move1', `
       Let's try a few more easy ones. Try to make as many points as you can!
     `),
+    // instruct_block('learn_rewards'),
     practice_block('move2', `
       OK, let's step it up a notch. Try a few two-move games.
     `),
