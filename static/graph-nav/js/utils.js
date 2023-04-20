@@ -31,7 +31,8 @@ export async function makeButton(div, text, opts={}) {
   return text
 }
 
-export function numString(n, noun) {
+export function numString(n, noun, options={}) {
+  if (options.skip_one && n == 1) return noun
   let res = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"][n]
   if (noun) {
     if (n != 1) {

@@ -7,6 +7,7 @@ import {bfs} from './graphs.js';
 
 const BLOCK_SIZE = 100;
 window.$ = $
+
 export class CircleGraph {
   constructor(root, options) {
     this.root = $(root)
@@ -86,7 +87,23 @@ export class CircleGraph {
   }
 
   async showStartScreen(trial) {
-    await makeButton(this.root, 'start', {css: {'margin-top': '210px'}})
+    if (trial.bonus) {
+      $('<p>')
+      .addClass('Graph-bonus')
+      .css({
+        // 'position': 'absolute',
+        'font-size': 20,
+        // 'width': 500,
+        'margin-top': 100,
+        'margin-bottom': -125,
+        // 'font-weight': 'bold'
+      })
+      .text(trial.bonus.reportBonus())
+      .appendTo(this.root)
+    }
+    await makeButton(this.root, 'start', {css: {'margin-top': '210px'}, post_delay: 0})
+    $('.Graph-bonus').remove()
+    await sleep(200)
     if (trial.n_steps > 0) {
       let moves = $('<p>')
       .text(numString(trial.n_steps, "move"))
@@ -113,8 +130,8 @@ export class CircleGraph {
     let start_time = Date.now()
     this.logger = function (event, info={}) {
       if (this.logger_callback) this.logger_callback(event, info)
-      // if (!event.startsWith('mouse')) console.log(event, info)
-      console.log(event, info)
+      if (!event.startsWith('mouse')) console.log(event, info)
+      // console.log(event, info)
       this.data.events.push({
         time: Date.now() - start_time,
         event,
@@ -580,11 +597,12 @@ function renderKeyInstruction(keys) {
 }
 
 addPlugin('main', trialErrorHandling(async function main(root, trial) {
-
   cg = new CircleGraph($(root), trial);
   await cg.showStartScreen(trial)
   await cg.navigate()
-  $(root).empty()
+  trial.bonus.addPoints(cg.score)
+  cg.data.current_bonus = cg.bonus.dollars()
   console.log('cg.data', cg.data);
+  $(root).empty()
   jsPsych.finishTrial(cg.data)
 }));

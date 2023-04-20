@@ -333,7 +333,9 @@ window.jsPsych = (function() {
       if (typeof timeline_parameters == 'undefined') {
         // returns a clone of the trial_parameters to
         // protect functions.
-        return jsPsych.utils.deepCopy(trial_parameters);
+        // return jsPsych.utils.deepCopy(trial_parameters);
+        // ARE YOU FUCKING KIDDING ME?
+        return trial_parameters;
       } else {
         if (progress.current_location >= timeline_parameters.timeline.length) {
           return null;

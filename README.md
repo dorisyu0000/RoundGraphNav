@@ -58,6 +58,23 @@ pip install --global-option=build_ext \
             --global-option="-L/usr/local/opt/openssl/lib" -r requirements.txt
 ```
 
+## Heroku set up
+
+You need to use both the nodejs and python buildpacks. You can create the app with
+```
+heroku create PROJECTNAME --buildpack heroku/nodejs --buildpack heroku/python
+```
+
+If you already created the app, you can add an additional build pack with e.g.
+```
+heroku buildpacks:add heroku/python
+```
+
+Finally, create the database with
+```
+heroku addons:create heroku-postgresql
+```
+
 ## Experiment workflow
 1. Prep code! Make sure cost on consent screen (`templates/consent.html`) is up to date.
 2. Update `experiment_code_version` and make a git tag marking commit the code was run with.

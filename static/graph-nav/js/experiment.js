@@ -8,6 +8,7 @@ import _ from '../../lib/underscore-min.js';
 import $ from '../../lib/jquery-min.js';
 import jsPsych from '../../lib/jspsych-exported.js';
 import {circleXY} from './graphs.js';
+import {Bonus} from './bonus.js';
 
 function formWithValidation({stimulus, validate}) {
   return {
@@ -28,57 +29,21 @@ function formWithValidation({stimulus, validate}) {
   };
 }
 
-const debrief = () => [{
-  type: 'survey-multi-choice',
-  preamble: markdown(`
-  # Experiment complete
-
-  Thanks for participating! Please answer the questions below before
-  submitting the experiment.
-  `),
-  button_label: 'Submit',
-  questions: [
-    {prompt: "Which hand do you use to write?", name: 'hand', options: ['Left', 'Right', 'Either'], required:true},
-    {prompt: "In general, do you consider yourself detail-oriented or a big picture thinker?", name: 'detail-big-picture', options: ['Detail-Oriented', 'Big Picture Thinker', 'Both', 'Neither'], required:true},
-    {prompt: "Did you take a picture of the map? If you did, how often did you have to look at it? Note: Your completed experiment will be accepted regardless of your answer to this question.", name: 'picture-map', options: ['Did not take picture', 'Rarely looked at picture', 'Sometimes looked at picture', 'Often looked at picture'], required:true},
-    {prompt: "Did you draw the map out? If you did, how often did you have to look at it? Note: Your completed experiment will be accepted regardless of your answer to this question.", name: 'draw-map', options: ['Did not draw map', 'Rarely looked', 'Sometimes looked', 'Often looked'], required:true},
-  ],
-}, {
-  type: 'survey-text',
-  preamble: markdown(`
-  # Experiment complete
-
-  Thanks for participating! Please answer the questions below before
-  submitting the experiment.
-  `),
-  button_label: 'Submit',
-  questions: [
-    {'prompt': 'What strategy did you use to navigate?',
-     'rows': 2, columns: 60},
-    {'prompt': 'Was anything confusing or hard to understand?',
-     'rows': 2, columns: 60},
-    {'prompt': 'Do you have any suggestions on how we can improve the instructions or interface?',
-     'rows': 2, columns: 60},
-    {'prompt': 'Any other comments?',
-     'rows': 2, columns: 60}
-  ]
-}];
-
-const makeSimpleInstruction = (text) => ({
-  type: "SimpleInstruction",
-  stimulus: markdown(text),
-});
-
 const QUERY = new URLSearchParams(location.search);
 
 async function initializeExperiment() {
   psiturk.recordUnstructuredData('browser', window.navigator.userAgent);
 
   const config = await $.getJSON('static/json/test2.json');
+
   window.config = config
   const params = config.parameters
   // params.show_steps = false
   params.show_points = false
+
+  const bonus = new Bonus({points_per_cent: params.points_per_cent, initial: 50})
+  // window.bonus = bonus
+  // bonus.addPoints(10)
 
   params.graphRenderOptions = {
     onlyShowCurrentEdges: false,
@@ -126,6 +91,23 @@ async function initializeExperiment() {
       timeline: config.trials[name],
     }
   }
+  function text_block(message) {
+    return {
+      type: 'text',
+      message: message
+    }
+  }
+
+  function build_main(m) {
+    return {
+      type: 'main',
+      bonus,
+      ...params,
+      timeline: config.trials.main
+    }
+  }
+
+
   var timeline = [
     instruct_block('intro'),
     instruct_block('collect_all'),
@@ -151,11 +133,14 @@ async function initializeExperiment() {
       hover_edges: true,
       hover_rewards: true,
     }),
-    {
-      type: 'main',
-      ...params,
-      timeline: config.trials.main
-    }
+    text_block(`
+      You've got it! Now you're ready to play the game for real.
+      In the remaining ${config.trials.main.length} rounds, your
+      score will count towards your bonus. Specifically, you'll earn
+      <b>${bonus.describeScheme()}.</b> We'll start you off with ${bonus.initial}
+      points for free. Good luck!
+    `),
+    build_main()
   ];
 
   if (location.pathname == '/testexperiment') {

@@ -192,7 +192,7 @@ addPlugin('practice', async function practice(root, trial) {
 addPlugin('intro_hover', async function practice(root, trial) {
   setup(root, trial)
   message("Just one more thing...")
-  // await button()
+  await button()
 
   message("So far we've been showing you all the items and connections.")
   cg = new CircleGraph($("#cgi-root"), trial);
@@ -257,4 +257,12 @@ addPlugin('intro_hover', async function practice(root, trial) {
 
   $(root).empty()
   jsPsych.finishTrial(cg.data)
+})
+
+addPlugin('text', async function text(root, trial) {
+  setup(root, trial)
+  message(trial.message)
+  await button()
+  $(root).empty()
+  jsPsych.finishTrial({})
 })

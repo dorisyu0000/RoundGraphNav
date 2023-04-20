@@ -84,6 +84,12 @@ function value(problem::Problem, path)
     end
 end
 
+function value(problem::Problem)
+    maximum(paths(problem)) do pth
+        value(problem, pth)
+    end
+end
+
 # %% --------
 
 function make_trials()
@@ -124,10 +130,15 @@ end
 parameters = (
     rewardGraphics = Dict("-10" => "🤡", "-5" => "📌", "5" => "🍫", "10" => "💰"),
     n_steps = 3,
-    hover_edges =  true,
-    hover_rewards =  true,
+    hover_edges = true,
+    hover_rewards = true,
+    points_per_cent = 1,
 )
 
 trials = make_trials()
 fp = "/Users/fred/heroku/graph-nav/static/json/test2.json"
 write(fp, json((;parameters, trials)))
+
+# %% --------
+
+mean(value.(trials.main)) * 2/5
