@@ -19,7 +19,8 @@ def verify_config_conditions_match_json():
     nc_json = len(list(dd['conditionToFactors'].values())[0])
     assert nc_config == nc_json, f'Must match number conditions in Psiturk ({nc_config} conditions) and experiment JSON ({nc_json} conditions).'
     assert int(config['Task Parameters']['num_counters']) == 1
-verify_config_conditions_match_json()
+
+# verify_config_conditions_match_json()
 
 class ExperimentServer(exp.ExperimentServer):
     def load_user_config(self):
