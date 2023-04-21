@@ -10,6 +10,9 @@ import jsPsych from '../../lib/jspsych-exported.js';
 import {circleXY} from './graphs.js';
 import {Bonus} from './bonus.js';
 
+// ES6 Modules or TypeScript
+import Swal from 'sweetalert2'
+
 function formWithValidation({stimulus, validate}) {
   return {
     type: 'HTMLForm',
@@ -76,7 +79,7 @@ async function initializeExperiment() {
       type: name,
       hover_edges: false,
       hover_rewards: false,
-      timeline: config.trials[name],
+      ...config.trials[name],
     }
   }
   function practice_block(name, message, options={}) {
@@ -112,10 +115,7 @@ async function initializeExperiment() {
     instruct_block('intro'),
     instruct_block('collect_all'),
     instruct_block('easy'),
-    practice_block('move1', `
-      Let's try a few more easy ones. Try to make as many points as you can!
-    `),
-    // instruct_block('learn_rewards'),
+    instruct_block('learn_rewards'),
     practice_block('move2', `
       OK, let's step it up a notch. Try a few two-move games.
     `),

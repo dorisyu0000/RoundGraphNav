@@ -21,7 +21,7 @@ function message(html) {
   $('#cgi-msg').html(html)
 }
 
-function setup(root, trial) {
+function setup(root) {
   let top = $('<div>', {id: 'cgi-top'}).appendTo(root).css({
     'height': '120px',
     'width': '800px'
@@ -35,7 +35,7 @@ addPlugin('intro', async function intro(root, trial) {
     ...trial,
     rewards: Array(8).fill(0)
   }
-  setup(root, trial)
+  setup(root)
   let cg = new CircleGraph($("#cgi-root"), trial);
   cg.showGraph()
 
@@ -97,11 +97,11 @@ addPlugin('collect_all', async function collect_all(root, trial) {
     ...trial,
     n_steps: -1,
   }
-  setup(root, trial)
+  setup(root)
 
   let vals = _.sortBy(_.without(_.keys(trial.rewardGraphics), "0"), parseFloat)
   let descriptions = vals.map(reward => {
-    return `${renderSmallEmoji(trial.rewardGraphics[reward])} is worth ${reward}`
+    return `${renderSmallEmoji(trial.rewardGraphics[reward])}is worth ${reward}`
   })
   let spec = descriptions.slice(0, -1).join(', ') + ', and ' + descriptions.slice(-1)
   message(`Each kind of item is worth a different number of points:<br>` + spec)
@@ -130,7 +130,7 @@ addPlugin('collect_all', async function collect_all(root, trial) {
 
 
 addPlugin('easy', async function easy(root, trial) {
-  setup(root, trial)
+  setup(root)
   message(`
     On each turn, you have to make some number of moves.<br>
     The number of moves for the current turn is shown after you click the start button.
@@ -176,7 +176,7 @@ addPlugin('easy', async function easy(root, trial) {
 });
 
 addPlugin('practice', async function practice(root, trial) {
-  setup(root, trial)
+  setup(root)
   message(trial.message)
   // if (trial.first) await button()
 
@@ -187,30 +187,34 @@ addPlugin('practice', async function practice(root, trial) {
   jsPsych.finishTrial(cg.data)
 })
 
-addPlugin('learn_rewards', async function practice(root, trial) {
-  setup(root, trial)
-  message(`
-    Let's check to see if you've learned how much each item is worth.<br>
-  `)
+addPlugin('learn_rewards', async function learn_rewards(root, info) {
+  setup(root)
+  message(`Lets try a few more easy ones. Try to collect the best item!`)
 
-  `
+  for (const trial_set of info.trial_sets) {
+    for (let trial of trial_set) {
+      console.log('trial', trial)
+      trial = {...info, ...trial, show_steps: false}
+      cg = new CircleGraph($("#cgi-root"), trial);
+      await cg.showGraph()
+      await cg.navigate()
+      $(cg.wrapper).remove()
+    }
+  }
+  // jsPsych.data.write(data);
+  // psiturk.recordTrialData(data)
 
-  `
-
-
-  // if (trial.first) await button()
-
-  cg = new CircleGraph($("#cgi-root"), trial);
-  await cg.showStartScreen(trial)
-  await cg.navigate()
-  $(root).empty()
-  jsPsych.finishTrial(cg.data)
+  // cg = new CircleGraph($("#cgi-root"), trial);
+  // await cg.showStartScreen(trial)
+  // await cg.navigate()
+  // $(root).empty()
+  // jsPsych.finishTrial(cg.data)
 })
 
 
 
 addPlugin('intro_hover', async function intro_hover(root, trial) {
-  setup(root, trial)
+  setup(root)
   message("Just one more thing...")
   await button()
 
@@ -280,7 +284,7 @@ addPlugin('intro_hover', async function intro_hover(root, trial) {
 })
 
 addPlugin('text', async function text(root, trial) {
-  setup(root, trial)
+  setup(root)
   message(trial.message)
   await button()
   $(root).empty()

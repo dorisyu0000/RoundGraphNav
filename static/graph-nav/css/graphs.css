@@ -1,5 +1,9 @@
 /* Graph-related style */
 
+#cgi-msg b {
+  font-weight: 400;
+  color: #7946C3;
+}
 .Graph-moves {
   animation: scale 0.5s ease forwards;
   font-size: 40pt;

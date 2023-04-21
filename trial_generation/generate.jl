@@ -33,26 +33,22 @@ end
 
 function sample_graph(k; requirement=default_requirement)
     for i in 1:10000
-        graph = expected_degree_graph(fill(2, k))
-        requirement(graph) && return graph
+        sgraph = expected_degree_graph(fill(2, k))
+        requirement(sgraph) && return neighbor_list(graph)
     end
     error("Can't sample a graph!")
 end
 
-function sample_problem(;k=8, n_steps=3, graph=nothing, requirement=x->true)
-    fixed_graph = !isnothing(graph)
-    rdist = DiscreteNonParametric([-10, -5, 5, 10], ones(4) / 4)
+neighbor_list(sgraph::SimpleGraph) = neighbors.(Ref(sgraph), vertices(sgraph))
+
+function sample_problem(;k, n_steps, graph=neighbor_list(sample_graph(k)),
+                        rdist=nothing, rewards=rand(rdist, k), start=rand(1:k))
+    Problem(graph, rewards, start, n_steps)
+end
+
+function sample_problem(requirement; kws...)
     for i in 1:10000
-        if !fixed_graph
-            sgraph = sample_graph(k)
-            graph = neighbors.(Ref(sgraph), vertices(sgraph))
-        end
-        problem = Problem(
-            graph,
-            rand(rdist, k),
-            rand(1:k),
-            n_steps
-        )
+        problem = sample_problem(;kws...)
         requirement(problem) && return problem
     end
     error("Can't sample a problem!")
@@ -91,35 +87,43 @@ function value(problem::Problem)
 end
 
 # %% --------
+discrete_uniform(v) = DiscreteNonParametric(v, ones(length(v)) / length(v))
 
-function make_trials()
-    # easy choice problem between -10, -5, and 10
-    requirement = (problem) -> begin
-        step1_rewards = problem.rewards[problem.graph[problem.start]]
-        sort(step1_rewards) == [-10, -5, 10]
+function make_trials(;k=8, rdist=discrete_uniform([-10, -5, 5, 10]))
+    graph = neighbor_list(random_regular_graph(k, 3))
+
+    intro = sample_problem(;k, graph, n_steps=-1, rewards=zeros(k))
+    collect_all = sample_problem(;k, graph, n_steps=-1, rewards = shuffle(repeat([-10, -5, 5, 10], 2)))
+
+    easy = sample_problem(;k, graph, n_steps=1, rewards=zeros(k))
+    step1_rewards!(problem, rewards) = problem.rewards[graph[problem.start]] .= rewards
+    step1_rewards!(easy, [-10, -5, 10])
+    easy_max = value(easy)
+
+    trial_sets = map(1:10) do _
+        rs = support(rdist)
+        map(2:length(rs)) do i
+            problem = sample_problem(;k, rdist, graph, n_steps=1)
+            step1_rewards!(problem, shuffle([rs[i], rs[i-1], rand(rs[1:i-1])]))
+            problem
+        end
     end
-    easy = sample_problem(;n_steps=1, requirement)
-    easy_max = 10
-    graph = easy.graph
-    k = length(graph)
+    learn_rewards = (;trial_sets)
 
-    intro = mutate(easy; n_steps=-1, start = rand(setdiff(1:k, easy.start)), rewards=zeros(k))
-    collect_all = mutate(intro; n_steps=-1, rewards = shuffle(repeat([-10, -5, 5, 10], 2)))
-    move1 = [sample_problem(;n_steps=1, graph) for i in 1:3]
-    move2 = [sample_problem(;n_steps=2, graph) for i in 1:3]
-    move3 = [sample_problem(;n_steps=3, graph) for i in 1:3]
-    learn_rewards = [sample_problem(;n_steps=1, graph) for i in 1:15]
+    move1, move2, move3 = map(1:3) do n_steps
+        [sample_problem(;k, rdist, graph, n_steps) for i in 1:3]
+    end
 
-    vary_transition = [sample_problem(;n_steps) for n_steps in shuffle(2:4)]
-    intro_hover = [sample_problem(;n_steps = -1)]
-    practice_hover = [sample_problem(;n_steps) for n_steps in shuffle(2:4)]
+    vary_transition = [sample_problem(;k, rdist, graph, n_steps) for n_steps in shuffle(2:4)]
+    intro_hover = sample_problem(;k, rdist, graph, n_steps = -1)
+    practice_hover = [sample_problem(;k, rdist, graph, n_steps) for n_steps in shuffle(2:4)]
 
-    main = [sample_problem(;n_steps) for n_steps in shuffle(repeat(2:4, 10))]
+    main = [sample_problem(;k, rdist, graph, n_steps) for n_steps in shuffle(repeat(2:5, 5))]
 
     (;
-        intro = [intro],
-        collect_all = [collect_all],
-        easy = [(;JSON.lower(easy)..., max_val = easy_max)],
+        intro,
+        collect_all,
+        easy = (;JSON.lower(easy)..., max_val = easy_max),
         move1, move2, move3,
         learn_rewards,
         vary_transition,
