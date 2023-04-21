@@ -1,9 +1,10 @@
 import {numString, markdown, makePromise, parseHTML, trialErrorHandling, graphicsUrl, setTimeoutPromise, addPlugin, documentEventPromise, invariant, makeButton, sleep} from './utils.js';
-import _ from '../../lib/underscore-min.js'
+import _ from 'lodash-es'
 import $ from '../../lib/jquery-min.js';
 import jsPsych from '../../lib/jspsych-exported.js';
 import {bfs} from './graphs.js';
 import {queryEdge, CircleGraph, renderSmallEmoji} from './jspsych-CircleGraphNavigation.js';
+import {psiturk} from '../../js/setup.js';
 
 window._ = _
 
@@ -92,6 +93,14 @@ addPlugin('intro', async function intro(root, trial) {
 })
 
 
+function describeRewards(rewardGraphics) {
+  let vals = _.sortBy(_.without(_.keys(rewardGraphics), "0"), parseFloat)
+  let descriptions = vals.map(reward => {
+    return `${renderSmallEmoji(rewardGraphics[reward])}is worth ${reward}`
+  })
+  return descriptions.slice(0, -1).join(', ') + ', and ' + descriptions.slice(-1)
+}
+
 addPlugin('collect_all', async function collect_all(root, trial) {
   trial = {
     ...trial,
@@ -99,20 +108,16 @@ addPlugin('collect_all', async function collect_all(root, trial) {
   }
   setup(root)
 
-  let vals = _.sortBy(_.without(_.keys(trial.rewardGraphics), "0"), parseFloat)
-  let descriptions = vals.map(reward => {
-    return `${renderSmallEmoji(trial.rewardGraphics[reward])}is worth ${reward}`
-  })
-  let spec = descriptions.slice(0, -1).join(', ') + ', and ' + descriptions.slice(-1)
-  message(`Each kind of item is worth a different number of points:<br>` + spec)
+  message(`Each kind of item is worth a different number of points:<br>` +
+          describeRewards(trial.rewardGraphics))
   await button()
 
   message(`
     Try collecting all the items <b>(even the bad ones for now)</b>.
   `)
   let cg = new CircleGraph($("#cgi-root"), trial);
-  // cg.showGraph(trial)
-  await cg.showStartScreen(trial)
+  cg.showGraph(trial)
+  // await cg.showStartScreen(trial)
   await cg.navigate({
     leave_open: true,
     termination: (cg, s) => !_.some(cg.rewards)
@@ -128,52 +133,45 @@ addPlugin('collect_all', async function collect_all(root, trial) {
   jsPsych.finishTrial(cg.data)
 })
 
-
-addPlugin('easy', async function easy(root, trial) {
+addPlugin('learn_rewards', async function learn_rewards(root, info) {
   setup(root)
-  message(`
-    On each turn, you have to make some number of moves.<br>
-    The number of moves for the current turn is shown after you click the start button.
-  `)
-  await button()
+  let first = true
 
-  message(`Let's start with an easy one...<br> Try to make as many points as you can in just one move!`)
-  let cg = new CircleGraph($("#cgi-root"), trial);
-
-  $("#GraphNavigation-steps").html(trial.n_steps)
-  await cg.showStartScreen(trial)
-
-  await cg.navigate() // {leave_open: true}
-
-  if (cg.score == trial.max_val) {
-    message("Awesome! That was the most points you could have made.")
-    // $(cg.el).animate({opacity: 0.2}, 300);
-
-  } else {
-    message(`Hmm... you should be able to make ${trial.max_val} points. Why don't we try again?`)
-    cg.logger('try_again')
-    $(cg.el).animate({opacity: 0.2}, 300);
-    await button("reset")
-
-    message(`Hint: the ${renderSmallEmoji(trial.rewardGraphics[10])} is worth the most!`)
-    $(cg.el).animate({opacity: 1}, 100);
-    cg.setScore(0)
-    cg.loadTrial(trial)
-    await cg.navigate() // {leave_open: true}
-
-    // $(cg.el).animate({opacity: 0.2}, 300);
-    if (cg.score == trial.max_val) {
-      message("That's more like it! Well done!")
+  for (let trial_set of info.trial_sets) {
+    if (first) {
+      message(`Lets try a few easy ones. Try to collect the best item!`)
+      first = false
     } else {
-      message("Not quite, but let's move on for now.")
+      message(`Try to collect the best item! We'll continue when you always pick the best one.`)
+    }
+    let n_correct = 0
+    for (let trial of trial_set) {
+      trial = {...info, ...trial, show_steps: false}
+      cg = new CircleGraph($("#cgi-root"), trial);
+      let best = _.max(cg.graph.successors(cg.options.start).map(s => cg.rewards[s]))
+
+      await cg.showGraph()
+      await cg.navigate()
+      n_correct += (cg.score == best)
+
+      $(cg.wrapper).remove()
+      jsPsych.data.write(cg.data);
+      psiturk.recordTrialData(cg.data)
+    }
+    if (n_correct == trial_set.length) {
+      break
+    } else {
+      message(`
+        Hmm... You didn't always collect the best item. Let's try again.<br>
+        Remember: ${describeRewards(info.rewardGraphics)}
+      `)
+      await button()
     }
   }
-  cg.removeGraph()
+  message(`Great job! It looks like you've figured out which items are best.`)
   await button()
-
-  $(root).empty()
-  jsPsych.finishTrial(cg.data)
-});
+  jsPsych.finishTrial({})
+})
 
 addPlugin('practice', async function practice(root, trial) {
   setup(root)
@@ -187,30 +185,59 @@ addPlugin('practice', async function practice(root, trial) {
   jsPsych.finishTrial(cg.data)
 })
 
-addPlugin('learn_rewards', async function learn_rewards(root, info) {
+addPlugin('backstep', async function backstep(root, trial) {
   setup(root)
-  message(`Lets try a few more easy ones. Try to collect the best item!`)
+  message("Keep in mind: You can always move back to your previous location.")
 
-  for (const trial_set of info.trial_sets) {
-    for (let trial of trial_set) {
-      console.log('trial', trial)
-      trial = {...info, ...trial, show_steps: false}
-      cg = new CircleGraph($("#cgi-root"), trial);
-      await cg.showGraph()
-      await cg.navigate()
+  // if (trial.first) await button()
+  // await cg.showStartScreen(trial)
+
+  while (true) {
+    let cg = new CircleGraph($("#cgi-root"), trial);
+    await cg.showGraph()
+
+    let best = _.max(cg.graph.successors(cg.options.start).map(s => trial.rewards[s]))
+    console.log('this', cg.score, best)
+    await cg.navigate()
+    if (cg.score == best) {
+      break
+    } else {
+      message(`
+        Hmm... You should be able to make ${best} points on this round.<br>
+        <b>Remember, you can go back to where you started!</b>
+      `)
+      cg.logger('try_again')
       $(cg.wrapper).remove()
+      jsPsych.data.write(cg.data);
+      psiturk.recordTrialData(cg.data)
+      await button("try again")
     }
   }
-  // jsPsych.data.write(data);
-  // psiturk.recordTrialData(data)
 
-  // cg = new CircleGraph($("#cgi-root"), trial);
-  // await cg.showStartScreen(trial)
-  // await cg.navigate()
-  // $(root).empty()
-  // jsPsych.finishTrial(cg.data)
+  message("Awesome! You avoided the bad item by going back to your starting location.")
+  await button()
+
+  $(root).empty()
+  jsPsych.finishTrial(cg.data)
+
+
+  await cg.navigate()
+  $(root).empty()
+  jsPsych.finishTrial(cg.data)
+
 })
 
+addPlugin('easy', async function easy(root, trial) {
+  setup(root)
+  message(`
+    On each turn, you have to make some number of moves.<br>
+    The number of moves for the current turn is shown after you click the start button.
+  `)
+  await button()
+
+
+
+})
 
 
 addPlugin('intro_hover', async function intro_hover(root, trial) {

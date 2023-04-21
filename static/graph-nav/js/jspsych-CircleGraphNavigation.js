@@ -26,7 +26,7 @@ export class CircleGraph {
     options.show_points = options.show_points ?? true
 
 
-    this.rewards = options.rewards ?? Array(options.graph.length).fill(0)
+    this.rewards = [...options.rewards] ?? Array(options.graph.length).fill(0)
     this.onStateVisit = options.onStateVisit ?? ((s) => {})
     this.score = options.score ?? 0
 
@@ -258,6 +258,7 @@ export class CircleGraph {
   }
 
   async navigate(options) {
+    let path = []
     this.logger('navigate', options)
     // $(`.GraphNavigation-State`).css({opacity: 1})
     // $('img').css({opacity: 1})
@@ -282,6 +283,7 @@ export class CircleGraph {
         ),
       });
       this.visitState(state)
+      path.push(state)
 
       stepsLeft -= 1;
       $("#GraphNavigation-steps").html(stepsLeft)
@@ -297,6 +299,7 @@ export class CircleGraph {
           // $(this.el).animate({opacity: 0}, 500); await sleep(500)
           // $(this.el).empty()
         } else {
+          await sleep(200)
           $(this.el).animate({opacity: 0}, 200)
           await sleep(500)
         }
@@ -310,6 +313,8 @@ export class CircleGraph {
       await sleep(200);
       // await sleep(5)
     }
+    console.log('returning path', path)
+    return path
   }
 
   loadTrial(trial) {
@@ -601,7 +606,7 @@ addPlugin('main', trialErrorHandling(async function main(root, trial) {
   await cg.showStartScreen(trial)
   await cg.navigate()
   trial.bonus.addPoints(cg.score)
-  cg.data.current_bonus = cg.bonus.dollars()
+  cg.data.current_bonus = trial.bonus.dollars()
   console.log('cg.data', cg.data);
   $(root).empty()
   jsPsych.finishTrial(cg.data)

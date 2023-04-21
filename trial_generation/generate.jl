@@ -19,6 +19,7 @@ function JSON.lower(problem::Problem)
         problem.rewards,
         start = problem.start - 1,
         problem.n_steps,
+        # value = value(problem)
     )
 end
 
@@ -34,14 +35,14 @@ end
 function sample_graph(k; requirement=default_requirement)
     for i in 1:10000
         sgraph = expected_degree_graph(fill(2, k))
-        requirement(sgraph) && return neighbor_list(graph)
+        requirement(sgraph) && return neighbor_list(sgraph)
     end
     error("Can't sample a graph!")
 end
 
 neighbor_list(sgraph::SimpleGraph) = neighbors.(Ref(sgraph), vertices(sgraph))
 
-function sample_problem(;k, n_steps, graph=neighbor_list(sample_graph(k)),
+function sample_problem(;k, n_steps, graph=sample_graph(k),
                         rdist=nothing, rewards=rand(rdist, k), start=rand(1:k))
     Problem(graph, rewards, start, n_steps)
 end
@@ -102,30 +103,38 @@ function make_trials(;k=8, rdist=discrete_uniform([-10, -5, 5, 10]))
 
     trial_sets = map(1:10) do _
         rs = support(rdist)
-        map(2:length(rs)) do i
-            problem = sample_problem(;k, rdist, graph, n_steps=1)
+        map(shuffle(repeat(2:length(rs), 2))) do i
+            # problem = sample_problem(;k, rdist, graph, n_steps=1)
+            problem = sample_problem(;k, graph, n_steps=1, rewards=zeros(k))
             step1_rewards!(problem, shuffle([rs[i], rs[i-1], rand(rs[1:i-1])]))
             problem
         end
     end
     learn_rewards = (;trial_sets)
 
-    move1, move2, move3 = map(1:3) do n_steps
-        [sample_problem(;k, rdist, graph, n_steps) for i in 1:3]
-    end
+    move2 = [sample_problem(;k, rdist=discrete_uniform([5,10]), graph, n_steps=2) for i in 1:1]
 
-    vary_transition = [sample_problem(;k, rdist, graph, n_steps) for n_steps in shuffle(2:4)]
-    intro_hover = sample_problem(;k, rdist, graph, n_steps = -1)
-    practice_hover = [sample_problem(;k, rdist, graph, n_steps) for n_steps in shuffle(2:4)]
+    practice_revealed = [sample_problem(;k, rdist, graph, n_steps) for n_steps in 3:5]
+    backstep = sample_problem(;k, rdist, graph, n_steps=2, rewards=fill(-10, k))
+    step1_rewards!(backstep, [10, -5, -5])
 
-    main = [sample_problem(;k, rdist, graph, n_steps) for n_steps in shuffle(repeat(2:5, 5))]
+    # move1, move2, move3 = map(1:3) do n_steps
+    #     [sample_problem(;k, rdist, graph, n_steps) for i in 1:3]
+    # end
+
+    vary_transition = [sample_problem(;k, rdist, n_steps) for n_steps in shuffle(2:4)]
+    intro_hover = sample_problem(;k, rdist, n_steps = -1)
+    practice_hover = [sample_problem(;k, rdist, n_steps) for n_steps in shuffle(2:4)]
+
+    main = [sample_problem(;k, rdist, n_steps) for n_steps in shuffle(repeat(2:5, 5))]
 
     (;
         intro,
         collect_all,
-        easy = (;JSON.lower(easy)..., max_val = easy_max),
-        move1, move2, move3,
+        practice_revealed,
         learn_rewards,
+        move2,
+        backstep,
         vary_transition,
         intro_hover,
         practice_hover,

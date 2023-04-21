@@ -114,13 +114,15 @@ async function initializeExperiment() {
   var timeline = [
     instruct_block('intro'),
     instruct_block('collect_all'),
-    instruct_block('easy'),
     instruct_block('learn_rewards'),
-    practice_block('move2', `
-      OK, let's step it up a notch. Try a few two-move games.
+    practice_block('move2',`
+      In the real game, you get to move more than once. The number of moves
+      for the current round is shown after you click the start button. Give
+      it a shot!
     `),
-    practice_block('move3', `
-      How about three moves?
+    instruct_block('backstep'),
+    practice_block('practice_revealed', `
+      Let's try a few practice rounds with more moves.
     `),
     practice_block('vary_transition', `
       So far we've been playing with one set of connections (lines).<br>
