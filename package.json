@@ -12,9 +12,6 @@
     "build": "parcel build --no-scope-hoist --public-url /dist",
     "watch": "parcel watch --public-url /dist --no-hmr"
   },
-  "engines": {
-    "node": "14.x"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cgc/graph-nav.git"
