@@ -1,5 +1,5 @@
 import {numString, markdown, makePromise, parseHTML, trialErrorHandling, graphicsUrl, setTimeoutPromise, addPlugin, documentEventPromise, invariant, makeButton, sleep} from './utils.js';
-import _ from 'lodash-es'
+import _ from '../../lib/lodash-min.js';
 import $ from '../../lib/jquery-min.js';
 import jsPsych from '../../lib/jspsych-exported.js';
 import {bfs} from './graphs.js';
