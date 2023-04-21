@@ -10,9 +10,6 @@ import jsPsych from '../../lib/jspsych-exported.js';
 import {circleXY} from './graphs.js';
 import {Bonus} from './bonus.js';
 
-// ES6 Modules or TypeScript
-import Swal from 'sweetalert2'
-
 function formWithValidation({stimulus, validate}) {
   return {
     type: 'HTMLForm',
