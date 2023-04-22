@@ -109,37 +109,37 @@ async function initializeExperiment() {
 
 
   var timeline = [
-    instruct_block('intro'),
-    instruct_block('collect_all'),
-    instruct_block('learn_rewards'),
-    practice_block('move2',`
-      In the real game, you get to move more than once. The number of moves
-      for the current round is shown after you click the start button. Give
-      it a shot!
-    `),
-    instruct_block('backstep'),
-    practice_block('practice_revealed', `
-      Let's try a few practice rounds with more moves.
-    `),
-    practice_block('vary_transition', `
-      So far we've been playing with one set of connections (lines).<br>
-      But in the real game, the connections change on every round.
-    `),
-    instruct_block('intro_hover'),
-    practice_block('practice_hover', `
-      Try three more practice games. Then we can begin the main section<br>
-      (where you can earn money!)
-    `, {
-      hover_edges: true,
-      hover_rewards: true,
-    }),
-    text_block(`
-      You've got it! Now you're ready to play the game for real.
-      In the remaining ${config.trials.main.length} rounds, your
-      score will count towards your bonus. Specifically, you'll earn
-      <b>${bonus.describeScheme()}.</b> We'll start you off with ${bonus.initial}
-      points for free. Good luck!
-    `),
+    // instruct_block('intro'),
+    // instruct_block('collect_all'),
+    // instruct_block('learn_rewards'),
+    // practice_block('move2',`
+    //   In the real game, you get to move more than once. The number of moves
+    //   for the current round is shown after you click the start button. Give
+    //   it a shot!
+    // `),
+    // instruct_block('backstep'),
+    // practice_block('practice_revealed', `
+    //   Let's try a few practice rounds with more moves.
+    // `),
+    // practice_block('vary_transition', `
+    //   So far we've been playing with one set of connections (lines).<br>
+    //   But in the real game, the connections change on every round.
+    // `),
+    // instruct_block('intro_hover'),
+    // practice_block('practice_hover', `
+    //   Try three more practice games. Then we can begin the main section<br>
+    //   (where you can earn money!)
+    // `, {
+    //   hover_edges: true,
+    //   hover_rewards: true,
+    // }),
+    // text_block(`
+    //   You've got it! Now you're ready to play the game for real.
+    //   In the remaining ${config.trials.main.length} rounds, your
+    //   score will count towards your bonus. Specifically, you'll earn
+    //   <b>${bonus.describeScheme()}.</b> We'll start you off with ${bonus.initial}
+    //   points for free. Good luck!
+    // `),
     build_main(),
     {
       type: 'survey-text',
@@ -166,24 +166,14 @@ async function initializeExperiment() {
     }
   ];
 
-  if (location.pathname == '/testexperiment') {
-    const type = QUERY.get('type');
-    if (type) {
-      timeline = timeline.filter(t => t.type == type);
-    } else {
-      // // If we aren't filtering by a type, we'll cut down the number of trials per type at least.
-      // timeline = timeline.map(t => {
-      //   if (t.timeline) {
-      //     t.timeline = t.timeline.slice(0, 3);
-      //   }
-      //   return t;
-      // });
-    }
-    let skip = QUERY.get('skip');
-    if (skip != null) {
-      timeline = timeline.slice(skip);
-      console.log('timeline', timeline)
-    }
+  // const type = QUERY.get('type');
+  // if (type) {
+  //   timeline = timeline.filter(t => t.type == type);
+  // } else {
+  // }
+  let skip = QUERY.get('skip');
+  if (skip != null) {
+    timeline = timeline.slice(skip);
   }
 
   window.timeline = timeline
