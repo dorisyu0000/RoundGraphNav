@@ -4,6 +4,7 @@ import subprocess
 import pandas as pd
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 import hashlib
+import json
 
 # set environment parameters so that we use the remote database
 
@@ -25,7 +26,6 @@ env["DATABASE_URL"] = get_database()
 
 from psiturk.models import Participant  # must be imported after setting params
 
-
 class Anonymizer(object):
     def __init__(self):
         self.mapping = {}
@@ -37,7 +37,7 @@ class Anonymizer(object):
         return self.mapping[worker_id]
 
 
-def main(version, debug):
+def write_csvs(version, debug):
     ps = Participant.query.filter(Participant.codeversion == version).all()
     if not debug:
         ps = [p for p in ps if 'debug' not in p.uniqueid]
@@ -91,8 +91,37 @@ def main(version, debug):
         df.to_csv(dest, header=None, index=False)
 
     fp = os.path.join('data/human_raw', version, "identifiers.csv")
-    pd.Series(anonymize.mapping, name='wid').to_csv('.csv', index_label='workerid')
+    pd.Series(anonymize.mapping, name='wid').to_csv(fp, index_label='workerid')
 
+
+def reformat(version):
+    os.makedirs(f'data/human/{version}')
+
+    df = pd.read_csv("data/human_raw/1.14/trialdata.csv", header=None,
+        names = ["wid", "idx", "timestamp", "data"])
+
+    def parse_row(row):
+        data = json.loads(row.data)
+        data['wid'] = row.wid
+        return data
+
+    data = [parse_row(row) for row in df.itertuples()]
+
+
+
+
+    with open(f'data/human/{version}/trials.json', 'w') as f:
+        json.dump([d for d in data if d.get('trial_type') == 'main'], f)
+
+    df = pd.DataFrame(data).query('trial_type == "main"')
+    bonus = df.loc[df.groupby('wid').trial_index.idxmax()][['wid', 'current_bonus']].set_index('wid')
+    identifiers = pd.read_csv(f'data/human_raw/{version}/identifiers.csv').set_index('wid')
+    identifiers.join(bonus).to_csv('bonus.csv', index=False, header=False)
+
+
+def main(version, debug):
+    write_csvs(version, debug)
+    reformat(version)
 
 if __name__ == "__main__":
     parser = ArgumentParser(
