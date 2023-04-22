@@ -93,7 +93,7 @@ jsPsych.plugins['survey-text'] = (function() {
     }
     // add questions
     for (var i = 0; i < trial.questions.length; i++) {
-      html += '<div id="jspsych-survey-text-"'+i+'" class="jspsych-survey-text-question" style="margin: 2em 0em;">';
+      html += '<div id="jspsych-survey-text-"'+i+'" class="jspsych-survey-text-question" style="margin: 1em 0em;">';
       html += '<p class="jspsych-survey-text">' + trial.questions[i].prompt + '</p>';
       if(trial.questions[i].rows == 1){
         html += '<input type="text" name="#jspsych-survey-text-response-' + i + '" size="'+trial.questions[i].columns+'" value="'+trial.questions[i].value+'"></input>';
@@ -104,7 +104,7 @@ jsPsych.plugins['survey-text'] = (function() {
     }
 
     // add submit button
-    html += '<button id="jspsych-survey-text-next" class="jspsych-btn jspsych-survey-text">'+trial.button_label+'</button>';
+    html += '<button id="jspsych-survey-text-next" class="btn btn-purple">'+trial.button_label+'</button>';
 
     display_element.innerHTML = html;
 

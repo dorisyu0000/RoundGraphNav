@@ -125,7 +125,7 @@ export class CircleGraph {
   setupLogging() {
     this.data = {
       events: [],
-      trial: _.pick(this.options, 'practice', 'start', 'reward')
+      trial: _.pick(this.options, 'graph', 'n_steps', 'rewards', 'start', 'hover_edges', 'hover_rewards')
     }
     let start_time = Date.now()
     this.logger = function (event, info={}) {

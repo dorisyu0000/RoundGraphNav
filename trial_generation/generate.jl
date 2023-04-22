@@ -101,7 +101,7 @@ function make_trials(;k=8, rdist=discrete_uniform([-10, -5, 5, 10]))
     step1_rewards!(easy, [-10, -5, 10])
     easy_max = value(easy)
 
-    trial_sets = map(1:10) do _
+    trial_sets = map(1:5) do _
         rs = support(rdist)
         map(shuffle(repeat(2:length(rs), 2))) do i
             # problem = sample_problem(;k, rdist, graph, n_steps=1)
@@ -144,7 +144,6 @@ end
 
 parameters = (
     rewardGraphics = Dict("-10" => "🤡", "-5" => "📌", "5" => "🍫", "10" => "💰"),
-    n_steps = 3,
     hover_edges = true,
     hover_rewards = true,
     points_per_cent = 1,

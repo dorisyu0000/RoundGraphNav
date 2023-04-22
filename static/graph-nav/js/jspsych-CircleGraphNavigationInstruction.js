@@ -142,6 +142,11 @@ addPlugin('learn_rewards', async function learn_rewards(root, info) {
       message(`Lets try a few easy ones. Try to collect the best item!`)
       first = false
     } else {
+      message(`
+        Hmm... You didn't always collect the best item. Let's try again.<br>
+        Remember: ${describeRewards(info.rewardGraphics)}
+      `)
+      await button()
       message(`Try to collect the best item! We'll continue when you always pick the best one.`)
     }
     let n_correct = 0
@@ -159,18 +164,19 @@ addPlugin('learn_rewards', async function learn_rewards(root, info) {
       psiturk.recordTrialData(cg.data)
     }
     if (n_correct == trial_set.length) {
-      break
-    } else {
-      message(`
-        Hmm... You didn't always collect the best item. Let's try again.<br>
-        Remember: ${describeRewards(info.rewardGraphics)}
-      `)
+      message(`Great job! It looks like you've figured out which items are best.`)
       await button()
+      jsPsych.finishTrial({})
+      return
     }
   }
-  message(`Great job! It looks like you've figured out which items are best.`)
-  await button()
-  jsPsych.finishTrial({})
+  // exhausted all the trial sets!
+  message(`
+    <b>It seems like you are having a hard time understanding the game.
+    Please submit your assignment without a completion code and send
+    us a message on Prolific explaining what happened.</b>
+  `)
+  $('#cgi-msg').css('margin-top', 200)
 })
 
 addPlugin('practice', async function practice(root, trial) {

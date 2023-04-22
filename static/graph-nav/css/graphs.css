@@ -152,6 +152,7 @@
 }
 .GraphNavigation-currentEdge {
 /*  opacity: 1 !important;*/
+  transition: background-color 300ms;
   z-index: 1 !important;
 }
 
