@@ -137,7 +137,7 @@ submitHit = function() {
       });
     } else {
       console.log('GIVE UP');
-      $('#jspsych-target').html("<div class=\"alert alert-danger\">\n  <strong>Error!</strong>\n  We couldn't save your data! Please contact cocosci.turk@gmail.com to report\n  the error. Then click the button below.\n</div>\n<br><br>\n<button class='btn btn-primary btn-lg' id=\"resubmit\">I reported the error</button>");
+      $('#jspsych-target').html("<div class=\"alert alert-danger\">\n  <strong>Error!</strong>\n  We couldn't save your data! Please contact fredcallaway@gmail.com to report\n  the error. Then click the button below.\n</div>\n<br><br>\n<button class='btn btn-primary btn-lg' id=\"resubmit\">I reported the error</button>");
       return new Promise(function(resolve) {
         return $('#resubmit').click(function() {
           return resolve('gave up');
@@ -164,8 +164,8 @@ handleError = function(e) {
   psiturk.recordUnstructuredData('error', msg);
   psiturk.saveData();
   message = `<pre>\n  HitID: ${(typeof window.hitId !== "undefined" && window.hitId !== null ? window.hitId[0] : 'N/A')}\n  AssignId: ${(typeof window.assignId !== "undefined" && window.assignId !== null ? window.assignId : 'N/A')}\n  WorkerId: ${(typeof window.workerId !== "undefined" && window.workerId !== null ? window.workerId[0] : 'N/A')}\n\n  ${msg}\n</pre>`;
-  link = '<a href="mailto:cocosci.turk@gmail.com?subject=ERROR in experiment' + '&body=#{encodeURIComponent(message)}">Click here</a>';
-  $('#jspsych-target').html(markdown(`# The experiment encountered an error!\n\n${link} to report the error by email. Please describe at what point in the HIT the error\noccurred, and include the following\n\n${message}\n\nThen click the button below to submit the HIT.\nIf you have trouble submitting the HIT, please\ncontact <cocosci.turk@gmail.com>\n\n<button id="submit">Submit HIT</button>`));
+  link = '<a href="mailto:fredcallaway@gmail.com?subject=ERROR in experiment' + '&body=#{encodeURIComponent(message)}">Click here</a>';
+  $('#jspsych-target').html(markdown(`# The experiment encountered an error!\n\n${link} to report the error by email. Please describe at what point in the HIT the error\noccurred, and include the following\n\n${message}\n\nThen click the button below to submit the HIT.\nIf you have trouble submitting the HIT, please\ncontact <fredcallaway@gmail.com>\n\n<button id="submit">Submit HIT</button>`));
   return $('#submit').click(submitHit);
 };
 
