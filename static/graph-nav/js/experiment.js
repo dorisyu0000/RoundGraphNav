@@ -153,7 +153,7 @@ async function initializeExperiment() {
       questions: [
         {'prompt': 'Did you have any difficulty with the interface? Any odd (or "buggy") behavior?',
          'rows': 2, columns: 60},
-        {'prompt': 'Were any part of the instructions difficult to understand?',
+        {'prompt': 'Was any part of the instructions difficult to understand?',
          'rows': 2, columns: 60},
         {'prompt': 'Do you have any suggestions on how we can improve the instructions or interface?',
          'rows': 2, columns: 60},
@@ -161,7 +161,7 @@ async function initializeExperiment() {
          'rows': 2, columns: 60}
       ],
       on_start() {
-        psiturk.recordUnstructuredData('bonus', bonus.dollars);
+        psiturk.recordUnstructuredData('bonus', bonus.dollars());
       },
     }
   ];
