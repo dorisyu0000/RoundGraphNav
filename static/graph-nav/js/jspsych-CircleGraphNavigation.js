@@ -288,6 +288,7 @@ export class CircleGraph {
       stepsLeft -= 1;
       $("#GraphNavigation-steps").html(stepsLeft)
       if (termination(this, state) || stepsLeft == 0) {
+        this.logger('done')
         await sleep(500)
         $(".GraphNavigation-currentEdge").removeClass('GraphNavigation-currentEdge')
         if (options.leave_state) {
@@ -313,7 +314,6 @@ export class CircleGraph {
       await sleep(200);
       // await sleep(5)
     }
-    console.log('returning path', path)
     return path
   }
 
