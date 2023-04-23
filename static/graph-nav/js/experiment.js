@@ -38,36 +38,17 @@ async function initializeExperiment() {
 
   window.config = config
   const params = config.parameters
-  // params.show_steps = false
   params.show_points = false
 
   const bonus = new Bonus({points_per_cent: params.points_per_cent, initial: 50})
-  // window.bonus = bonus
-  // bonus.addPoints(10)
 
   params.graphRenderOptions = {
     onlyShowCurrentEdges: false,
     width: 800,
     height: 450,
     scaleEdgeFactor: 0.95,
-    // fixedXY: circleXY(params.graph.states.length)
     fixedXY: circleXY(8)
   };
-
-  // var instructions = {
-  //   type: 'CircleGraphNavigationInstruction',
-  //   ...params,
-  //   timeline: config.trials.instruction,
-  //   show_steps: false,
-  //   hover_edges: false,
-  //   hover_rewards: false,
-  //   n_steps: 10,
-  //   // trialsLength: 5,
-  //   // trialsLength: configuration.graph.ordering.navigation.length,
-  //   // ...configuration.graph.ordering.navigation_practice_len2[0],
-  //   // graphRenderOptions: {...graphRenderOptions, onlyShowCurrentEdges: false},
-  //   // onlyShowCurrentEdges,
-  // };
 
   function instruct_block(name) {
     if (!_.has(config.trials, name)) throw new Error(`${name} not in config.trials`)
@@ -79,6 +60,7 @@ async function initializeExperiment() {
       ...config.trials[name],
     }
   }
+
   function practice_block(name, message, options={}) {
     if (!_.has(config.trials, name)) throw new Error(`${name} not in config.trials`)
     return {
@@ -91,6 +73,7 @@ async function initializeExperiment() {
       timeline: config.trials[name],
     }
   }
+
   function text_block(message) {
     return {
       type: 'text',
@@ -106,7 +89,6 @@ async function initializeExperiment() {
       timeline: config.trials.main
     }
   }
-
 
   var timeline = [
     instruct_block('intro'),
@@ -166,11 +148,13 @@ async function initializeExperiment() {
     }
   ];
 
-  // const type = QUERY.get('type');
-  // if (type) {
-  //   timeline = timeline.filter(t => t.type == type);
-  // } else {
-  // }
+  const type = QUERY.get('type');
+  if (type) {
+    while (timeline[0].type != type) {
+      timeline.shift()
+      invariant(timeline.length > 0)
+    }
+  }
   let skip = QUERY.get('skip');
   if (skip != null) {
     timeline = timeline.slice(skip);
