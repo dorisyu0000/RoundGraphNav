@@ -146,7 +146,7 @@ parameters = (
     rewardGraphics = Dict("-10" => "🤡", "-5" => "📌", "5" => "🍫", "10" => "💰"),
     hover_edges = true,
     hover_rewards = true,
-    points_per_cent = 5,
+    points_per_cent = 10,
 )
 
 
