@@ -160,13 +160,14 @@ addPlugin('learn_rewards', async function learn_rewards(root, info) {
       n_correct += (cg.score == best)
 
       $(cg.wrapper).remove()
+      cg.data.trial_type = 'learn_rewards'
       jsPsych.data.write(cg.data);
       psiturk.recordTrialData(cg.data)
     }
     if (n_correct == trial_set.length) {
       message(`Great job! It looks like you've figured out which items are best.`)
       await button()
-      jsPsych.finishTrial({})
+      jsPsych.finishTrial({'trial_type': 'dummy', 'flag': 'dummy'})
       return
     }
   }
@@ -240,11 +241,7 @@ addPlugin('easy', async function easy(root, trial) {
     The number of moves for the current turn is shown after you click the start button.
   `)
   await button()
-
-
-
 })
-
 
 addPlugin('intro_hover', async function intro_hover(root, trial) {
   setup(root)
