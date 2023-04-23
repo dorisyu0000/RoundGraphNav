@@ -34,7 +34,7 @@ const QUERY = new URLSearchParams(location.search);
 async function initializeExperiment() {
   psiturk.recordUnstructuredData('browser', window.navigator.userAgent);
 
-  const config = await $.getJSON('static/json/test2.json');
+  const config = await $.getJSON(`static/json/config/${CONDITION+1}.json`);
 
   window.config = config
   const params = config.parameters

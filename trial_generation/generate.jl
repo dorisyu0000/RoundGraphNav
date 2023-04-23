@@ -90,7 +90,9 @@ end
 # %% --------
 discrete_uniform(v) = DiscreteNonParametric(v, ones(length(v)) / length(v))
 
-function make_trials(;k=8, rdist=discrete_uniform([-10, -5, 5, 10]))
+function make_trials(i; k=8, rdist=discrete_uniform([-10, -5, 5, 10]))
+    Random.seed!(i)
+
     graph = neighbor_list(random_regular_graph(k, 3))
 
     intro = sample_problem(;k, graph, n_steps=-1, rewards=zeros(k))
@@ -99,12 +101,10 @@ function make_trials(;k=8, rdist=discrete_uniform([-10, -5, 5, 10]))
     easy = sample_problem(;k, graph, n_steps=1, rewards=zeros(k))
     step1_rewards!(problem, rewards) = problem.rewards[graph[problem.start]] .= rewards
     step1_rewards!(easy, [-10, -5, 10])
-    easy_max = value(easy)
 
     trial_sets = map(1:5) do _
         rs = support(rdist)
         map(shuffle(repeat(2:length(rs), 2))) do i
-            # problem = sample_problem(;k, rdist, graph, n_steps=1)
             problem = sample_problem(;k, graph, n_steps=1, rewards=zeros(k))
             step1_rewards!(problem, shuffle([rs[i], rs[i-1], rand(rs[1:i-1])]))
             problem
@@ -126,7 +126,7 @@ function make_trials(;k=8, rdist=discrete_uniform([-10, -5, 5, 10]))
     intro_hover = sample_problem(;k, rdist, n_steps = -1)
     practice_hover = [sample_problem(;k, rdist, n_steps) for n_steps in shuffle(2:4)]
 
-    main = [sample_problem(;k, rdist, n_steps) for n_steps in shuffle(repeat(2:5, 5))]
+    main = [sample_problem(;k, rdist, n_steps) for n_steps in shuffle(repeat(2:5, 8))]
 
     (;
         intro,
@@ -146,13 +146,19 @@ parameters = (
     rewardGraphics = Dict("-10" => "🤡", "-5" => "📌", "5" => "🍫", "10" => "💰"),
     hover_edges = true,
     hover_rewards = true,
-    points_per_cent = 1,
+    points_per_cent = 5,
 )
 
-trials = make_trials()
-fp = "/Users/fred/heroku/graph-nav/static/json/test2.json"
-write(fp, json((;parameters, trials)))
 
-# %% --------
+subj_trials = make_trials.(1:30)
 
-mean(value.(trials.main)) * 2/5
+dest = "/Users/fred/heroku/graph-nav/static/json/config/"
+mkpath(dest)
+foreach(enumerate(subj_trials)) do (i, trials)
+    write("$dest/$i.json", json((;parameters, trials)))
+end
+
+map(subj_trials) do trials
+    (50 + sum(value.(trials.main))) / (parameters.points_per_cent * 100)
+end
+
