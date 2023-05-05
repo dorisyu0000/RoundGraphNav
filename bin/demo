@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+out=demos/$1
+rm -r $out
+mkdir -p $out/static/json/config/
+cp static/json/config/1.json $out/static/json/config/1.json
+parcel build --dist-dir $out --public-url "."
+mv $out/exp.template.html $out/index.html
+rsync -av --delete-after $out/ fredc@simcoe.lmi.net:~/www.fredcallaway.com/docs/expdemo/graphnav-$1/

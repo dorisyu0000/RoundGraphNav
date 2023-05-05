@@ -53,6 +53,7 @@ async function initializeExperiment() {
   function instruct_block(name) {
     if (!_.has(config.trials, name)) throw new Error(`${name} not in config.trials`)
     return {
+      name,
       ...params,
       type: name,
       hover_edges: false,
@@ -64,6 +65,7 @@ async function initializeExperiment() {
   function practice_block(name, message, options={}) {
     if (!_.has(config.trials, name)) throw new Error(`${name} not in config.trials`)
     return {
+      name,
       ...params,
       type: 'practice',
       hover_edges: false,
@@ -83,6 +85,7 @@ async function initializeExperiment() {
 
   function build_main(m) {
     return {
+      name: 'main',
       type: 'main',
       bonus,
       ...params,
@@ -148,9 +151,9 @@ async function initializeExperiment() {
     }
   ];
 
-  const type = QUERY.get('type');
-  if (type) {
-    while (timeline[0].type != type) {
+  const name = QUERY.get('name');
+  if (name) {
+    while (timeline[0].name != name) {
       timeline.shift()
       invariant(timeline.length > 0)
     }
