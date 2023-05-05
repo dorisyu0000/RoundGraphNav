@@ -81,7 +81,7 @@ def write_csvs(version, debug):
 
         dest = os.path.join('data/human_raw', version, "{}.csv".format(os.path.splitext(filename)[0]))
         if not os.path.exists(os.path.dirname(dest)):
-            os.makedirs(os.path.dirname(dest))
+            os.makedirs(os.path.dirname(dest), exist_ok=True)
         with open(dest, "w") as fh:
             fh.write(data)
 
@@ -95,9 +95,9 @@ def write_csvs(version, debug):
 
 
 def reformat(version):
-    os.makedirs(f'data/human/{version}')
+    os.makedirs(f'data/human/{version}', exist_ok=True)
 
-    df = pd.read_csv("data/human_raw/1.14/trialdata.csv", header=None,
+    df = pd.read_csv(f"data/human_raw/{version}/trialdata.csv", header=None,
         names = ["wid", "idx", "timestamp", "data"])
 
     def parse_row(row):
@@ -116,7 +116,7 @@ def reformat(version):
     df = pd.DataFrame(data).query('trial_type == "main"')
     bonus = df.loc[df.groupby('wid').trial_index.idxmax()][['wid', 'current_bonus']].set_index('wid')
     identifiers = pd.read_csv(f'data/human_raw/{version}/identifiers.csv').set_index('wid')
-    identifiers.join(bonus).to_csv('bonus.csv', index=False, header=False)
+    identifiers.join(bonus).drop_na().to_csv('bonus.csv', index=False, header=False)
 
 
 def main(version, debug):

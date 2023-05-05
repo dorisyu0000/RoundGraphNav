@@ -1,3 +1,9 @@
+---
+title: "Consent Form for IRB-FY2023-7478"
+footer-right: "\\quad"
+header-right: "Updated on May 4, 2023"
+---
+
 You have been invited to take part in a research study to learn more about the cognitive mechanisms underlying memory, value-based learning, and decision-making. This study will be conducted by Marcelo Mattar, FAS - Psychology, Arts & Science, New York University
 
 <!-- ##### Study procedures -->
@@ -6,7 +12,7 @@ If you agree to be in this study, you  will be presented repeatedly with images 
 
 The amount of time to complete the study may vary between 5-90 minutes, depending on the experimental condition. A more precise time estimate is provided on the Prolific flyer. There are no known risks associated with your participation in this research beyond those of everyday life.
 
-For your participation, you will receive the base payment advertised on the Prolific flyer. You may additionally receive a bonus payment based on the decisions you make in the experiment. The base payment and bonus are determined such that a median (i.e., typical) wage is US$12 per hour.
+For your participation, you will receive the base payment advertised on the Prolific flyer. You may additionally receive a bonus payment based on the decisions you make in the experiment (the maximum bonus is also given on the Prolific flyer). The base payment and bonus are determined such that a median (i.e., typical) wage is US$12 per hour.
 
 If for any reason you do not complete the study (e.g. technical difficulties, or a desire to stop), you will receive a pro-rated payment based on the ammount of the experiment that you completed. Importantly, in the event that you do not finish the study, we will only be able to provide partial compensation if you send a message through Prolific.
 
