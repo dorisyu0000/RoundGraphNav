@@ -110,13 +110,16 @@ async function initializeExperiment() {
       So far we've been playing with one set of connections (lines).<br>
       But in the real game, the connections change on every round.
     `),
-    instruct_block('intro_hover'),
+    instruct_block('intro_hover', {
+      hover_edges: true,
+      hover_rewards: params.hover_rewards,
+    }),
     practice_block('practice_hover', `
       Try three more practice games. Then we can begin the main section<br>
       (where you can earn money!)
     `, {
       hover_edges: true,
-      hover_rewards: true,
+      hover_rewards: params.hover_rewards,
     }),
     text_block(`
       You've got it! Now you're ready to play the game for real.

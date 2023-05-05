@@ -248,7 +248,8 @@ addPlugin('intro_hover', async function intro_hover(root, trial) {
   message("Just one more thing...")
   await button()
 
-  message("So far we've been showing you all the items and connections.")
+  message("So far we've been showing you all the connections.")
+  // message("So far we've been showing you all the items and connections.")
   cg = new CircleGraph($("#cgi-root"), trial);
   cg.showGraph()
   cg.setCurrentState(trial.start)
@@ -256,7 +257,7 @@ addPlugin('intro_hover', async function intro_hover(root, trial) {
 
   message("But in the real game, they're hidden!")
   await sleep(1000)
-  $(".State > img").animate({'opacity': 0}, 1000)
+  // $(".State > img").animate({'opacity': 0}, 1000)
   $(".GraphNavigation-edge").animate({'opacity': 0}, 1000)
   await sleep(1300)
 
@@ -266,9 +267,9 @@ addPlugin('intro_hover', async function intro_hover(root, trial) {
     You can reveal the item and connections at a location by hovering over it.<br>
     <b>Hover over every location to continue.</b>
   `)
-  cg.el.classList.add('hideStates')
+  // cg.el.classList.add('hideStates')
   cg.el.classList.add('hideEdges')
-  $(".State > img").css({'opacity': ''})
+  // $(".State > img").css({'opacity': ''})
   $(".GraphNavigation-edge").css({'opacity': ''})
   cg.setupMouseTracking()
 
@@ -303,7 +304,8 @@ addPlugin('intro_hover', async function intro_hover(root, trial) {
     You still move around by clicking on a location.<br>
     <b>Collect all the items to continue</b>.
   `)
-  cg.options.hover_edges = cg.options.hover_rewards = true
+  cg.options.hover_edges = true
+  cg.options.hover_rewards = false
   await cg.navigate({
     n_steps: -1,
     termination: (cg, s) => !_.some(cg.rewards)
