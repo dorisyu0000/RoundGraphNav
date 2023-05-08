@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!env/bin/python
 import os
 import subprocess
 import pandas as pd
@@ -106,9 +106,6 @@ def reformat(version):
         return data
 
     data = [parse_row(row) for row in df.itertuples()]
-
-
-
 
     with open(f'data/human/{version}/trials.json', 'w') as f:
         json.dump([d for d in data if d.get('trial_type') == 'main'], f)

@@ -7,3 +7,4 @@ cp static/json/config/1.json $out/static/json/config/1.json
 parcel build --dist-dir $out --public-url "."
 mv $out/exp.template.html $out/index.html
 rsync -av --delete-after $out/ fredc@simcoe.lmi.net:~/www.fredcallaway.com/docs/expdemo/graphnav-$1/
+echo https://www.fredcallaway.com/expdemo/graphnav-$1
