@@ -204,67 +204,20 @@
   background-color: #ccc;
 }
 
-.GraphNavigation-key {
+.GraphNavigation-arrow {
+  z-index: 10;
   position: absolute;
-  border-radius: 5px;
-  border: 1px solid black;
-  width: 18pt;
-  height: 20pt;
-  color: white;
-  background-color: black;
-  text-align: center;
-  font-size: 12pt;
+
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 10px solid black;
 
   opacity: 0;
-  z-index: 2;
 }
 .GraphNavigation-currentKey {
   opacity: 1;
-}
-
-.GraphNavigation-key-49, /* for "1" */
-.GraphNavigation-currentEdge-49 {
-  background-color: #1f77b4;
-}
-
-.GraphNavigation-key-50, /* for "2" */
-.GraphNavigation-currentEdge-50 {
-  background-color: #ff7f0e;
-}
-
-.GraphNavigation-key-51, /* for "3" */
-.GraphNavigation-currentEdge-51 {
-  background-color: #2ca02c;
-}
-
-.GraphNavigation-key-52, /* for "4" */
-.GraphNavigation-currentEdge-52 {
-  background-color: #d62728;
-}
-
-.GraphNavigation-key-53, /* for "5" */
-.GraphNavigation-currentEdge-53 {
-  background-color: #9467bd;
-}
-
-.GraphNavigation-key-54, /* for "6" */
-.GraphNavigation-currentEdge-54 {
-  background-color: #8c564b;
-}
-
-.GraphNavigation-key-55, /* for "7" */
-.GraphNavigation-currentEdge-55 {
-  background-color: #e377c2;
-}
-
-.GraphNavigation-key-56, /* for "8" */
-.GraphNavigation-currentEdge-56 {
-  background-color: #7f7f7f;
-}
-
-.GraphNavigation-key-57, /* for "9" */
-.GraphNavigation-currentEdge-57 {
-  background-color: #bcbd22;
 }
 
 .GraphNavigation-instruction {

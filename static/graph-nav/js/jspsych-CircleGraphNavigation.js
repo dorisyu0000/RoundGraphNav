@@ -461,6 +461,23 @@ function renderCircleGraph(graph, gfx, goal, options) {
     });
   });
 
+  function addKey(state, successor, norm, rot) {
+      const [x, y] = xy.scaled[state];
+      const [sx, sy] = xy.scaled[successor];
+      keys.push(`
+        <div class="GraphNavigation-arrow GraphNavigation-arrow-${state}-${successor}"
+        style="
+        transform-origin: center;
+        transform:
+          translate(${sx-10}px, ${sy-4}px)
+          rotate(${rot}rad)
+          translate(-40px)
+          rotate(90deg)
+        ;">
+        </div>
+      `);
+    }
+
   // HACK for the score animation
   let shadowStates = states.map(state => {
     return state
@@ -489,8 +506,8 @@ function renderCircleGraph(graph, gfx, goal, options) {
       `);
 
       // We also add the key labels here
-      // addKey(successorKeys[state][idx], state, successor, e.norm);
-      // addKey(successorKeys[successor][graph.successors(successor).indexOf(state)], successor, state, e.norm);
+      addKey(state, successor, e.norm, e.rot);
+      // addKey(successor, state, e.norm);
     });
   }
 
@@ -551,8 +568,8 @@ function setCurrentState(display_element, graph, state, options) {
   }
 
   if (options.onlyShowCurrentEdges) {
-    // for (const el of display_element.querySelectorAll('.GraphNavigation-edge,.GraphNavigation-key')) {
-    for (const el of display_element.querySelectorAll('.GraphNavigation-edge')) {
+    for (const el of display_element.querySelectorAll('.GraphNavigation-edge,.GraphNavigation-arrow')) {
+    // for (const el of display_element.querySelectorAll('.GraphNavigation-edge')) {
       el.style.opacity = 0;
     }
   }
@@ -571,12 +588,11 @@ function setCurrentState(display_element, graph, state, options) {
     }
 
     // Now setting active keys
-    // el = display_element.querySelector(`.GraphNavigation-key-${state}-${successor}`);
-    // el.classList.add('GraphNavigation-currentKey');
-    // el.classList.add(`GraphNavigation-currentKey-${keyForCSSClass(successorKeys[idx])}`);
-    // if (options.onlyShowCurrentEdges) {
-    //   el.style.opacity = 1;
-    // }
+    el = display_element.querySelector(`.GraphNavigation-arrow-${state}-${successor}`);
+    el.classList.add('GraphNavigation-currentKey');
+    if (options.onlyShowCurrentEdges) {
+      el.style.opacity = 1;
+    }
   });
 }
 

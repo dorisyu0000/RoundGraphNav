@@ -35,6 +35,12 @@ async function initializeExperiment() {
   psiturk.recordUnstructuredData('browser', window.navigator.userAgent);
 
   const config = await $.getJSON(`static/json/config/${CONDITION+1}.json`);
+  config.trials.test = {
+    "graph":[[1, 2], [3, 4], [5, 6], [7], [], [], [], []],
+    "rewards":[0,0,0,0,0,0,0,0],
+    "start":0,
+    "n_steps":-1
+  }
 
   window.config = config
   const params = config.parameters
@@ -46,7 +52,7 @@ async function initializeExperiment() {
     onlyShowCurrentEdges: false,
     width: 800,
     height: 450,
-    scaleEdgeFactor: 0.95,
+    scaleEdgeFactor: 1,
     fixedXY: circleXY(8)
   };
 
@@ -94,6 +100,7 @@ async function initializeExperiment() {
   }
 
   var timeline = [
+    instruct_block('test'),
     instruct_block('intro'),
     instruct_block('collect_all'),
     instruct_block('learn_rewards'),

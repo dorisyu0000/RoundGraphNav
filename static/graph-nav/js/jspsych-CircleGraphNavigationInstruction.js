@@ -31,6 +31,20 @@ function setup(root) {
   $('<div>', {id: "cgi-root"}).appendTo(root)
 }
 
+addPlugin('test', async function intro(root, trial) {
+    setup(root)
+    message(trial.message)
+    // if (trial.first) await button()
+
+    cg = new CircleGraph($("#cgi-root"), trial);
+    console.log(trial)
+    cg.showGraph()
+    await cg.navigate()
+    $(root).empty()
+    jsPsych.finishTrial(cg.data)
+})
+
+
 addPlugin('intro', async function intro(root, trial) {
   trial = {
     ...trial,
