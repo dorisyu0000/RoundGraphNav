@@ -154,14 +154,17 @@ export class CircleGraph {
         this.logger('mouseenter', {state})
         el.classList.add('is-visible');
         for (const successor of this.graph.successors(state)) {
-          queryEdge(this.el, state, successor).classList.add('is-visible');
+          $(`.GraphNavigation-edge-${state}-${successor}`).addClass('is-visible')
+          console.log('this', $(`.GraphNavigation-edge-${state}-${successor}`))
+          // queryEdge(this.el, state, successor).classList.add('is-visible');
         }
       });
       el.addEventListener('mouseleave', (e) => {
         this.logger('mouseleave', {state})
         el.classList.remove('is-visible');
         for (const successor of this.graph.successors(state)) {
-          queryEdge(this.el, state, successor).classList.remove('is-visible');
+          $(`.GraphNavigation-edge-${state}-${successor}`).removeClass('is-visible')
+          // queryEdge(this.el, state, successor).classList.remove('is-visible');
         }
       });
     }
@@ -461,11 +464,11 @@ function renderCircleGraph(graph, gfx, goal, options) {
     });
   });
 
-  function addKey(state, successor, norm, rot) {
+  function addArrow(state, successor, norm, rot) {
       const [x, y] = xy.scaled[state];
       const [sx, sy] = xy.scaled[successor];
-      keys.push(`
-        <div class="GraphNavigation-arrow GraphNavigation-arrow-${state}-${successor}"
+      arrows.push(`
+        <div class="GraphNavigation-arrow GraphNavigation-edge-${state}-${successor}"
         style="
         transform-origin: center;
         transform:
@@ -495,7 +498,7 @@ function renderCircleGraph(graph, gfx, goal, options) {
   window.shadowStates = shadowStates
 
   const succ = [];
-  const keys = [];
+  const arrows = [];
   for (const state of graph.states) {
     let [x, y] = xy.scaled[state];
     graph.successors(state).forEach((successor, idx) => {
@@ -508,19 +511,19 @@ function renderCircleGraph(graph, gfx, goal, options) {
       succ.push(`
         <div class="GraphNavigation-edge GraphNavigation-edge-${state}-${successor}" style="
         width: ${e.norm}px;
-        transform: translate(${x}px,${y}px) rotate(${e.rot}rad);
+        transform: translate(${x}px,${y-1}px) rotate(${e.rot}rad);
         "></div>
       `);
 
       // We also add the key labels here
-      addKey(state, successor, e.norm, e.rot);
-      // addKey(successor, state, e.norm);
+      addArrow(state, successor, e.norm, e.rot);
+      // addArrow(successor, state, e.norm);
     });
   }
 
   return `
   <div class="GraphNavigation withGraphic" style="width: ${width}px; height: ${height}px;">
-    ${keys.join('')}
+    ${arrows.join('')}
     ${succ.join('')}
     ${shadowStates.join('')}
     ${states.join('')}
@@ -533,11 +536,7 @@ export function queryEdge(root, state, successor) {
   Returns the edge associated with nodes `state` and `successor`. Since we only
   have undirected graphs, they share an edge, so some logic is needed to find it.
   */
-  if (state < successor) {
-    return root.querySelector(`.GraphNavigation-edge-${state}-${successor}`);
-  } else {
-    return root.querySelector(`.GraphNavigation-edge-${successor}-${state}`);
-  }
+  return root.querySelector(`.GraphNavigation-edge-${state}-${successor}`);
 }
 
 function setCurrentState(display_element, graph, state, options) {
@@ -595,11 +594,11 @@ function setCurrentState(display_element, graph, state, options) {
     }
 
     // Now setting active keys
-    el = display_element.querySelector(`.GraphNavigation-arrow-${state}-${successor}`);
-    el.classList.add('GraphNavigation-currentKey');
-    if (options.onlyShowCurrentEdges) {
-      el.style.opacity = 1;
-    }
+    // el = display_element.querySelector(`.GraphNavigation-arrow-${state}-${successor}`);
+    // el.classList.add('GraphNavigation-currentKey');
+    // if (options.onlyShowCurrentEdges) {
+    //   el.style.opacity = 1;
+    // }
   });
 }
 

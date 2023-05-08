@@ -34,6 +34,8 @@ function setup(root) {
 addPlugin('test', async function intro(root, trial) {
     setup(root)
     message(trial.message)
+    trial.hover_edges = true
+    trial.hover_rewards = true
     // if (trial.first) await button()
 
     cg = new CircleGraph($("#cgi-root"), trial);

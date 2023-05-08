@@ -37,7 +37,7 @@ async function initializeExperiment() {
   const config = await $.getJSON(`static/json/config/${CONDITION+1}.json`);
   config.trials.test = {
     "graph":[[1, 2], [3, 4], [5, 6], [7], [], [], [], []],
-    "rewards":[0,0,0,0,0,0,0,0],
+    "rewards":[5,5,5,5,5,5,5,5],
     "start":0,
     "n_steps":-1
   }

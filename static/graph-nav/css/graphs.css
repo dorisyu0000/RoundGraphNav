@@ -143,6 +143,7 @@
   transform-origin: left center;
   position: absolute;
   background-color: black;
+/*  z-index: 10;*/
 /*  transition: opacity 300ms;*/
 }
 .GraphNavigation-edge.is-faded {
@@ -220,10 +221,10 @@
   border-right: 8px solid transparent;
   border-bottom: 8px solid black;*/
 
-/*  opacity: 0;*/
+  opacity: 0;
 }
 .GraphNavigation-currentKey {
-  opacity: 1;
+/*  opacity: 1;*/
 }
 
 .GraphNavigation-instruction {
@@ -269,8 +270,13 @@
   transition: opacity 100ms;
   opacity: 0;
 }
-.GraphNavigation.hideEdges .GraphNavigation-edge.is-visible {
-  opacity: 1;
+.GraphNavigation.hideEdges .GraphNavigation-arrow {
+  transition: opacity 100ms;
+  opacity: 0;
+}
+
+.is-visible {
+  opacity: 1 !important;
 }
 
 .GraphNavigation-terminated {
