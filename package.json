@@ -11,7 +11,7 @@
   "scripts": {
     "build": "parcel build --no-scope-hoist --public-url /dist",
     "build_local": "parcel build --public-url /dist",
-    "watch": "parcel watch --public-url /dist"
+    "watch": "parcel watch --public-url /dist --no-hmr"
   },
   "repository": {
     "type": "git",
