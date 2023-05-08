@@ -186,7 +186,7 @@ async function initializeExperiment() {
     auto_update_progress_bar: false,
     auto_preload: false,
     exclusions: {
-      min_width: 800,
+      // min_width: 800,
       // min_height: 600
     },
   });

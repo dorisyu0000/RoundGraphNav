@@ -469,11 +469,18 @@ function renderCircleGraph(graph, gfx, goal, options) {
         style="
         transform-origin: center;
         transform:
-          translate(${sx-10}px, ${sy-4}px)
+          translate(${sx-35}px, ${sy-35}px)
           rotate(${rot}rad)
-          translate(-40px)
+          translate(-30px)
           rotate(90deg)
         ;">
+        <svg height="70" width="70" style="display: block; ">
+            <polygon points="
+            35  , 38
+            29  , 50
+            41 , 50
+          " class="triangle" />
+        </svg>
         </div>
       `);
     }
