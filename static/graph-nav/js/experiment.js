@@ -61,6 +61,7 @@ async function initializeExperiment() {
     if (!_.has(config.trials, name)) throw new Error(`${name} not in config.trials`)
     return {
       name,
+      bonus,
       ...params,
       type: name,
       hover_edges: false,
@@ -105,18 +106,18 @@ async function initializeExperiment() {
     instruct_block('intro'),
     instruct_block('collect_all'),
     instruct_block('learn_rewards'),
-    practice_block('move2',`
-      In the real game, you get to move more than once. The number of moves
-      for the current round is shown after you click the start button. Give
-      it a shot!
-    `),
-    instruct_block('backstep'),
+    // practice_block('move2',`
+    //   In the real game, you get to move more than once. The number of moves
+    //   for the current round is shown after you click the start button. Give
+    //   it a shot!
+    // `),
+    // instruct_block('backstep'),
+    // practice_block('practice_revealed', `
+    //   Let's try a few practice rounds with more moves.
+    // `),
+    instruct_block('vary_transition'),
     practice_block('practice_revealed', `
-      Let's try a few practice rounds with more moves.
-    `),
-    practice_block('vary_transition', `
-      So far we've been playing with one set of connections (lines).<br>
-      But in the real game, the connections change on every round.
+      Great! Let's try a few more practice rounds.
     `),
     instruct_block('intro_hover', {
       hover_edges: true,

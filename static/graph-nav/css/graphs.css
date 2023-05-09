@@ -1,5 +1,6 @@
 /* Graph-related style */
 
+
 #cgi-msg b {
   font-weight: 400;
   color: #7946C3;
@@ -186,6 +187,10 @@
 
   background-image: none;
   background-color: white;
+}
+.GraphNavigation.withGraphic .GraphNavigation-State-Highlighted {
+  border-color: #8437EE;
+  background-color: #EDE0FF;
 }
 .GraphNavigation.withGraphic .GraphNavigation-current {
   background-image: none;

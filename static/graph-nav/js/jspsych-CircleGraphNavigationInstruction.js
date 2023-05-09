@@ -59,14 +59,15 @@ addPlugin('intro', async function intro(root, trial) {
   cg.setCurrentState(trial.start)
   await button()
 
-  message(`You can move between locations that are connected by a line.`)
-  $(cg.el).addClass('GraphNavigation-highlight-current-edge')
-  await button()
-  $(cg.el).removeClass('GraphNavigation-highlight-current-edge')
+  message(`You can move by clicking on a location that has an arrow pointing<br>from your current location. Try it now!`)
+  let next_states = cg.graph.successors(trial.start)
+  for (const s of next_states) {
+    $(`.GraphNavigation-State-${s}`).addClass('GraphNavigation-State-Highlighted')
+  }
 
-  message(`You move to a location by clicking on it. Try it now!`)
   console.log('cg.graph', cg.graph)
   await cg.navigate({n_steps: 1, leave_state: true})
+  $(`.GraphNavigation-State`).removeClass('GraphNavigation-State-Highlighted')
 
   message(`
     The goal of the game is to earn points by collecting items from the board.<br>
@@ -84,7 +85,8 @@ addPlugin('intro', async function intro(root, trial) {
   await button()
 
   message(`
-    In the non-practice games, those points will become a cash bonus!
+    In the non-practice games, those points will become a cash bonus!<br>
+    (${trial.bonus.describeScheme()})
   `)
   await button()
 
@@ -129,7 +131,6 @@ addPlugin('collect_all', async function collect_all(root, trial) {
   `)
   let cg = new CircleGraph($("#cgi-root"), trial);
   cg.showGraph(trial)
-  // await cg.showStartScreen(trial)
   await cg.navigate({
     leave_open: true,
     termination: (cg, s) => !_.some(cg.rewards)
@@ -208,9 +209,6 @@ addPlugin('backstep', async function backstep(root, trial) {
   setup(root)
   message("Keep in mind: You can always move back to your previous location.")
 
-  // if (trial.first) await button()
-  // await cg.showStartScreen(trial)
-
   while (true) {
     let cg = new CircleGraph($("#cgi-root"), trial);
     await cg.showGraph()
@@ -255,6 +253,36 @@ addPlugin('easy', async function easy(root, trial) {
   await button()
 })
 
+addPlugin('vary_transition', async function vary_transition(root, trial) {
+  setup(root)
+  message(`
+    So far we've been playing with one set of connections (the arrows).<br>
+    But in the real game, the connections change on every round.
+  `)
+  cg = new CircleGraph($("#cgi-root"), trial);
+  cg.showGraph()
+  cg.setCurrentState(trial.start)
+  await button()
+
+  message(`
+    When you get to a location with no outgoing connections, the round ends.<br>
+  `)
+  let terminal = _.keys(_.pickBy(cg.graph._adjacency, _.isEmpty))
+  for (const s of terminal) {
+    $(`.GraphNavigation-State-${s}`).addClass('GraphNavigation-State-Highlighted')
+  }
+  await button()
+
+  message(`
+    Try to make as many points as you can!
+  `)
+  await cg.navigate()
+  $(root).empty()
+  jsPsych.finishTrial(cg.data)
+})
+
+
+
 addPlugin('intro_hover', async function intro_hover(root, trial) {
   setup(root)
   message("Just one more thing...")
@@ -268,21 +296,23 @@ addPlugin('intro_hover', async function intro_hover(root, trial) {
   await button()
 
   message("But in the real game, they're hidden!")
-  await sleep(1000)
+  await sleep(500)
   // $(".State > img").animate({'opacity': 0}, 1000)
   $(".GraphNavigation-edge").animate({'opacity': 0}, 1000)
+  $(".GraphNavigation-arrow").animate({'opacity': 0}, 1000)
   await sleep(1300)
 
   await button()
 
   message(`
     You can reveal the item and connections at a location by hovering over it.<br>
-    <b>Hover over every location to continue.</b>
+    Hover over every location to continue.
   `)
   // cg.el.classList.add('hideStates')
   cg.el.classList.add('hideEdges')
   // $(".State > img").css({'opacity': ''})
   $(".GraphNavigation-edge").css({'opacity': ''})
+  $(".GraphNavigation-arrow").css({'opacity': ''})
   cg.setupMouseTracking()
 
   let {promise, resolve} = makePromise();
@@ -314,15 +344,11 @@ addPlugin('intro_hover', async function intro_hover(root, trial) {
 
   message(`
     You still move around by clicking on a location.<br>
-    <b>Collect all the items to continue</b>.
+    Try to make as many points as you can!
   `)
   cg.options.hover_edges = true
   cg.options.hover_rewards = false
-  await cg.navigate({
-    n_steps: -1,
-    termination: (cg, s) => !_.some(cg.rewards)
-  })
-
+  await cg.navigate()
   $(root).empty()
   jsPsych.finishTrial(cg.data)
 })
