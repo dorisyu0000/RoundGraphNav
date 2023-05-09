@@ -155,8 +155,9 @@ export class CircleGraph {
         el.classList.add('is-visible');
         for (const successor of this.graph.successors(state)) {
           $(`.GraphNavigation-edge-${state}-${successor}`).addClass('is-visible')
-          console.log('this', $(`.GraphNavigation-edge-${state}-${successor}`))
-          // queryEdge(this.el, state, successor).classList.add('is-visible');
+        }
+        for (const pred of this.graph.predecessors(state)) {
+          $(`.GraphNavigation-edge-${pred}-${state}`).addClass('is-visible')
         }
       });
       el.addEventListener('mouseleave', (e) => {
@@ -164,7 +165,9 @@ export class CircleGraph {
         el.classList.remove('is-visible');
         for (const successor of this.graph.successors(state)) {
           $(`.GraphNavigation-edge-${state}-${successor}`).removeClass('is-visible')
-          // queryEdge(this.el, state, successor).classList.remove('is-visible');
+        }
+        for (const pred of this.graph.predecessors(state)) {
+          $(`.GraphNavigation-edge-${pred}-${state}`).removeClass('is-visible')
         }
       });
     }
@@ -271,7 +274,9 @@ export class CircleGraph {
       this.setCurrentState(this.options.start)
     }
     let goal = options.goal ?? this.options.goal
-    const termination = options.termination || ((cg, state) => state == goal);
+    const termination = options.termination || ((cg, state) => {
+      return (this.graph.successors(state).length == 0) || state == goal
+    });
     let stepsLeft = options.n_steps ?? this.options.n_steps;
 
     $("#GraphNavigation-steps").html(stepsLeft)
@@ -502,9 +507,9 @@ function renderCircleGraph(graph, gfx, goal, options) {
   for (const state of graph.states) {
     let [x, y] = xy.scaled[state];
     graph.successors(state).forEach((successor, idx) => {
-      if (state >= successor) {
-        return;
-      }
+      // if (state >= successor) {
+      //   return;
+      // }
       const e = xy.edge(state, successor);
       // const opacity = options.edgeShow(state, successor) ? 1 : 0;
       // opacity: ${opacity};
@@ -624,6 +629,7 @@ function renderKeyInstruction(keys) {
 }
 
 addPlugin('main', trialErrorHandling(async function main(root, trial) {
+  trial.n_steps = -1;
   cg = new CircleGraph($(root), trial);
   await cg.showStartScreen(trial)
   await cg.navigate()

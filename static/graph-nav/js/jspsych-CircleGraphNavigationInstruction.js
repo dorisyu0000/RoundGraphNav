@@ -48,10 +48,6 @@ addPlugin('test', async function intro(root, trial) {
 
 
 addPlugin('intro', async function intro(root, trial) {
-  trial = {
-    ...trial,
-    rewards: Array(8).fill(0)
-  }
   setup(root)
   let cg = new CircleGraph($("#cgi-root"), trial);
   cg.showGraph()

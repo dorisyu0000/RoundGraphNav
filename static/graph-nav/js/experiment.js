@@ -45,15 +45,16 @@ async function initializeExperiment() {
   window.config = config
   const params = config.parameters
   params.show_points = false
+  // params.hover_edges = false
 
   const bonus = new Bonus({points_per_cent: params.points_per_cent, initial: 50})
 
   params.graphRenderOptions = {
     onlyShowCurrentEdges: false,
-    width: 800,
-    height: 450,
+    width: 700,
+    height: 600,
     scaleEdgeFactor: 1,
-    fixedXY: circleXY(8)
+    fixedXY: circleXY(10)
   };
 
   function instruct_block(name) {
@@ -100,7 +101,7 @@ async function initializeExperiment() {
   }
 
   var timeline = [
-    instruct_block('test'),
+    // instruct_block('test'),
     instruct_block('intro'),
     instruct_block('collect_all'),
     instruct_block('learn_rewards'),

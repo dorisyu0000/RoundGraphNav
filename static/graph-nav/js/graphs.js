@@ -70,6 +70,10 @@ export class Graph {
     return this._adjacency[state];
   }
 
+  predecessors(state) {
+    return this.states.filter(s => _.contains(this.successors(s), state))
+  }
+
   shuffleSuccessors() {
     /*
     Modifies the graph, shuffling successors.

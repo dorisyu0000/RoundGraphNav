@@ -8,7 +8,6 @@ import jsPsych from '../lib/jspsych-exported.js';
 var CONDITION, DEBUG, LOCAL, LOG_DEBUG, handleError, psiturk, saveData, startExperiment, submitHit;
 
 DEBUG = false;
-
 LOCAL = false;
 
 if (window.mode === "{{ mode }}") {
