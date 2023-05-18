@@ -113,7 +113,7 @@ def reformat(version):
     df = pd.DataFrame(data).query('trial_type == "main"')
     bonus = df.loc[df.groupby('wid').trial_index.idxmax()][['wid', 'current_bonus']].set_index('wid')
     identifiers = pd.read_csv(f'data/human_raw/{version}/identifiers.csv').set_index('wid')
-    identifiers.join(bonus).drop_na().to_csv('bonus.csv', index=False, header=False)
+    identifiers.join(bonus).dropna().to_csv('bonus.csv', index=False, header=False)
 
 
 def main(version, debug):
