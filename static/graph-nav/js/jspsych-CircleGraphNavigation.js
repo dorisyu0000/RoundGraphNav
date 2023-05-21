@@ -5,6 +5,9 @@ import $ from '../../lib/jquery-min.js';
 import jsPsych from '../../lib/jspsych-exported.js';
 import {bfs} from './graphs.js';
 
+import webgazer from '../../../node_modules/webgazer'
+// window.webgazer = webgazer
+
 const BLOCK_SIZE = 100;
 window.$ = $
 
@@ -63,6 +66,10 @@ export class CircleGraph {
 
     // Making sure it is easy to clean up event listeners...
     this.cancellables = [];
+
+    this.data = {
+      trial: _.pick(this.options, 'graph', 'n_steps', 'rewards', 'start', 'hover_edges', 'hover_rewards')
+    }
     this.setupLogging()
   }
 
@@ -123,17 +130,13 @@ export class CircleGraph {
   }
 
   setupLogging() {
-    this.data = {
-      events: [],
-      trial: _.pick(this.options, 'graph', 'n_steps', 'rewards', 'start', 'hover_edges', 'hover_rewards')
-    }
-    let start_time = Date.now()
+    this.data.events = []
     this.logger = function (event, info={}) {
       if (this.logger_callback) this.logger_callback(event, info)
       if (!event.startsWith('mouse')) console.log(event, info)
       // console.log(event, info)
       this.data.events.push({
-        time: Date.now() - start_time,
+        time: Date.now(),
         event,
         ...info
       });
@@ -171,6 +174,32 @@ export class CircleGraph {
         }
       });
     }
+  }
+
+  setupEyeTracking() {
+    return new Promise((resolve, reject) => {
+
+      this.data.webgazer = []
+      webgazer.begin()
+      webgazer.setGazeListener(data => {
+        console.log(data)
+        // this.data.webgazer.push(data)
+      }).begin();
+      resolve()
+
+    //   GazeCloudAPI.StartEyeTracking()
+    //   data.gaze_cloud = []
+    //   GazeCloudAPI.OnResult = function (d) {
+    //     data.gaze_cloud.push(d)
+    //   }
+    //   GazeCloudAPI.OnCalibrationComplete = function(){
+    //     resolve()
+    //   }
+    //   GazeCloudAPI.OnCamDenied = function(){
+    //     reject('camera access denied')
+    //   }
+    //   GazeCloudAPI.OnError = function(msg){ console.log('err: ' + msg) }
+    })
   }
 
   cancel() {

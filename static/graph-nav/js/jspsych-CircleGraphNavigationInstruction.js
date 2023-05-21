@@ -33,16 +33,17 @@ function setup(root) {
 
 addPlugin('test', async function intro(root, trial) {
     setup(root)
-    message(trial.message)
-    trial.hover_edges = true
-    trial.hover_rewards = true
-    // if (trial.first) await button()
+    message("This is a test")
+    trial.hover_edges = false
+    trial.hover_rewards = false
 
     cg = new CircleGraph($("#cgi-root"), trial);
-    console.log(trial)
     cg.showGraph()
+    await cg.setupEyeTracking()
     await cg.navigate()
     $(root).empty()
+    console.log(cg.data)
+    console.log(JSON.stringify(cg.data))
     jsPsych.finishTrial(cg.data)
 })
 

@@ -5,9 +5,9 @@
   "source": "templates/exp.template.html",
   "dependencies": {
     "eslint": "^7.26.0",
-    "parcel": "^2.0.0-rc.0"
+    "parcel": "^2.0.0-rc.0",
+    "webgazer": "^3.1.2"
   },
-  "devDependencies": {},
   "scripts": {
     "build": "parcel build --no-scope-hoist --public-url /dist",
     "build_local": "parcel build --public-url /dist",
@@ -22,5 +22,9 @@
   "bugs": {
     "url": "https://github.com/cgc/graph-nav/issues"
   },
-  "homepage": "https://github.com/cgc/graph-nav#readme"
+  "homepage": "https://github.com/cgc/graph-nav#readme",
+  "devDependencies": {
+    "buffer": "^5.7.1",
+    "process": "^0.11.10"
+  }
 }
