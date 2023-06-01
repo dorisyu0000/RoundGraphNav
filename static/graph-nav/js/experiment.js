@@ -33,6 +33,7 @@ const QUERY = new URLSearchParams(location.search);
 
 async function initializeExperiment() {
   psiturk.recordUnstructuredData('browser', window.navigator.userAgent);
+  psiturk.recordUnstructuredData('start_time', new Date());
 
   const config = await $.getJSON(`static/json/config/${CONDITION+1}.json`);
   config.trials.test = {
