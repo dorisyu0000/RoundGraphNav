@@ -5,6 +5,7 @@ import pandas as pd
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 import hashlib
 import json
+from datetime import datetime
 
 # set environment parameters so that we use the remote database
 
@@ -68,6 +69,7 @@ def write_csvs(version, debug):
     }
 
     for filename in ["trialdata", "eventdata", "questiondata"]:
+
         data = []
         for p in ps:
             try:
@@ -96,6 +98,16 @@ def write_csvs(version, debug):
 
 def reformat(version):
     os.makedirs(f'data/human/{version}', exist_ok=True)
+
+    events = pd.read_csv(f"data/human_raw/{version}/eventdata.csv", header=None)
+    start = events[events[1] == "initialized"][[0, 4]]
+    start.columns = ["wid", "start_time"]
+    start.start_time /= 1000
+    start.set_index('wid', inplace=True)
+    start.start_time = start.start_time.apply(datetime.fromtimestamp)
+
+    start.to_csv(f'data/human/{version}/participants.csv')
+
 
     df = pd.read_csv(f"data/human_raw/{version}/trialdata.csv", header=None,
         names = ["wid", "idx", "timestamp", "data"])
