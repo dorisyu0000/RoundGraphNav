@@ -40,7 +40,7 @@ class Prolific(object):
     def patch(self, url, json=None, **kws):
         return self.request('PATCH', url, json=json, **kws)
 
-    def post_duplicate(study_id, **kws):
+    def post_duplicate(self, study_id, **kws):
         # name, internal_name, description, total_available_places
 
         new = self.post(f'/studies/{study_id}/clone/')
@@ -56,7 +56,7 @@ class Prolific(object):
             print(k + ': ' + str(new[k]))
         y = input(f'Go ahead? [y/N] ')
         if y in 'yY':
-            post(f'/studies/{new_id}/transition/', {
+            self.post(f'/studies/{new_id}/transition/', {
                 "action": "PUBLISH"
             })
             print('Posted! See submssisions at:')
@@ -158,7 +158,7 @@ def generate_internal_name():
     c.read('config.txt')
     version = c["Task Parameters"]["experiment_code_version"]
     project_name = c["Server Parameters"]["adserver_revproxy_host"].split('.')[0]
-    return '-'.join(project_name, version)
+    return '-'.join([project_name, version])
 
 
 def main():
@@ -184,7 +184,7 @@ def main():
 
     elif cmd == 'post_duplicate':
         study_id = prolific.last_study(project_id)
-        prolific.post_duplicate(study_id, internal_name=generate_internal_name())
+        prolific.post_duplicate(study_id, internal_name=generate_internal_name(), total_available_places=3)
 
 
 if __name__ == '__main__':
