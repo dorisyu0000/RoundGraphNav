@@ -47,8 +47,10 @@ async function initializeExperiment() {
 
   params.graphRenderOptions = {
     onlyShowCurrentEdges: false,
-    width: 800,
-    height: 800,
+    width: 600,
+    height: 600,
+    // width: 800,
+    // height: 800,
     scaleEdgeFactor: 1,
     fixedXY: circleXY(config.trials.intro.graph.length)
   };
@@ -57,7 +59,7 @@ async function initializeExperiment() {
     return {name, type: name}
   }
 
-  function instruct_block(name) {
+  function instruct_block(name, options={}) {
     if (!_.has(config.trials, name)) throw new Error(`${name} not in config.trials`)
     return {
       name,
@@ -66,6 +68,7 @@ async function initializeExperiment() {
       type: name,
       hover_edges: false,
       hover_rewards: false,
+      ...options,
       ...config.trials[name],
     }
   }
@@ -118,8 +121,8 @@ async function initializeExperiment() {
       Let's try a few practice rounds with more moves.
     `),
     (params.hover_rewards || params.hover_edges) && instruct_block('intro_hover', {
-      hover_edges: params.hover_edges,
-      hover_rewards: params.hover_rewards,
+      _edges: params.hover_edges,
+      _rewards: params.hover_rewards,
     }),
     text_block(`
       You've got it! Now you're ready to play the game for real.

@@ -61,12 +61,12 @@ addPlugin('intro', async function intro(root, trial) {
   `)
   let goal = _.sample(cg.graph.successors(cg.state))
   // $("#gn-points").show()
-  cg.setReward(goal, 10)
+  cg.setReward(goal, 4)
   console.log('goal', goal)
   await cg.navigate({n_steps: -1, goal, leave_state: true})
 
   message(`
-    Nice! You got 10 points for collecting that item.
+    Nice! You got 4 points for collecting that item.
   `)
   await button()
 
@@ -81,10 +81,10 @@ addPlugin('intro', async function intro(root, trial) {
   `)
 
   goal = _.sample(cg.graph.successors(cg.state))
-  cg.setReward(goal, -5)
+  cg.setReward(goal, -4)
   await cg.navigate({n_steps: -1, goal, leave_open: true})
 
-  message(`<i>Ouch!</i> You lost 5 points for collecting that one!`)
+  message(`<i>Ouch!</i> You lost 4 points for collecting that one!`)
   cg.removeGraph()
   await button()
 
@@ -92,13 +92,26 @@ addPlugin('intro', async function intro(root, trial) {
   jsPsych.finishTrial(cg.data)
 })
 
+let ensureSign = x => x > 0 ? "+" + x : "" + x
 
 function describeRewards(rewardGraphics) {
   let vals = _.sortBy(_.without(_.keys(rewardGraphics), "0"), parseFloat)
-  let descriptions = vals.map(reward => {
-    return `${renderSmallEmoji(rewardGraphics[reward])}is worth ${reward}`
-  })
-  return descriptions.slice(0, -1).join(', ') + ', and ' + descriptions.slice(-1)
+  // let descriptions = vals.map(reward => {
+  //   return `${renderSmallEmoji(rewardGraphics[reward])}is worth ${reward}`
+  // })
+  // return descriptions.slice(0, -1).join(', ') + ', and ' + descriptions.slice(-1)
+
+  let vv =  vals.map(reward => `
+    <div class="describe-rewards-box">
+    ${renderSmallEmoji(rewardGraphics[reward])}<br>
+    ${ensureSign(reward)}
+    </div>
+  `).join("")
+  return `
+    <div class="describe-rewards">
+      ${vv}
+    </div>
+  `
 }
 
 addPlugin('collect_all', async function collect_all(root, trial) {
@@ -108,12 +121,15 @@ addPlugin('collect_all', async function collect_all(root, trial) {
   }
   setup(root)
 
-  message(`Each kind of item is worth a different number of points:<br>` +
-          describeRewards(trial.rewardGraphics))
+  message(
+    `Each kind of item is worth a different number of points:
+    ${describeRewards(trial.rewardGraphics)}
+  `)
   await button()
 
   message(`
     Try collecting all the items <b>(even the bad ones for now)</b>.
+    ${describeRewards(trial.rewardGraphics)}
   `)
   let cg = new CircleGraph($("#cgi-root"), trial);
   cg.showGraph(trial)
@@ -132,36 +148,124 @@ addPlugin('collect_all', async function collect_all(root, trial) {
   jsPsych.finishTrial(cg.data)
 })
 
-addPlugin('learn_rewards', async function learn_rewards(root, info) {
+addPlugin('learn_rewards_foo', async function learn_rewards(root, info) {
   setup(root)
+
+  message("Select the best item")
+  let choices = [-1, 1]
+  let stage = $('<div>').appendTo(root)
+
+  let choice = await new Promise((resolve, reject) => {
+    choices.forEach(r => {
+      let graphic = info.rewardGraphics[r]
+      let choice_div = $('<div>')
+      .css('display', 'inline-block')
+      .appendTo(stage)
+
+      $('<button>')
+      .addClass('reward-button')
+      .addClass(r == _.max(choices) ? 'correct-button' : 'incorrect-button')
+      .appendTo(choice_div)
+      .css({margin: '0px 20px 0px 20px', border: 'thick black solid', 'border-radius': 10})
+      .append($('<img>', {src: graphicsUrl(graphic), width: 200}))
+      .click(() => {
+        console.log("click!")
+        resolve(r)
+      })
+
+      $('<span>')
+      .addClass('reward-feedback')
+      .html(`<br>${ensureSign(r)}`)
+      .appendTo(choice_div)
+      .css({'font-size': 40, 'font-weight': 'bold'})
+      .hide()
+    })
+  })
+  $('.reward-button').off("click").css('cursor', 'default')
+  $('.correct-button').css('border', 'thick green solid')
+  $('.incorrect-button').css('opacity', .2)
+  $('.reward-feedback').show()
+  await sleep(1000)
+})
+
+addPlugin('learn_rewards', async function learn_rewards_alt(root, info) {
+  setup(root)
+  let stage = $('<div>').appendTo(root)
   let first = true
 
   for (let trial_set of info.trial_sets) {
     if (first) {
-      message(`Lets try a few easy ones. Try to collect the best item!`)
+      message(`Before we play the full game, let's do some pratice to make<br>
+        sure you know what each item is worth.`)
+      await button()
+      message(`
+        You can review the values below before trying the test.
+        ${describeRewards(info.rewardGraphics)}
+     `)
       first = false
     } else {
       message(`
-        Hmm... You didn't always collect the best item. Let's try again.<br>
-        Remember: ${describeRewards(info.rewardGraphics)}
+        You didn't always pick the best item on that round. Let's try again.<br>
+        ${describeRewards(info.rewardGraphics)}
       `)
       await button()
       message(`Try to collect the best item! We'll continue when you always pick the best one.`)
     }
+    await button()
     let n_correct = 0
-    for (let trial of trial_set) {
-      trial = {...info, ...trial, show_steps: false}
-      cg = new CircleGraph($("#cgi-root"), trial);
-      let best = _.max(cg.graph.successors(cg.options.start).map(s => cg.rewards[s]))
+    for (let choices of trial_set) {
+      message(`Pick the better item.`)
+      let choice = await new Promise((resolve, reject) => {
+        choices.forEach(r => {
+          let graphic = info.rewardGraphics[r]
+          let choice_div = $('<div>')
+          .css('display', 'inline-block')
+          .appendTo(stage)
 
-      await cg.showGraph()
-      await cg.navigate()
-      n_correct += (cg.score == best)
+          $('<button>')
+          .addClass('reward-button')
+          .addClass(r == _.max(choices) ? 'correct-button' : 'incorrect-button')
+          .appendTo(choice_div)
+          .css({margin: '0px 20px 0px 20px', border: 'thick black solid', 'border-radius': 10})
+          .append($('<img>', {src: graphicsUrl(graphic), width: 200}))
+          .click(() => {
+            console.log("click!")
+            resolve(r)
+          })
 
-      $(cg.wrapper).remove()
-      cg.data.trial_type = 'learn_rewards'
-      jsPsych.data.write(cg.data);
-      psiturk.recordTrialData(cg.data)
+          $('<span>')
+          .addClass('reward-feedback')
+          .html(`<br>${ensureSign(r)}`)
+          .appendTo(choice_div)
+          .css({'font-size': 40, 'font-weight': 'bold'})
+          .hide()
+        })
+      })
+
+      let correct = (choice == _.max(choices))
+      $('.incorrect-button').css('opacity', .2)
+      $('.reward-feedback').show()
+      $('.reward-button').off("click").css('cursor', 'default')
+      if (correct) {
+        message(`That's right!`)
+      } else {
+        message(`Actually, the other one is better. <b>Please fix your choice.</b>`)
+        let {promise, resolve} = makePromise()
+        $('.correct-button')
+        .css('cursor', 'pointer')
+        .click(() => resolve())
+        await promise
+        $('.correct-button').css('border', 'thick green solid')
+        message(`Much better!`)
+      }
+      await sleep(1000)
+      stage.empty()
+      n_correct += correct
+      console.log('choice', choice, n_correct)
+
+      let data = {trial_type: 'learn_rewards', choices, choice}
+      jsPsych.data.write(data);
+      psiturk.recordTrialData(data)
     }
     if (n_correct == trial_set.length) {
       message(`Great job! It looks like you've figured out which items are best.`)
@@ -267,9 +371,14 @@ addPlugin('intro_hover', async function intro_hover(root, trial) {
   // let hidden_things = []
   // trial.
   let hidden_things = [
-    trial.hover_rewards && "items",
-    trial.hover_edges && "connections"
-  ].filter(x=>x).join("and")
+    trial._rewards && "items",
+    trial._edges && "connections"
+  ].filter(x=>x).join(" and ")
+
+  let hidden_thing = [
+    trial._rewards && "item",
+    trial._edges && "connections"
+  ].filter(x=>x).join(" and ")
 
   message(`So far we've been showing you all the ${hidden_things}`)
   // message("So far we've been showing you all the items and connections.")
@@ -280,23 +389,27 @@ addPlugin('intro_hover', async function intro_hover(root, trial) {
 
   message("But in the real game, they're hidden!")
   await sleep(500)
-  // $(".State > img").animate({'opacity': 0}, 1000)
-  $(".GraphNavigation-edge").animate({'opacity': 0}, 1000)
-  $(".GraphNavigation-arrow").animate({'opacity': 0}, 1000)
-  await sleep(1300)
 
+  trial._rewards && $(".State > img").animate({'opacity': 0}, 1000)
+  trial._edges && $(".GraphNavigation-edge").animate({'opacity': 0}, 1000)
+  trial._edges && $(".GraphNavigation-arrow").animate({'opacity': 0}, 1000)
+  await sleep(1300)
   await button()
 
   message(`
-    You can reveal the item and connections at a location by hovering over it.<br>
+    You can reveal the ${hidden_thing} at a location by hovering over it.<br>
     Hover over every location to continue.
   `)
-  // cg.el.classList.add('hideStates')
-  cg.el.classList.add('hideEdges')
-  // $(".State > img").css({'opacity': ''})
+  cg.options.hover_rewards = trial._rewards
+  cg.options.hover_edges = trial._edges
+  cg.setupMouseTracking()
+
+  // trial._rewards && cg.el.classList.add('hideStates')
+  // trial._edges && cg.el.classList.add('hideEdges')
+
+  $(".State > img").css({'opacity': ''})
   $(".GraphNavigation-edge").css({'opacity': ''})
   $(".GraphNavigation-arrow").css({'opacity': ''})
-  cg.setupMouseTracking()
 
   let {promise, resolve} = makePromise();
 
@@ -327,11 +440,16 @@ addPlugin('intro_hover', async function intro_hover(root, trial) {
 
   message(`
     You still move around by clicking on a location.<br>
-    Try to make as many points as you can!
+    Collect all the items to continue.
   `)
-  cg.options.hover_edges = true
-  cg.options.hover_rewards = false
-  await cg.navigate()
+  // cg.options.hover_edges = true
+  // cg.options.hover_rewards = false
+  // await cg.navigate()  IF ACYCLIC
+  await cg.navigate({
+    // leave_open: true,
+    termination: (cg, s) => !_.some(cg.rewards)
+  })
+
   $(root).empty()
   jsPsych.finishTrial(cg.data)
 })

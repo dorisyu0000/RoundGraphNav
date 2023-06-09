@@ -156,8 +156,10 @@ export class CircleGraph {
   }
 
   setupMouseTracking() {
+    if (!this.options.hover_rewards && !this.options.hover_edges) return
     if (this.options.hover_rewards) this.el.classList.add('hideStates');
     if (this.options.hover_edges) this.el.classList.add('hideEdges');
+
 
     // don't double up the event listeners
     if (this.mouseTrackingEnabled) return
