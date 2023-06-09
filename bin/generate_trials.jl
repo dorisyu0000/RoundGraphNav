@@ -59,11 +59,7 @@ end
 function make_trials(; n=8, rdist=discrete_uniform([-10, -5, 5, 10]))
     graph = neighbor_list(intro_graph(n))
 
-    intro = sample_problem(;n, graph, rewards=zeros(n), n_steps=3)
-
-    paths(intro)
-    intro.start
-
+    intro = sample_problem(;n, graph, rewards=zeros(n))
 
     rewards = shuffle(repeat([-10, -5, 5, 10], cld(n, 4)))[1:n]
     collect_all = sample_problem(;n, graph, rewards)
@@ -86,6 +82,7 @@ function make_trials(; n=8, rdist=discrete_uniform([-10, -5, 5, 10]))
         intro,
         collect_all,
         learn_rewards,
+        move2 = [sample_problem(;graph, n, rdist, n_steps=2) for _ in 1:3],
         practice_revealed = [sample_problem(;graph, n, rdist, n_steps) for n_steps in 2:4],
         calibration = mutate(intro, graph=neighbor_list(cycle_digraph(n)), n_steps=n),
         # vary_transition = sample_problem(;n, rdist),
@@ -100,11 +97,14 @@ parameters = (
     hover_edges = false,
     hover_rewards = false,
     points_per_cent = 5,
+    use_n_steps = true,
+    vary_transition = false,
+    eye_tracking = false
 )
 
 version = "test"
-# Random.seed!(hash(version))
-subj_trials = repeatedly(make_trials, 20)
+Random.seed!(hash(version))
+subj_trials = repeatedly(make_trials, 1)
 
 # %% --------
 
@@ -117,9 +117,9 @@ end
 
 # %% --------
 
-bonus = map(subj_trials) do trials
-    (50 + sum(value.(trials.main))) / (parameters.points_per_cent * 100)
-end
-using UnicodePlots
-histogram(bonus, nbins=10, vertical=true, height=10)
+# bonus = map(subj_trials) do trials
+#     (50 + sum(value.(trials.main))) / (parameters.points_per_cent * 100)
+# end
+# using UnicodePlots
+# histogram(bonus, nbins=10, vertical=true, height=10)
 

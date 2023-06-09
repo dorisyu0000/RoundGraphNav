@@ -47,8 +47,8 @@ async function initializeExperiment() {
 
   params.graphRenderOptions = {
     onlyShowCurrentEdges: false,
-    width: 900,
-    height: 850,
+    width: 800,
+    height: 800,
     scaleEdgeFactor: 1,
     fixedXY: circleXY(config.trials.intro.graph.length)
   };
@@ -101,26 +101,26 @@ async function initializeExperiment() {
     }
   }
 
+
   var timeline = [
     // instruct_block('test'),
     instruct_block('intro'),
     instruct_block('collect_all'),
     instruct_block('learn_rewards'),
-    // practice_block('move2',`
-    //   In the real game, you get to move more than once. The number of moves
-    //   for the current round is shown after you click the start button. Give
-    //   it a shot!
-    // `),
     // instruct_block('backstep'),
-    // practice_block('practice_revealed', `
-    //   Let's try a few practice rounds with more moves.
-    // `),
-    // instruct_block('vary_transition'),
-
-    practice_block('practice_revealed', `
-      Great! Let's try a few more practice rounds.
+    params.use_n_steps && practice_block('move2',`
+      In the real game, you get to move more than once. The number of moves
+      for the current round is shown after you click the start button. Give
+      it a shot!
     `),
-
+    params.vary_transition && instruct_block('vary_transition'),
+    practice_block('practice_revealed', `
+      Let's try a few practice rounds with more moves.
+    `),
+    (params.hover_rewards || params.hover_edges) && instruct_block('intro_hover', {
+      hover_edges: params.hover_edges,
+      hover_rewards: params.hover_rewards,
+    }),
     text_block(`
       You've got it! Now you're ready to play the game for real.
       In the remaining ${config.trials.main.length} rounds, your
@@ -128,7 +128,7 @@ async function initializeExperiment() {
       <b>${bonus.describeScheme()}.</b> We'll start you off with ${bonus.initial}
       points for free. Good luck!
     `),
-    instruct_block('calibration'),
+    params.eye_tracking && instruct_block('calibration'),
     build_main(),
     {
       type: 'survey-text',
@@ -153,7 +153,8 @@ async function initializeExperiment() {
         psiturk.recordUnstructuredData('bonus', bonus.dollars());
       },
     }
-  ];
+  ].filter(x=>x)  // skip the falses
+
 
   const name = QUERY.get('name');
   if (name) {

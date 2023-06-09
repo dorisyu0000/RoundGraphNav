@@ -31,40 +31,10 @@ function setup(root) {
   $('<div>', {id: "cgi-root"}).appendTo(root)
 }
 
-addPlugin('calibration', async function intro(root, trial) {
-
-  setup(root)
-  message(`
-    To finish calibration, please complete a lap around the ring.<br>
-    <b>Make sure you are looking at each state when you visit it!</b>
-  `)
-  await button()
-
-  let cg = new CircleGraph($("#cgi-root"), trial);
-  cg.showGraph()
-  await cg.navigate()
-  cg.removeGraph()
-  $(root).empty()
-  jsPsych.finishTrial(cg.data)
-
-
-  // await new Promise((resolve, reject) => {
-  //   GazeCloudAPI.StartEyeTracking()
-  //   GazeCloudAPI.OnCalibrationComplete = function(){
-  //     resolve()
-  //   }
-  //   GazeCloudAPI.OnCamDenied = function(){
-  //     reject('camera access denied')
-  //   }
-  //   GazeCloudAPI.OnError = function(msg){ console.log('err: ' + msg) }
-  // })
-
-  // jsPsych.finishTrial({})
-})
-
 
 addPlugin('intro', async function intro(root, trial) {
   setup(root)
+  trial.n_steps = -1
   let cg = new CircleGraph($("#cgi-root"), trial);
   cg.showGraph()
 
@@ -260,15 +230,6 @@ addPlugin('backstep', async function backstep(root, trial) {
 
 })
 
-addPlugin('easy', async function easy(root, trial) {
-  setup(root)
-  message(`
-    On each round, you have to make some number of moves.<br>
-    The number of moves for the current turn is shown after you click the start button.
-  `)
-  await button()
-})
-
 addPlugin('vary_transition', async function vary_transition(root, trial) {
   setup(root)
   message(`
@@ -297,14 +258,20 @@ addPlugin('vary_transition', async function vary_transition(root, trial) {
   jsPsych.finishTrial(cg.data)
 })
 
-
-
 addPlugin('intro_hover', async function intro_hover(root, trial) {
   setup(root)
   message("Just one more thing...")
   await button()
 
-  message("So far we've been showing you all the connections.")
+
+  // let hidden_things = []
+  // trial.
+  let hidden_things = [
+    trial.hover_rewards && "items",
+    trial.hover_edges && "connections"
+  ].filter(x=>x).join("and")
+
+  message(`So far we've been showing you all the ${hidden_things}`)
   // message("So far we've been showing you all the items and connections.")
   cg = new CircleGraph($("#cgi-root"), trial);
   cg.showGraph()
@@ -374,5 +341,34 @@ addPlugin('text', async function text(root, trial) {
   message(trial.message)
   await button()
   $(root).empty()
+  jsPsych.finishTrial({})
+})
+
+addPlugin('calibration', async function intro(root, trial) {
+  setup(root)
+  message(`
+    To finish calibration, please complete a lap around the ring.<br>
+    <b>Make sure you are looking at each state when you visit it!</b>
+  `)
+  await button()
+
+  let cg = new CircleGraph($("#cgi-root"), trial);
+  cg.showGraph()
+  await cg.navigate()
+  cg.removeGraph()
+  $(root).empty()
+  jsPsych.finishTrial(cg.data)
+
+  await new Promise((resolve, reject) => {
+    GazeCloudAPI.StartEyeTracking()
+    GazeCloudAPI.OnCalibrationComplete = function(){
+      resolve()
+    }
+    GazeCloudAPI.OnCamDenied = function(){
+      reject('camera access denied')
+    }
+    GazeCloudAPI.OnError = function(msg){ console.log('err: ' + msg) }
+  })
+
   jsPsych.finishTrial({})
 })
