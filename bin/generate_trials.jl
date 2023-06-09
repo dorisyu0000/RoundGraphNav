@@ -32,6 +32,7 @@ end
 
 function sample_problem_(;n, n_steps=-1, graph=sample_graph(n),
                         rdist=nothing, rewards=rand(rdist, n), start=rand(1:n))
+    rewards = copy(rewards)
     rewards[start] = 0
     Problem(graph, rewards, start, n_steps)
 end
@@ -58,11 +59,8 @@ end
 
 function make_trials(; n=8, rdist=discrete_uniform([-10, -5, 5, 10]))
     graph = neighbor_list(intro_graph(n))
-
-    intro = sample_problem(;n, graph, rewards=zeros(n))
-
     rewards = shuffle(repeat([-10, -5, 5, 10], cld(n, 4)))[1:n]
-    collect_all = sample_problem(;n, graph, rewards)
+    kws = (;n, graph, rewards)
 
     function step1_rewards!(problem, rewards)
         problem.rewards[graph[problem.start]] .= rewards
@@ -79,18 +77,20 @@ function make_trials(; n=8, rdist=discrete_uniform([-10, -5, 5, 10]))
     learn_rewards = (;trial_sets)
 
     (;
-        intro,
-        collect_all,
+        intro = sample_problem(;kws..., rewards=zeros(n)),
+        collect_all = sample_problem(;kws...),
         learn_rewards,
-        move2 = [sample_problem(;graph, n, rdist, n_steps=2) for _ in 1:3],
-        practice_revealed = [sample_problem(;graph, n, rdist, n_steps) for n_steps in 2:4],
+        move2 = [sample_problem(;kws..., n_steps=2) for _ in 1:3],
+        practice_revealed = [sample_problem(;kws..., n_steps) for n_steps in 2:4],
         calibration = mutate(intro, graph=neighbor_list(cycle_digraph(n)), n_steps=n),
-        # vary_transition = sample_problem(;n, rdist),
-        # intro_hover = sample_problem(;n, rdist),
-        # practice_hover = [sample_problem(;n, rdist) for i in (1:3)],
-        main = [sample_problem(;graph, n, rdist, n_steps) for n_steps in [5, 5, 5]],
+        vary_transition = sample_problem(;n, rdist),
+        intro_hover = sample_problem(;n, rdist),
+        practice_hover = [sample_problem(;n, rdist) for i in (1:3)],
+        main = [sample_problem(;graph, rewards, n, rdist, n_steps) for n_steps in repeat(3:5, 10)]
     )
 end
+
+# %% --------
 
 parameters = (
     rewardGraphics = Dict("-10" => "🤡", "-5" => "📌", "5" => "🍫", "10" => "💰"),
@@ -99,7 +99,8 @@ parameters = (
     points_per_cent = 5,
     use_n_steps = true,
     vary_transition = false,
-    eye_tracking = false
+    eye_tracking = false,
+    fixed_rewards = true,
 )
 
 version = "test"
