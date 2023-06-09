@@ -31,20 +31,35 @@ function setup(root) {
   $('<div>', {id: "cgi-root"}).appendTo(root)
 }
 
-addPlugin('test', async function intro(root, trial) {
-    setup(root)
-    message("This is a test")
-    trial.hover_edges = false
-    trial.hover_rewards = false
+addPlugin('calibration', async function intro(root, trial) {
 
-    cg = new CircleGraph($("#cgi-root"), trial);
-    cg.showGraph()
-    await cg.setupEyeTracking()
-    await cg.navigate()
-    $(root).empty()
-    console.log(cg.data)
-    console.log(JSON.stringify(cg.data))
-    jsPsych.finishTrial(cg.data)
+  setup(root)
+  message(`
+    To finish calibration, please complete a lap around the ring.<br>
+    <b>Make sure you are looking at each state when you visit it!</b>
+  `)
+  await button()
+
+  let cg = new CircleGraph($("#cgi-root"), trial);
+  cg.showGraph()
+  await cg.navigate()
+  cg.removeGraph()
+  $(root).empty()
+  jsPsych.finishTrial(cg.data)
+
+
+  // await new Promise((resolve, reject) => {
+  //   GazeCloudAPI.StartEyeTracking()
+  //   GazeCloudAPI.OnCalibrationComplete = function(){
+  //     resolve()
+  //   }
+  //   GazeCloudAPI.OnCamDenied = function(){
+  //     reject('camera access denied')
+  //   }
+  //   GazeCloudAPI.OnError = function(msg){ console.log('err: ' + msg) }
+  // })
+
+  // jsPsych.finishTrial({})
 })
 
 
@@ -248,7 +263,7 @@ addPlugin('backstep', async function backstep(root, trial) {
 addPlugin('easy', async function easy(root, trial) {
   setup(root)
   message(`
-    On each turn, you have to make some number of moves.<br>
+    On each round, you have to make some number of moves.<br>
     The number of moves for the current turn is shown after you click the start button.
   `)
   await button()

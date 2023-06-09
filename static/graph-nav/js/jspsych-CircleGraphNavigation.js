@@ -73,6 +73,13 @@ export class CircleGraph {
     this.setupLogging()
   }
 
+  highlight(s) {
+    $(`.GraphNavigation-State-${s}`).addClass('GraphNavigation-State-Highlighted')
+  }
+  unhighlight(s) {
+    $(`.GraphNavigation-State-${s}`).removeClass('GraphNavigation-State-Highlighted')
+  }
+
   showGraph() {
     this.root.append(this.wrapper)
     this.setupMouseTracking()
@@ -144,6 +151,11 @@ export class CircleGraph {
   }
 
   setupMouseTracking() {
+    this.data.gaze_cloud = []
+    GazeCloudAPI.OnResult = d => {
+      this.data.gaze_cloud.push(d)
+    }
+
     if (this.options.hover_rewards) this.el.classList.add('hideStates');
     if (this.options.hover_edges) this.el.classList.add('hideEdges');
 
@@ -174,32 +186,6 @@ export class CircleGraph {
         }
       });
     }
-  }
-
-  setupEyeTracking() {
-    return new Promise((resolve, reject) => {
-
-      this.data.webgazer = []
-      webgazer.begin()
-      webgazer.setGazeListener(data => {
-        console.log(data)
-        // this.data.webgazer.push(data)
-      }).begin();
-      resolve()
-
-    //   GazeCloudAPI.StartEyeTracking()
-    //   data.gaze_cloud = []
-    //   GazeCloudAPI.OnResult = function (d) {
-    //     data.gaze_cloud.push(d)
-    //   }
-    //   GazeCloudAPI.OnCalibrationComplete = function(){
-    //     resolve()
-    //   }
-    //   GazeCloudAPI.OnCamDenied = function(){
-    //     reject('camera access denied')
-    //   }
-    //   GazeCloudAPI.OnError = function(msg){ console.log('err: ' + msg) }
-    })
   }
 
   cancel() {
@@ -658,7 +644,7 @@ function renderKeyInstruction(keys) {
 }
 
 addPlugin('main', trialErrorHandling(async function main(root, trial) {
-  trial.n_steps = -1;
+  // trial.n_steps = -1;
   cg = new CircleGraph($(root), trial);
   await cg.showStartScreen(trial)
   await cg.navigate()
