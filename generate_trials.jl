@@ -86,17 +86,19 @@ function make_trials(; n=8, rdist=discrete_uniform([-10, -5, 5, 10]))
     end
     learn_rewards = (;trial_sets)
 
+    intro = sample_problem(;kws..., rewards=zeros(n))
     (;
-        intro = sample_problem(;kws..., rewards=zeros(n)),
+        intro,
         collect_all = sample_problem(;kws...),
         learn_rewards,
         move2 = [sample_problem(;kws..., n_steps=2) for _ in 1:3],
         practice_revealed = [sample_problem(;kws..., n_steps) for n_steps in 3:5],
-        # calibration = mutate(intro, graph=neighbor_list(cycle_digraph(n)), n_steps=n),
+        calibration = mutate(intro; graph=neighbor_list(DiGraph(n))),
         # vary_transition = sample_problem(;n, rdist),
         intro_hover = sample_problem(;kws...),
         practice_hover = [sample_problem(;kws..., n_steps) for n_steps in 3:5],
-        main = [sample_problem(;kws..., n_steps) for n_steps in shuffle(repeat(3:5, 10))]
+        main = [sample_problem(;kws..., n_steps) for n_steps in shuffle(repeat(3:5, 5))],
+        eyetracking = [sample_problem(;kws..., n_steps) for n_steps in shuffle(repeat(3:5, 3))]
     )
 end
 
@@ -117,12 +119,12 @@ subj_trials = repeatedly(make_trials, 10)
 # %% --------
 
 base_params = (
-    hover_edges = true,
-    hover_rewards = true,
+    eye_tracking = true,
+    hover_edges = false,
+    hover_rewards = false,
     points_per_cent = 3,
     use_n_steps = true,
     vary_transition = false,
-    eye_tracking = false,
     fixed_rewards = true,
 )
 
@@ -144,4 +146,4 @@ bonus = map(subj_trials) do trials
 end
 
 using UnicodePlots
-histogram(bonus, nbins=10, vertical=true, height=10)
+display(histogram(bonus, nbins=10, vertical=true, height=10))

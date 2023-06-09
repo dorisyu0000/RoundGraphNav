@@ -29,7 +29,7 @@ secret_key = 'this is my secret key which is hard to guess, i should change this
 adserver_revproxy_host = graph-nav.herokuapp.com
 
 [Task Parameters]
-experiment_code_version = v7
+experiment_code_version = v8
 num_conds = 10
 num_counters = 1
 

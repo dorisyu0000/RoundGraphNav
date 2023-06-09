@@ -38,6 +38,9 @@ async function initializeExperiment() {
 
   const config = await $.getJSON(`static/json/config/${CONDITION+1}.json`);
   config.trials.test = config.trials.main[15]
+  const bonused_rounds = config.trials.main.length +
+    (config.trials.eye_tracking ?? []).length
+  console.log('bonused_rounds', bonused_rounds)
 
   window.config = config
   const params = config.parameters
@@ -55,8 +58,8 @@ async function initializeExperiment() {
     fixedXY: circleXY(config.trials.intro.graph.length)
   };
 
-  function bare_block(name) {
-    return {name, type: name}
+  function bare_block(name, options={}) {
+    return {name, type: name, ...params, ...options}
   }
 
   function instruct_block(name, options={}) {
@@ -94,18 +97,21 @@ async function initializeExperiment() {
     }
   }
 
-  function build_main(m) {
+  function main_block(name='main', options={}) {
+    if (!_.has(config.trials, name)) throw new Error(`${name} not in config.trials`)
+
     return {
-      name: 'main',
-      type: 'main',
-      bonus,
+      name,
       ...params,
-      timeline: config.trials.main
+      type: 'main',
+      ...options,
+      timeline: config.trials[name],
     }
   }
 
 
   var timeline = [
+    config.trials.eyetracking && bare_block('check_camera'),
     // instruct_block('test'),
     instruct_block('intro'),
     instruct_block('collect_all'),
@@ -126,13 +132,17 @@ async function initializeExperiment() {
     }),
     text_block(`
       You've got it! Now you're ready to play the game for real.
-      In the remaining ${config.trials.main.length} rounds, your
+      In the remaining ${bonused_rounds} rounds, your
       score will count towards your bonus. Specifically, you'll earn
       <b>${bonus.describeScheme()}.</b> We'll start you off with ${bonus.initial}
       points for free. Good luck!
     `),
-    params.eye_tracking && instruct_block('calibration'),
-    build_main(),
+    main_block(),
+    config.trials.eyetracking && bare_block('setup_eyetracking', {
+      n_trial: config.trials.eyetracking.length
+    }),
+    instruct_block('calibration'),
+    main_block('eyetracking'),
     {
       type: 'survey-text',
       preamble: `
@@ -163,7 +173,7 @@ async function initializeExperiment() {
   if (name) {
     while (timeline[0].name != name) {
       timeline.shift()
-      invariant(timeline.length > 0)
+      if (timeline.length <= 0) throw new Error("Timeline is empty")
     }
   }
   let skip = QUERY.get('skip');
@@ -172,9 +182,7 @@ async function initializeExperiment() {
   }
 
   window.timeline = timeline
-  if (timeline.length <= 0) {
-    throw new Error("Timeline is empty")
-  }
+  if (timeline.length <= 0) throw new Error("Timeline is empty")
 
   configureProgress(timeline);
   // timeline.splice(0, 0, {type: 'fullscreen', fullscreen_mode: true})

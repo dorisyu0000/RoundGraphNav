@@ -462,20 +462,50 @@ addPlugin('text', async function text(root, trial) {
   jsPsych.finishTrial({})
 })
 
-addPlugin('calibration', async function intro(root, trial) {
+addPlugin('check_camera', async function check_camera(root, trial) {
   setup(root)
   message(`
-    To finish calibration, please complete a lap around the ring.<br>
-    <b>Make sure you are looking at each state when you visit it!</b>
+    Thanks for participating in our experiment! This experiment involves an eye-tracking
+    component, so we need to confirm that we can access your webcam before
+    we continue. Make sure you click "Allow" when the notification pops up!
+  `)
+
+  await button('Allow webcam')
+  try {
+    let stream = await navigator.mediaDevices.getUserMedia({video: true, audio: false})
+    stream.getTracks().forEach(function(track) {
+      track.stop();
+    });
+  } catch {
+    message(`
+      It looks like you didn't give access. Unfortunately, you can only participate
+      in this experiment if can use your webcam to record your eyes. If you meant
+      to allow webcam access, try refreshing the page.
+    `)
+  }
+  message(`
+    Great! We won't actually use your webcam until the last section of the experiment.
   `)
   await button()
-
-  let cg = new CircleGraph($("#cgi-root"), trial);
-  cg.showGraph()
-  await cg.navigate()
-  cg.removeGraph()
   $(root).empty()
-  jsPsych.finishTrial(cg.data)
+  jsPsych.finishTrial({})
+})
+
+addPlugin('setup_eyetracking', async function setup_eyetracking(root, trial) {
+  setup(root)
+  message(markdown(`
+
+    For the last ${trial.n_trial} rounds, we're going to
+    record what you look at using your webcame ("eye-tracking").
+    This will help us understand how you're deciding which locations to visit.
+
+    We will get the best data if you keep your head still.
+    <b>If you want to take a break, please do so now! </b>
+    The eye-tracking phase will last
+    ${trial.n_trial} rounds, and we hope that you
+    can stay at your computer until you finish them.
+  `))
+  await button()
 
   await new Promise((resolve, reject) => {
     GazeCloudAPI.StartEyeTracking()
@@ -489,4 +519,28 @@ addPlugin('calibration', async function intro(root, trial) {
   })
 
   jsPsych.finishTrial({})
+})
+
+addPlugin('calibration', async function calibration(root, trial) {
+  setup(root)
+  message(`
+    Please click on each location when it is highlighted.<br>
+    <b>Make sure you are looking at the location when you click it!</b>
+  `)
+
+  let cg = new CircleGraph($("#cgi-root"), trial);
+  cg.showGraph()
+
+  for (let s of _.shuffle(cg.graph.states)) {
+    cg.highlight(s)
+    await new Promise((resolve, reject) => {
+      $(`.GraphNavigation-State-${s}`)
+      .css('cursor', 'pointer')
+      .click(resolve)
+    })
+    cg.unhighlight(s)
+    $(`.GraphNavigation-State-${s}`).css('cursor', 'default')
+  }
+  $(root).empty()
+  jsPsych.finishTrial(cg.data)
 })
