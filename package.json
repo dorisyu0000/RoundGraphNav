@@ -5,8 +5,7 @@
   "source": "templates/exp.template.html",
   "dependencies": {
     "eslint": "^7.26.0",
-    "parcel": "^2.0.0-rc.0",
-    "webgazer": "^3.1.2"
+    "parcel": "^2.0.0-rc.0"
   },
   "scripts": {
     "build": "parcel build --no-scope-hoist --public-url /dist",

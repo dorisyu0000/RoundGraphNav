@@ -5,9 +5,6 @@ import $ from '../../lib/jquery-min.js';
 import jsPsych from '../../lib/jspsych-exported.js';
 import {bfs} from './graphs.js';
 
-import webgazer from '../../../node_modules/webgazer'
-// window.webgazer = webgazer
-
 const BLOCK_SIZE = 100;
 window.$ = $
 
@@ -83,6 +80,7 @@ export class CircleGraph {
   showGraph() {
     this.root.append(this.wrapper)
     this.setupMouseTracking()
+    this.setupEyeTracking()
 
     $(`.ShadowState img`).remove()
     if (!this.options.show_steps) {
@@ -150,12 +148,14 @@ export class CircleGraph {
     }
   }
 
-  setupMouseTracking() {
+  setupEyeTracking() {
     this.data.gaze_cloud = []
     GazeCloudAPI.OnResult = d => {
       this.data.gaze_cloud.push(d)
     }
+  }
 
+  setupMouseTracking() {
     if (this.options.hover_rewards) this.el.classList.add('hideStates');
     if (this.options.hover_edges) this.el.classList.add('hideEdges');
 
