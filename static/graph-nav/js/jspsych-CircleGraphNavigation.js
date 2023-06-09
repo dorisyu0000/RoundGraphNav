@@ -63,12 +63,24 @@ export class CircleGraph {
 
     // Making sure it is easy to clean up event listeners...
     this.cancellables = [];
+
+    this.data = {
+      trial: _.pick(this.options, 'graph', 'n_steps', 'rewards', 'start', 'hover_edges', 'hover_rewards')
+    }
     this.setupLogging()
+  }
+
+  highlight(s) {
+    $(`.GraphNavigation-State-${s}`).addClass('GraphNavigation-State-Highlighted')
+  }
+  unhighlight(s) {
+    $(`.GraphNavigation-State-${s}`).removeClass('GraphNavigation-State-Highlighted')
   }
 
   showGraph() {
     this.root.append(this.wrapper)
     this.setupMouseTracking()
+    this.setupEyeTracking()
 
     $(`.ShadowState img`).remove()
     if (!this.options.show_steps) {
@@ -123,20 +135,23 @@ export class CircleGraph {
   }
 
   setupLogging() {
-    this.data = {
-      events: [],
-      trial: _.pick(this.options, 'graph', 'n_steps', 'rewards', 'start', 'hover_edges', 'hover_rewards')
-    }
-    let start_time = Date.now()
+    this.data.events = []
     this.logger = function (event, info={}) {
       if (this.logger_callback) this.logger_callback(event, info)
       if (!event.startsWith('mouse')) console.log(event, info)
       // console.log(event, info)
       this.data.events.push({
-        time: Date.now() - start_time,
+        time: Date.now(),
         event,
         ...info
       });
+    }
+  }
+
+  setupEyeTracking() {
+    this.data.gaze_cloud = []
+    GazeCloudAPI.OnResult = d => {
+      this.data.gaze_cloud.push(d)
     }
   }
 
@@ -629,7 +644,7 @@ function renderKeyInstruction(keys) {
 }
 
 addPlugin('main', trialErrorHandling(async function main(root, trial) {
-  trial.n_steps = -1;
+  // trial.n_steps = -1;
   cg = new CircleGraph($(root), trial);
   await cg.showStartScreen(trial)
   await cg.navigate()

@@ -37,12 +37,7 @@ async function initializeExperiment() {
   console.log('Jun 2, 2023 11:56:17 AM')
 
   const config = await $.getJSON(`static/json/config/${CONDITION+1}.json`);
-  config.trials.test = {
-    "graph":[[1, 2], [3, 4], [5, 6], [7], [], [], [], []],
-    "rewards":[5,5,5,5,5,5,5,5],
-    "start":0,
-    "n_steps":-1
-  }
+  config.trials.test = config.trials.main[15]
 
   window.config = config
   const params = config.parameters
@@ -52,11 +47,15 @@ async function initializeExperiment() {
 
   params.graphRenderOptions = {
     onlyShowCurrentEdges: false,
-    width: 700,
-    height: 600,
+    width: 900,
+    height: 850,
     scaleEdgeFactor: 1,
-    fixedXY: circleXY(10)
+    fixedXY: circleXY(config.trials.intro.graph.length)
   };
+
+  function bare_block(name) {
+    return {name, type: name}
+  }
 
   function instruct_block(name) {
     if (!_.has(config.trials, name)) throw new Error(`${name} not in config.trials`)
@@ -116,21 +115,12 @@ async function initializeExperiment() {
     // practice_block('practice_revealed', `
     //   Let's try a few practice rounds with more moves.
     // `),
-    instruct_block('vary_transition'),
+    // instruct_block('vary_transition'),
+
     practice_block('practice_revealed', `
       Great! Let's try a few more practice rounds.
     `),
-    instruct_block('intro_hover', {
-      hover_edges: true,
-      hover_rewards: params.hover_rewards,
-    }),
-    practice_block('practice_hover', `
-      Try three more practice games. Then we can begin the main section<br>
-      (where you can earn money!)
-    `, {
-      hover_edges: true,
-      hover_rewards: params.hover_rewards,
-    }),
+
     text_block(`
       You've got it! Now you're ready to play the game for real.
       In the remaining ${config.trials.main.length} rounds, your
@@ -138,6 +128,7 @@ async function initializeExperiment() {
       <b>${bonus.describeScheme()}.</b> We'll start you off with ${bonus.initial}
       points for free. Good luck!
     `),
+    instruct_block('calibration'),
     build_main(),
     {
       type: 'survey-text',
@@ -182,10 +173,11 @@ async function initializeExperiment() {
   }
 
   configureProgress(timeline);
+  // timeline.splice(0, 0, {type: 'fullscreen', fullscreen_mode: true})
 
   return startExperiment({
     timeline,
-    show_progress_bar: true,
+    show_progress_bar: false,
     auto_update_progress_bar: false,
     auto_preload: false,
     exclusions: {
@@ -199,7 +191,7 @@ function configureProgress(timeline) {
   let done = 0;
   function on_finish() {
     done++;
-    jsPsych.setProgressBar(done/total);
+    // jsPsych.setProgressBar(done/total);
     requestSaveData();
   }
 
