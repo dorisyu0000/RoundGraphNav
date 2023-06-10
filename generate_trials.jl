@@ -63,6 +63,21 @@ function fixed_rewards(n)
     [-n2:1:-1; 1:1:n2]
 end
 
+function sample_nonmatching_perm(x)
+    while true
+        y = shuffle(x)
+        if all(y .≠ x)
+            return y
+        end
+    end
+end
+
+function sample_pairs(x)
+    x = shuffle(x)
+    y = sample_nonmatching_perm(x)
+    collect(zip(x, y))
+end
+
 function make_trials(; n=8, rdist=discrete_uniform([-10, -5, 5, 10]))
     graph = neighbor_list(intro_graph(n))
     rewards = shuffle(fixed_rewards(n))
@@ -75,13 +90,8 @@ function make_trials(; n=8, rdist=discrete_uniform([-10, -5, 5, 10]))
 
     trial_sets = map(1:5) do _
         # rs = support(rdist)
-        rs = sort(rewards)
-        correct = shuffle(repeat(eachindex(rs)[2:end], 2))
-        map(correct) do i
-            shuffle([rs[i], rand(rs[1:i-1])])
-            # problem = sample_problem(;n, graph, n_steps=1, rewards=zeros(n))
-            # step1_rewards!(problem, shuffle([rs[i], rand(rs[1:i-1])]))
-            # problem
+        mapreduce(vcat, 1:2) do _
+            sample_pairs(rewards)
         end
     end
     learn_rewards = (;trial_sets)
@@ -112,7 +122,7 @@ function reward_graphics(n=8)
     Dict(zip(fixed_rewards(n), sample(emoji, n; replace=false)))
 end
 
-version = "v7"
+version = "v8"
 Random.seed!(hash(version))
 subj_trials = repeatedly(make_trials, 10)
 
