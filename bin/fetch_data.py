@@ -99,37 +99,45 @@ def write_csvs(version, debug):
 def reformat(version):
     os.makedirs(f'data/human/{version}', exist_ok=True)
 
-    events = pd.read_csv(f"data/human_raw/{version}/eventdata.csv", header=None)
-    start = events[events[1] == "initialized"][[0, 4]]
-    start.columns = ["wid", "start_time"]
-    start.start_time /= 1000
-    start.set_index('wid', inplace=True)
-    start.start_time = start.start_time.apply(datetime.fromtimestamp)
-
-    start.to_csv(f'data/human/{version}/participants.csv')
-
-
-    df = pd.read_csv(f"data/human_raw/{version}/trialdata.csv", header=None,
-        names = ["wid", "idx", "timestamp", "data"])
-
     def parse_row(row):
         data = json.loads(row.data)
         data['wid'] = row.wid
         return data
 
+    # trial json
+    df = pd.read_csv(f"data/human_raw/{version}/trialdata.csv", header=None,
+        names = ["wid", "idx", "timestamp", "data"])
     data = [parse_row(row) for row in df.itertuples()]
+    to_save = ['learn_rewards', 'main', 'survey-text']
+    names = {'main': 'trials', 'survey-text': 'survey'}
+    for t in to_save:
+        trials = [d for d in data if d.get('trial_type') == t]
+        if t == 'survey-text':
+            for i in range(len(trials)):
+                trials[i] = {
+                    'wid': trials[i]['wid'],
+                    **json.loads(trials[i]['responses'])
+                }
 
-    with open(f'data/human/{version}/trials.json', 'w') as f:
-        json.dump([d for d in data if d.get('trial_type') == 'main'], f)
+            pd.DataFrame(trials).to_csv(f'data/human/{version}/survey.csv', index=False)
+        else:
+            with open(f'data/human/{version}/{names.get(t, t)}.json', 'w') as f:
+                json.dump(trials, f)
 
-    df = pd.DataFrame(data).query('trial_type == "main"')
-    bonus = df.loc[df.groupby('wid').trial_index.idxmax()][['wid', 'current_bonus']].set_index('wid')
+    # participants.csv
+    qdata = pd.read_csv(f"data/human_raw/{version}/questiondata.csv", header=None,
+        names = ["wid", "key", "value"])
+    participants = pd.pivot(qdata, index='wid', columns='key', values='value')
+    participants.to_csv(f'data/human/{version}/participants.csv')
+
+    # bonus.csv
     identifiers = pd.read_csv(f'data/human_raw/{version}/identifiers.csv').set_index('wid')
-    identifiers.join(bonus).dropna().to_csv('bonus.csv', index=False, header=False)
+    identifiers.join(participants.bonus).dropna().to_csv('bonus.csv', index=False, header=False)
 
 
-def main(version, debug):
-    write_csvs(version, debug)
+def main(version, debug, nofetch):
+    if not nofetch:
+        write_csvs(version, debug)
     reformat(version)
 
 if __name__ == "__main__":
@@ -141,6 +149,7 @@ if __name__ == "__main__":
         help=("Experiment version. This corresponds to the experiment_code_version "
               "parameter in the psiTurk config.txt file that was used when the "
               "data was collected."))
+    parser.add_argument("--nofetch", action="store_true")
     parser.add_argument("--debug", help="Keep debug participants", action="store_true")
 
     args = parser.parse_args()
@@ -152,4 +161,4 @@ if __name__ == "__main__":
         version = c["Task Parameters"]["experiment_code_version"]
         print("Fetching data for current version: ", version)
 
-    main(version, args.debug)
+    main(version, args.debug, args.nofetch)
