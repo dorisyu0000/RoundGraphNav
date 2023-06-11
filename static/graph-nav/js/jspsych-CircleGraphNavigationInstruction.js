@@ -191,17 +191,16 @@ addPlugin('learn_rewards_foo', async function learn_rewards(root, info) {
 addPlugin('learn_rewards', async function learn_rewards_alt(root, info) {
   setup(root)
   let stage = $('<div>').appendTo(root)
-  let first = true
+  let attempt = 0
 
   for (let trial_set of info.trial_sets) {
-    if (first) {
-      message(`Before we play the full game, let's do some pratice to make<br>
-        sure you know what each item is worth.`)
-      await button()
+    attempt += 1
+    if (attempt == 1) {
       message(`
-        You can review the values below before trying the test.
+        Before we play the full game, let's do some pratice to make<br>
+        sure you know what each item is worth.<br>
         ${describeRewards(info.rewardGraphics)}
-     `)
+      `)
       first = false
     } else {
       message(`
@@ -263,7 +262,7 @@ addPlugin('learn_rewards', async function learn_rewards_alt(root, info) {
       n_correct += correct
       console.log('choice', choice, n_correct)
 
-      let data = {trial_type: 'learn_rewards', choices, choice}
+      let data = {trial_type: 'learn_rewards', choices, choice, attempt}
       jsPsych.data.write(data);
       psiturk.recordTrialData(data)
     }
