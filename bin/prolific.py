@@ -112,7 +112,7 @@ class Prolific(object):
         new_bonus = {
             p: bonuses.get(p, 0) - previous_bonus[p] for p in participants
         }
-        bonus_string = '\n'.join(f'{p},{bonuses:.2f}' for p, bonuses in new_bonus.items() if bonuses > 0)
+        bonus_string = '\n'.join(f'{p},{bonus:.2f}' for p, bonus in new_bonus.items() if bonus > 0)
 
         if not bonus_string:
             print('No bonuses due')
@@ -129,6 +129,35 @@ class Prolific(object):
                 print('Bonuses paid')
             else:
                 print('NOT paying bonuses')
+
+    def check_wage(self, study_id):
+        from dateutil.parser import parse
+        import numpy as np
+
+        basepay = self.get(f'/studies/{study_id}')['reward']
+        target_wage = 12
+
+        times = []
+        pays = []
+        for sub in self.get(f'/studies/{study_id}/submissions')['results']:
+            seconds = (parse(sub['completed_at']) - parse(sub['started_at'])).total_seconds()
+            hrs = seconds / 3600
+            times.append(hrs)
+            bonus = sum(sub['bonus_payments'])
+            totalpay = (basepay + bonus) / 100
+            pays.append(totalpay)
+
+        wage = np.median(np.array(pays) / np.array(times))
+        print(f'median wage is: ${wage:.2f}/hr')
+
+        inc = np.arange(-5, 5, .05).reshape((-1, 1))
+        W = (np.array(pays) + inc) / np.array(times)
+        i = np.argmax(np.median(W, axis=1) > target_wage)
+
+        missing_base = round(inc[i][0], 2)
+        new_base = (basepay / 100) + inc[i][0]
+        print(f'base pay short by ${missing_base:.2f}, should be ${new_base:.2f}')
+
 
 
 def get_project_id():
@@ -169,7 +198,6 @@ def main():
 
     project_id = get_project_id()
     prolific = Prolific(token)
-
     cmd = sys.argv[1]
 
     if cmd == 'approve_and_bonus':
@@ -185,6 +213,10 @@ def main():
     elif cmd == 'post_duplicate':
         study_id = prolific.last_study(project_id)
         prolific.post_duplicate(study_id, internal_name=generate_internal_name(), total_available_places=3)
+
+    elif cmd == 'check_wage':
+        study_id = prolific.last_study(project_id)
+        prolific.check_wage(study_id)
 
 
 if __name__ == '__main__':
