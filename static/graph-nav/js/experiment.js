@@ -102,6 +102,7 @@ async function initializeExperiment() {
 
     return {
       name,
+      bonus,
       ...params,
       type: 'main',
       ...options,
