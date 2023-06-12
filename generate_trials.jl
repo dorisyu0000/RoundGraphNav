@@ -101,9 +101,8 @@ function make_trials(; n=8, )
     # rewards = shuffle(repeat([-10, -5, 5, 10], cld(n, 4)))[1:n]
     kws = (;n, graph, rdist)
 
-    trial_sets = map(1:5) do _
-        # rs = support(rdist)
-        mapreduce(vcat, 1:2) do _
+    trial_sets = map(1:10) do _
+        mapreduce(vcat, 1:3) do _
             sample_pairs(rewards)
         end
     end

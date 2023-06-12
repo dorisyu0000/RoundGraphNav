@@ -148,47 +148,7 @@ addPlugin('collect_all', async function collect_all(root, trial) {
   jsPsych.finishTrial(cg.data)
 })
 
-addPlugin('learn_rewards_foo', async function learn_rewards(root, info) {
-  setup(root)
-
-  message("Select the best item")
-  let choices = [-1, 1]
-  let stage = $('<div>').appendTo(root)
-
-  let choice = await new Promise((resolve, reject) => {
-    choices.forEach(r => {
-      let graphic = info.rewardGraphics[r]
-      let choice_div = $('<div>')
-      .css('display', 'inline-block')
-      .appendTo(stage)
-
-      $('<button>')
-      .addClass('reward-button')
-      .addClass(r == _.max(choices) ? 'correct-button' : 'incorrect-button')
-      .appendTo(choice_div)
-      .css({margin: '0px 20px 0px 20px', border: 'thick black solid', 'border-radius': 10})
-      .append($('<img>', {src: graphicsUrl(graphic), width: 200}))
-      .click(() => {
-        console.log("click!")
-        resolve(r)
-      })
-
-      $('<span>')
-      .addClass('reward-feedback')
-      .html(`<br>${ensureSign(r)}`)
-      .appendTo(choice_div)
-      .css({'font-size': 40, 'font-weight': 'bold'})
-      .hide()
-    })
-  })
-  $('.reward-button').off("click").css('cursor', 'default')
-  $('.correct-button').css('border', 'thick green solid')
-  $('.incorrect-button').css('opacity', .2)
-  $('.reward-feedback').show()
-  await sleep(1000)
-})
-
-addPlugin('learn_rewards', async function learn_rewards_alt(root, info) {
+addPlugin('learn_rewards', async function learn_rewards(root, info) {
   setup(root)
   let stage = $('<div>').appendTo(root)
   let attempt = 0
