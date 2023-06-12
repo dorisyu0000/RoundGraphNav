@@ -48,11 +48,15 @@ class Prolific(object):
         if 'name' not in kws:
             kws['name'] = new['name'].replace(' Copy', '')
 
+        kws['reward'] = 350
+        kws['total_available_places'] = 10
+        kws['estimated_completion_time'] = 20
+
         new = self.patch(f'/studies/{new_id}/', kws)
 
         new['cost'] = f"${new['total_cost'] / 100:.2f}"
 
-        for k in ['name', 'internal_name', 'description', 'total_available_places', 'cost']:
+        for k in ['name', 'internal_name', 'description', 'reward', 'total_available_places', 'cost']:
             print(k + ': ' + str(new[k]))
         y = input(f'Go ahead? [y/N] ')
         if y in 'yY':
@@ -140,6 +144,8 @@ class Prolific(object):
         times = []
         pays = []
         for sub in self.get(f'/studies/{study_id}/submissions')['results']:
+            if not sub['is_complete']:
+                continue
             seconds = (parse(sub['completed_at']) - parse(sub['started_at'])).total_seconds()
             hrs = seconds / 3600
             times.append(hrs)
@@ -147,16 +153,26 @@ class Prolific(object):
             totalpay = (basepay + bonus) / 100
             pays.append(totalpay)
 
-        wage = np.median(np.array(pays) / np.array(times))
-        print(f'median wage is: ${wage:.2f}/hr')
+        pays = np.array(pays)
+        times = np.array(times)
+
+        try:
+            import uniplot
+            uniplot.plot(pays, 60*times, x_unit=" min", y_unit=" $", title="Pay by Time")
+            print(f'median time is: {60*np.median(times):.2f} minutes')
+            print(f'average pay is: ${np.median(pays):.2f}')
+            print(f'median wage is: ${np.median(pays / times):.2f}/hr')
+        except ImportError:
+            print('pip install uniplot to get a nice plot here')
 
         inc = np.arange(-5, 5, .05).reshape((-1, 1))
-        W = (np.array(pays) + inc) / np.array(times)
+        W = (pays + inc) / times
         i = np.argmax(np.median(W, axis=1) > target_wage)
 
         missing_base = round(inc[i][0], 2)
         new_base = (basepay / 100) + inc[i][0]
         print(f'base pay short by ${missing_base:.2f}, should be ${new_base:.2f}')
+
 
 
 
@@ -212,7 +228,7 @@ def main():
 
     elif cmd == 'post_duplicate':
         study_id = prolific.last_study(project_id)
-        prolific.post_duplicate(study_id, internal_name=generate_internal_name(), total_available_places=3)
+        prolific.post_duplicate(study_id, internal_name=generate_internal_name())
 
     elif cmd == 'check_wage':
         study_id = prolific.last_study(project_id)
