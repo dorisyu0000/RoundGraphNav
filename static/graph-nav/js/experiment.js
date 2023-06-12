@@ -142,8 +142,8 @@ async function initializeExperiment() {
     config.trials.eyetracking && bare_block('setup_eyetracking', {
       n_trial: config.trials.eyetracking.length
     }),
-    instruct_block('calibration'),
-    main_block('eyetracking'),
+    config.trials.eyetracking && instruct_block('calibration'),
+    config.trials.eyetracking && main_block('eyetracking'),
     {
       type: 'survey-text',
       preamble: `

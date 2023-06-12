@@ -31,7 +31,7 @@ function default_problem_requirement(problem)
 end
 
 function sample_problem_(;n, n_steps=-1, graph=sample_graph(n),
-                        rdist=nothing, rewards=rand(rdist, n), start=rand(1:n))
+                        rdist=nothing, rewards=rand(rdist), start=rand(1:n))
     rewards = copy(rewards)
     rewards[start] = 0
     Problem(graph, rewards, start, n_steps)
@@ -57,10 +57,17 @@ function intro_graph(n)
     g
 end
 
-function fixed_rewards(n)
+function linear_rewards(n)
     @assert iseven(n)
     n2 = div(n,2)
     [-n2:1:-1; 1:1:n2]
+end
+
+function exponential_rewards(n; base=2)
+    @assert iseven(n)
+    n2 = div(n,2)
+    v = base .^ (0:1:n2-1)
+    sort!([-v; v])
 end
 
 function sample_nonmatching_perm(x)
@@ -78,15 +85,21 @@ function sample_pairs(x)
     collect(zip(x, y))
 end
 
-function make_trials(; n=8, rdist=discrete_uniform([-10, -5, 5, 10]))
-    graph = neighbor_list(intro_graph(n))
-    rewards = shuffle(fixed_rewards(n))
-    # rewards = shuffle(repeat([-10, -5, 5, 10], cld(n, 4)))[1:n]
-    kws = (;n, graph, rewards)
+struct Shuffler{T}
+    x::Vector{T}
+end
 
-    function step1_rewards!(problem, rewards)
-        problem.rewards[graph[problem.start]] .= rewards
-    end
+function Random.rand(rng::AbstractRNG, s::Random.SamplerTrivial{<:Shuffler})
+    shuffle(s[].x)
+end
+
+function make_trials(; n=8, )
+    graph = neighbor_list(intro_graph(n))
+    rewards = exponential_rewards(n)
+    rdist = Shuffler(rewards)
+
+    # rewards = shuffle(repeat([-10, -5, 5, 10], cld(n, 4)))[1:n]
+    kws = (;n, graph, rdist)
 
     trial_sets = map(1:5) do _
         # rs = support(rdist)
@@ -97,18 +110,19 @@ function make_trials(; n=8, rdist=discrete_uniform([-10, -5, 5, 10]))
     learn_rewards = (;trial_sets)
 
     intro = sample_problem(;kws..., rewards=zeros(n))
+    sample_problem(;kws...)
     (;
         intro,
-        collect_all = sample_problem(;kws...),
+        collect_all = sample_problem(; rewards=shuffle(rewards), kws...),
         learn_rewards,
         move2 = [sample_problem(;kws..., n_steps=2) for _ in 1:3],
         practice_revealed = [sample_problem(;kws..., n_steps) for n_steps in 3:5],
-        calibration = mutate(intro; graph=neighbor_list(DiGraph(n))),
+        # calibration = mutate(intro; graph=neighbor_list(DiGraph(n))),
         # vary_transition = sample_problem(;n, rdist),
         intro_hover = sample_problem(;kws...),
         practice_hover = [sample_problem(;kws..., n_steps) for n_steps in 3:5],
-        main = [sample_problem(;kws..., n_steps) for n_steps in shuffle(repeat(3:5, 5))],
-        eyetracking = [sample_problem(;kws..., n_steps) for n_steps in shuffle(repeat(3:5, 3))]
+        main = [sample_problem(;kws..., n_steps) for n_steps in shuffle(repeat(3:5, 10))],
+        # eyetracking = [sample_problem(;kws..., n_steps) for n_steps in shuffle(repeat(3:5, 3))]
     )
 end
 
@@ -119,7 +133,7 @@ function reward_graphics(n=8)
         "🎈","🎀","📌","✏️","🔮","⚙️","💡","⏰",
         "✈️","🍎","🌞","⛄️","🐒","👟","🤖",
     ]
-    Dict(zip(fixed_rewards(n), sample(emoji, n; replace=false)))
+    Dict(zip(exponential_rewards(n), sample(emoji, n; replace=false)))
 end
 
 version = "v8"
@@ -130,12 +144,12 @@ subj_trials = repeatedly(make_trials, 10)
 
 base_params = (
     eye_tracking = true,
-    hover_edges = false,
-    hover_rewards = false,
+    hover_edges = true,
+    hover_rewards = true,
     points_per_cent = 3,
     use_n_steps = true,
     vary_transition = false,
-    fixed_rewards = true,
+    linear_rewards = true,
 )
 
 dest = "static/json/config/"
