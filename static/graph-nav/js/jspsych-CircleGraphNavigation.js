@@ -70,11 +70,13 @@ export class CircleGraph {
     this.setupLogging()
   }
 
-  highlight(s) {
-    $(`.GraphNavigation-State-${s}`).addClass('GraphNavigation-State-Highlighted')
+  highlight(state) {
+    this.logger('highlight', {state})
+    $(`.GraphNavigation-State-${state}`).addClass('GraphNavigation-State-Highlighted')
   }
-  unhighlight(s) {
-    $(`.GraphNavigation-State-${s}`).removeClass('GraphNavigation-State-Highlighted')
+  unhighlight(state) {
+    this.logger('unhighlight', {state})
+    $(`.GraphNavigation-State-${state}`).removeClass('GraphNavigation-State-Highlighted')
   }
 
   showGraph() {
@@ -156,7 +158,6 @@ export class CircleGraph {
   }
 
   setupMouseTracking() {
-    if (!this.options.hover_rewards && !this.options.hover_edges) return
     if (this.options.hover_rewards) this.el.classList.add('hideStates');
     if (this.options.hover_edges) this.el.classList.add('hideEdges');
 
