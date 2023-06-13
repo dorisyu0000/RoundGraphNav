@@ -151,6 +151,10 @@ export class CircleGraph {
   }
 
   setupEyeTracking() {
+    this.data.state_boxes = {}
+    this.graph.states.forEach(s => {
+      this.data.state_boxes[s] = this.el.querySelector(`.GraphNavigation-State-${s}`).getBoundingClientRect()
+    })
     this.data.gaze_cloud = []
     GazeCloudAPI.OnResult = d => {
       this.data.gaze_cloud.push(d)
@@ -653,7 +657,6 @@ addPlugin('main', trialErrorHandling(async function main(root, trial) {
   await cg.navigate()
   trial.bonus.addPoints(cg.score)
   cg.data.current_bonus = trial.bonus.dollars()
-  console.log('cg.data', cg.data);
   $(root).empty()
   jsPsych.finishTrial(cg.data)
 }));
