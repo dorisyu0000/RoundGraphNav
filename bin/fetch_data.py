@@ -42,7 +42,8 @@ def write_csvs(version, debug):
     ps = Participant.query.filter(Participant.codeversion == version).all()
     if not debug:
         ps = [p for p in ps if 'debug' not in p.uniqueid]
-    print(len(ps), 'participants')
+    complete = sum(1 for p in ps if p.status == 3)
+    print(f'{len(ps)} participants, {complete} completed')
 
     anonymize = Anonymizer()
 
@@ -108,9 +109,10 @@ def reformat(version):
     df = pd.read_csv(f"data/human_raw/{version}/trialdata.csv", header=None,
         names = ["wid", "idx", "timestamp", "data"])
     data = [parse_row(row) for row in df.itertuples()]
-    to_save = ['learn_rewards', 'main', 'survey-text']
+    to_save = ['learn_rewards', 'main', 'survey-text', 'calibration']
     names = {'main': 'trials', 'survey-text': 'survey'}
     for t in to_save:
+        typs = [d.get('trial_type') for d in data]
         trials = [d for d in data if d.get('trial_type') == t]
         if t == 'survey-text':
             for i in range(len(trials)):

@@ -165,7 +165,7 @@ end
 # %% --------
 
 bonus = map(subj_trials) do trials
-    (50 + sum(value.(trials.main))) / (base_params.points_per_cent * 100)
+    (50 + sum(value.(trials.main)) + sum(value.(trials.eyetracking))) / (base_params.points_per_cent * 100)
 end
 
 using UnicodePlots

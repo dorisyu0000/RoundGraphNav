@@ -49,7 +49,7 @@ class Prolific(object):
             kws['name'] = new['name'].replace(' Copy', '')
 
         kws['reward'] = 400
-        kws['total_available_places'] = 10
+        kws['total_available_places'] = 5
         kws['estimated_completion_time'] = 30
 
         new = self.patch(f'/studies/{new_id}/', kws)
