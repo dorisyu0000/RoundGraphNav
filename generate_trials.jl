@@ -116,12 +116,12 @@ function make_trials(; n=8, )
         learn_rewards,
         move2 = [sample_problem(;kws..., n_steps=2) for _ in 1:3],
         practice_revealed = [sample_problem(;kws..., n_steps) for n_steps in 3:5],
-        # calibration = mutate(intro; graph=neighbor_list(DiGraph(n))),
+        calibration = intro,
         # vary_transition = sample_problem(;n, rdist),
-        intro_hover = sample_problem(;kws...),
-        practice_hover = [sample_problem(;kws..., n_steps) for n_steps in 3:5],
-        main = [sample_problem(;kws..., n_steps) for n_steps in shuffle(repeat(3:5, 10))],
-        # eyetracking = [sample_problem(;kws..., n_steps) for n_steps in shuffle(repeat(3:5, 3))]
+        # intro_hover = sample_problem(;kws...),
+        # practice_hover = [sample_problem(;kws..., n_steps) for n_steps in 3:5],
+        main = [sample_problem(;kws..., n_steps) for n_steps in shuffle(repeat(3:5, 3))],
+        eyetracking = [sample_problem(;kws..., n_steps) for n_steps in shuffle(repeat(3:5, 7))]
     )
 end
 
@@ -135,7 +135,7 @@ function reward_graphics(n=8)
     Dict(zip(exponential_rewards(n), sample(emoji, n; replace=false)))
 end
 
-version = "v8"
+version = "v9"
 Random.seed!(hash(version))
 subj_trials = repeatedly(make_trials, 10)
 
@@ -143,12 +143,12 @@ subj_trials = repeatedly(make_trials, 10)
 
 base_params = (
     eye_tracking = true,
-    hover_edges = true,
-    hover_rewards = true,
+    hover_edges = false,
+    hover_rewards = false,
     points_per_cent = 3,
     use_n_steps = true,
     vary_transition = false,
-    linear_rewards = true,
+    # linear_rewards = true,
 )
 
 dest = "static/json/config/"

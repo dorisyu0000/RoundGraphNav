@@ -39,7 +39,7 @@ async function initializeExperiment() {
   const config = await $.getJSON(`static/json/config/${CONDITION+1}.json`);
   config.trials.test = config.trials.main[15]
   const bonused_rounds = config.trials.main.length +
-    (config.trials.eye_tracking ?? []).length
+    (config.trials.eyetracking ?? []).length
   console.log('bonused_rounds', bonused_rounds)
 
   window.config = config
@@ -144,6 +144,7 @@ async function initializeExperiment() {
     }),
     config.trials.eyetracking && instruct_block('calibration'),
     config.trials.eyetracking && main_block('eyetracking'),
+    config.trials.eyetracking && instruct_block('calibration'),
     {
       type: 'survey-text',
       preamble: `

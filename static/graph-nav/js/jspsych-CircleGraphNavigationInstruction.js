@@ -467,6 +467,7 @@ addPlugin('setup_eyetracking', async function setup_eyetracking(root, trial) {
   await button()
 
   await new Promise((resolve, reject) => {
+    GazeCloudAPI.APIKey = "X2E4vLlucLEvVbuM5VR76y3"
     GazeCloudAPI.StartEyeTracking()
     GazeCloudAPI.OnCalibrationComplete = function(){
       resolve()
@@ -476,7 +477,7 @@ addPlugin('setup_eyetracking', async function setup_eyetracking(root, trial) {
     }
     GazeCloudAPI.OnError = function(msg){ console.log('err: ' + msg) }
   })
-
+  sleep(1000 * 60 * 60).then(() => GazeCloudAPI.StopEyeTracking())
   jsPsych.finishTrial({})
 })
 

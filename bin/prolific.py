@@ -48,9 +48,9 @@ class Prolific(object):
         if 'name' not in kws:
             kws['name'] = new['name'].replace(' Copy', '')
 
-        kws['reward'] = 350
+        kws['reward'] = 400
         kws['total_available_places'] = 10
-        kws['estimated_completion_time'] = 20
+        kws['estimated_completion_time'] = 30
 
         new = self.patch(f'/studies/{new_id}/', kws)
 
