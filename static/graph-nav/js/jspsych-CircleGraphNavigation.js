@@ -347,6 +347,13 @@ export class CircleGraph {
     return path
   }
 
+  async demonstrate(demo) {
+    demo.states.forEach((s) => {
+      
+    });
+
+  }
+
   loadTrial(trial) {
     if (trial.start != undefined) this.setCurrentState(trial.start)
     this.setRewards(trial.rewards)
