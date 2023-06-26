@@ -161,7 +161,6 @@ addPlugin('learn_rewards', async function learn_rewards(root, info) {
         sure you know what each item is worth.<br>
         ${describeRewards(info.rewardGraphics)}
       `)
-      first = false
     } else {
       message(`
         You didn't always pick the best item on that round. Let's try again.<br>
