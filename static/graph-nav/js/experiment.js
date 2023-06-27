@@ -37,7 +37,7 @@ async function initializeExperiment() {
   console.log('Jun 2, 2023 11:56:17 AM')
 
   const config = await $.getJSON(`static/json/config/${CONDITION+1}.json`);
-  config.trials.test = config.trials.main[15]
+  // config.trials.test = config.trials.main[1]
   const bonused_rounds = config.trials.main.length +
     (config.trials.eyetracking ?? []).length
   console.log('bonused_rounds', bonused_rounds)
@@ -63,14 +63,15 @@ async function initializeExperiment() {
   }
 
   function instruct_block(name, options={}) {
+    console.log('instruct', name, options)
     if (!_.has(config.trials, name)) throw new Error(`${name} not in config.trials`)
     return {
       name,
       bonus,
-      ...params,
       type: name,
-      hover_edges: false,
-      hover_rewards: false,
+      ...params,
+      hover_edges: options.enable_hover ? params.hover_edges : false,
+      hover_rewards: options.enable_hover ? params.hover_rewards : false,
       ...options,
       ...config.trials[name],
     }
@@ -80,12 +81,12 @@ async function initializeExperiment() {
     if (!_.has(config.trials, name)) throw new Error(`${name} not in config.trials`)
     return {
       name,
-      ...params,
-      type: 'practice',
-      hover_edges: false,
-      hover_rewards: false,
-      ...options,
       message,
+      type: 'practice',
+      ...params,
+      hover_edges: options.enable_hover ? params.hover_edges : false,
+      hover_rewards: options.enable_hover ? params.hover_rewards : false,
+      ...options,
       timeline: config.trials[name],
     }
   }
@@ -112,6 +113,7 @@ async function initializeExperiment() {
 
 
   var timeline = [
+    instruct_block('test', {enable_hover: true}),
     config.trials.eyetracking && bare_block('check_camera'),
     // instruct_block('test'),
     instruct_block('intro'),

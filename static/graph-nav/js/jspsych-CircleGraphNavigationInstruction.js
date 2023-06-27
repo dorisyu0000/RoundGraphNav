@@ -31,17 +31,17 @@ function setup(root) {
   $('<div>', {id: "cgi-root"}).appendTo(root)
 }
 
-addPlugin('demo', async function demo(root, trial) {
+addPlugin('test', async function test(root, trial) {
   setup(root)
+  console.log('this is test', trial)
+  // trial.hover_edges = true
+  // trial.hover_rewards = true
   message(trial.message)
   // if (trial.first) await button()
 
+  // trial.force_hover = [0, 1, 2, 3, 4]
   cg = new CircleGraph($("#cgi-root"), trial);
   await cg.showStartScreen(trial)
-  await cg.demonstrate({
-    states: [0, 1, 2, 3, 4],
-    duration: 500
-  })
   await cg.navigate()
   $(root).empty()
   jsPsych.finishTrial(cg.data)

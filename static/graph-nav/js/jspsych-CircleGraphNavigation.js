@@ -347,11 +347,33 @@ export class CircleGraph {
     return path
   }
 
-  async demonstrate(demo) {
-    demo.states.forEach((s) => {
-      
-    });
+  async showForcedHovers() {
+    await sleep(1000)
+    for (const s of this.options.force_hover) {
+      this.hover(s)
+      await sleep(this.options.hover_duration ?? 1000)
+      this.unhover(s)
+    };
+  }
 
+  hover(state) {
+    $(`.GraphNavigation-State-${state}`).addClass('is-visible')
+    for (const successor of this.graph.successors(state)) {
+      $(`.GraphNavigation-edge-${state}-${successor}`).addClass('is-visible')
+    }
+    for (const pred of this.graph.predecessors(state)) {
+      $(`.GraphNavigation-edge-${pred}-${state}`).addClass('is-visible')
+    }
+  }
+
+  unhover(state) {
+    $(`.GraphNavigation-State-${state}`).removeClass('is-visible')
+    for (const successor of this.graph.successors(state)) {
+      $(`.GraphNavigation-edge-${state}-${successor}`).removeClass('is-visible')
+    }
+    for (const pred of this.graph.predecessors(state)) {
+      $(`.GraphNavigation-edge-${pred}-${state}`).removeClass('is-visible')
+    }
   }
 
   loadTrial(trial) {

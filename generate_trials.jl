@@ -93,6 +93,30 @@ function Random.rand(rng::AbstractRNG, s::Random.SamplerTrivial{<:Shuffler})
     shuffle(s[].x)
 end
 
+abstract type HoverGenerator end
+
+struct RolloutGenerator <: HoverGenerator
+    n::Int
+end
+
+function force_hover(p::Problem, force_hover::Vector{Int})
+    (;JSON.lower(p)..., force_hover = force_hover .- 1)
+end
+
+force_hover(g::HoverGenerator, p::Problem) = force_hover(p, generate(g, p))
+
+function generate(g::HoverGenerator, p::Problem)
+    reduce(vcat, rollout(p) for i in 1:g.n)
+end
+
+function rollout(p::Problem)
+    res = [p.start]
+    for i in 1:p.n_steps
+        push!(res, rand(children(p, res[end])))
+    end
+    res
+end
+
 function make_trials(; n=8, )
     graph = neighbor_list(intro_graph(n))
     rewards = exponential_rewards(n)
@@ -109,8 +133,8 @@ function make_trials(; n=8, )
     learn_rewards = (;trial_sets)
 
     intro = sample_problem(;kws..., rewards=zeros(n))
-    sample_problem(;kws...)
     (;
+        test = force_hover(RolloutGenerator(5), sample_problem(;kws..., n_steps=3)),
         intro,
         collect_all = sample_problem(; rewards=shuffle(rewards), kws...),
         learn_rewards,
@@ -118,10 +142,10 @@ function make_trials(; n=8, )
         practice_revealed = [sample_problem(;kws..., n_steps) for n_steps in 3:5],
         calibration = intro,
         # vary_transition = sample_problem(;n, rdist),
-        # intro_hover = sample_problem(;kws...),
-        # practice_hover = [sample_problem(;kws..., n_steps) for n_steps in 3:5],
-        main = [sample_problem(;kws..., n_steps) for n_steps in shuffle(repeat(3:5, 3))],
-        eyetracking = [sample_problem(;kws..., n_steps) for n_steps in shuffle(repeat(3:5, 7))]
+        intro_hover = sample_problem(;kws...),
+        practice_hover = [sample_problem(;kws..., n_steps) for n_steps in 3:5],
+        main = [sample_problem(;kws..., n_steps) for n_steps in shuffle(repeat(3:5, 10))],
+        # eyetracking = [sample_problem(;kws..., n_steps) for n_steps in shuffle(repeat(3:5, 7))]
     )
 end
 
@@ -135,16 +159,16 @@ function reward_graphics(n=8)
     Dict(zip(exponential_rewards(n), sample(emoji, n; replace=false)))
 end
 
-version = "v9"
+version = "v10"
 Random.seed!(hash(version))
-subj_trials = repeatedly(make_trials, 10)
+subj_trials = repeatedly(make_trials, 1)
 
 # %% --------
 
 base_params = (
-    eye_tracking = true,
-    hover_edges = false,
-    hover_rewards = false,
+    eye_tracking = false,
+    hover_edges = true,
+    hover_rewards = true,
     points_per_cent = 3,
     use_n_steps = true,
     vary_transition = false,
@@ -165,7 +189,11 @@ end
 # %% --------
 
 bonus = map(subj_trials) do trials
-    (50 + sum(value.(trials.main)) + sum(value.(trials.eyetracking))) / (base_params.points_per_cent * 100)
+    trials = mapreduce(vcat, [:main, :eyetracking]) do t
+        get(trials, t, [])
+    end
+    points = 50 + sum(value.(trials))
+    points / (base_params.points_per_cent * 100)
 end
 
 using UnicodePlots
