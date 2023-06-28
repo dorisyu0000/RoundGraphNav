@@ -41,7 +41,8 @@ addPlugin('test', async function test(root, trial) {
 
   // trial.force_hover = [0, 1, 2, 3, 4]
   cg = new CircleGraph($("#cgi-root"), trial);
-  await cg.showStartScreen(trial)
+  // await cg.showStartScreen(trial)
+  cg.showGraph()
   await cg.navigate()
   $(root).empty()
   jsPsych.finishTrial(cg.data)

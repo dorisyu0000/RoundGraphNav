@@ -174,23 +174,11 @@ export class CircleGraph {
       const state = parseInt(el.getAttribute('data-state'), 10);
       el.addEventListener('mouseenter', (e) => {
         this.logger('mouseenter', {state})
-        el.classList.add('is-visible');
-        for (const successor of this.graph.successors(state)) {
-          $(`.GraphNavigation-edge-${state}-${successor}`).addClass('is-visible')
-        }
-        for (const pred of this.graph.predecessors(state)) {
-          $(`.GraphNavigation-edge-${pred}-${state}`).addClass('is-visible')
-        }
+        this.options.force_hover || this.hover(state)
       });
       el.addEventListener('mouseleave', (e) => {
         this.logger('mouseleave', {state})
-        el.classList.remove('is-visible');
-        for (const successor of this.graph.successors(state)) {
-          $(`.GraphNavigation-edge-${state}-${successor}`).removeClass('is-visible')
-        }
-        for (const pred of this.graph.predecessors(state)) {
-          $(`.GraphNavigation-edge-${pred}-${state}`).removeClass('is-visible')
-        }
+        this.options.force_hover || this.unhover(state)
       });
     }
   }
@@ -304,6 +292,10 @@ export class CircleGraph {
     $("#GraphNavigation-steps").html(stepsLeft)
     this.visitState(this.state, true)
 
+    if (this.options.force_hover) {
+      await this.showForcedHovers()
+    }
+
     while (true) { // eslint-disable-line no-constant-condition
       // State transition
       const g = this.graph;
@@ -348,12 +340,26 @@ export class CircleGraph {
   }
 
   async showForcedHovers() {
-    await sleep(1000)
-    for (const s of this.options.force_hover) {
-      this.hover(s)
-      await sleep(this.options.hover_duration ?? 1000)
-      this.unhover(s)
+    this.logger('begin forced hovers')
+    await sleep(500)
+    let states = this.options.force_hover
+    console.log('states', states)
+    for (var i = 0; i < states.length; i++) {
+      states[i]
+      console.log('i', i, i+1, states[i], states[1])
+      this.hover(states[i])
+      await sleep(1000)
+      this.highlightEdge(states[i], states[i+1])
+      await sleep(1000)
+      this.unhover(states[i])
     };
+  }
+
+  highlightEdge(s1, s2) {
+    console.log('highlight', s1, s2)
+    $(this.el).addClass('SomeHighlighted')
+    $(`.GraphNavigation-edge,.GraphNavigation-arrow`).removeClass('HighlightedEdge')
+    $(`.GraphNavigation-edge-${s1}-${s2}`).addClass('HighlightedEdge')
   }
 
   hover(state) {
@@ -533,7 +539,7 @@ function renderCircleGraph(graph, gfx, goal, options) {
           translate(-30px)
           rotate(90deg)
         ;">
-        <svg height="70" width="70" style="display: block; ">
+        <svg height="70" width="70" style="display: block; fill: currentColor; stroke: currentColor">
             <polygon points="
             35  , 38
             29  , 50

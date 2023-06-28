@@ -316,6 +316,22 @@
     border: 5px solid darkblue;
 }
 
+.GraphNavigation.SomeHighlighted .GraphNavigation-edge {
+    background: lightgray;
+}
+
+.GraphNavigation.SomeHighlighted .GraphNavigation-arrow {
+    color: lightgray;
+}
+
+.GraphNavigation-edge.HighlightedEdge {
+    background: black !important;
+}
+
+.GraphNavigation-arrow.HighlightedEdge {
+    color: black !important;
+}
+
 .Peek {
     font-size: 20px;
 }
