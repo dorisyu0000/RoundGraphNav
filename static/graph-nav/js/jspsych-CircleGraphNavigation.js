@@ -345,13 +345,17 @@ export class CircleGraph {
     let states = this.options.force_hover
     console.log('states', states)
     for (var i = 0; i < states.length; i++) {
-      states[i]
-      console.log('i', i, i+1, states[i], states[1])
-      this.hover(states[i])
+      let s1 = states[i], s2 = states[i+1]
+      if (s1 == -1) {
+        await sleep(500)
+        continue
+      }
+      this.showState(s1)
       await sleep(1000)
-      this.highlightEdge(states[i], states[i+1])
-      await sleep(1000)
-      this.unhover(states[i])
+      this.showEdge(s1, s2)
+      await sleep(400)
+      this.hideState(s1)
+      this.hideEdge(s1, s2)
     };
   }
 
@@ -362,23 +366,39 @@ export class CircleGraph {
     $(`.GraphNavigation-edge-${s1}-${s2}`).addClass('HighlightedEdge')
   }
 
-  hover(state) {
+  showState(state) {
     $(`.GraphNavigation-State-${state}`).addClass('is-visible')
+  }
+
+  hideState(state) {
+    $(`.GraphNavigation-State-${state}`).removeClass('is-visible')
+  }
+
+  showEdge(state, successor) {
+    $(`.GraphNavigation-edge-${state}-${successor}`).addClass('is-visible')
+  }
+
+  hideEdge(state, successor) {
+    $(`.GraphNavigation-edge-${state}-${successor}`).removeClass('is-visible')
+  }
+
+  hover(state) {
+    this.showState(state)
     for (const successor of this.graph.successors(state)) {
-      $(`.GraphNavigation-edge-${state}-${successor}`).addClass('is-visible')
+      this.showEdge(state, successor)
     }
     for (const pred of this.graph.predecessors(state)) {
-      $(`.GraphNavigation-edge-${pred}-${state}`).addClass('is-visible')
+      this.showEdge(pred, state)
     }
   }
 
   unhover(state) {
-    $(`.GraphNavigation-State-${state}`).removeClass('is-visible')
+    this.hideState(state)
     for (const successor of this.graph.successors(state)) {
-      $(`.GraphNavigation-edge-${state}-${successor}`).removeClass('is-visible')
+      this.hideEdge(state, successor)
     }
     for (const pred of this.graph.predecessors(state)) {
-      $(`.GraphNavigation-edge-${pred}-${state}`).removeClass('is-visible')
+      this.hideEdge(pred, state)
     }
   }
 

@@ -105,8 +105,8 @@ end
 
 force_hover(g::HoverGenerator, p::Problem) = force_hover(p, generate(g, p))
 
-function generate(g::HoverGenerator, p::Problem)
-    reduce(vcat, rollout(p) for i in 1:g.n)
+function generate(g::RolloutGenerator, p::Problem)
+    reduce(vcat, [rollout(p); 0] for i in 1:g.n)
 end
 
 function rollout(p::Problem)
