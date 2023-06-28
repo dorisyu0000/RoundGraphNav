@@ -134,7 +134,7 @@ function make_trials(; n=8, )
 
     intro = sample_problem(;kws..., rewards=zeros(n))
     (;
-        test = force_hover(RolloutGenerator(5), sample_problem(;kws..., n_steps=3)),
+        test = force_hover(RolloutGenerator(5), sample_problem(;kws..., n_steps=4)),
         intro,
         collect_all = sample_problem(; rewards=shuffle(rewards), kws...),
         learn_rewards,
@@ -197,4 +197,6 @@ bonus = map(subj_trials) do trials
 end
 
 using UnicodePlots
-display(histogram(bonus, nbins=10, vertical=true, height=10))
+if length(bonus) > 1
+    display(histogram(bonus, nbins=10, vertical=true, height=10))
+end
