@@ -341,38 +341,39 @@ export class CircleGraph {
 
   async showForcedHovers() {
     this.logger('begin forced hovers')
-    let delay = 1
-    await sleep(delay)
+    let delay = 750
+    // await sleep(delay)
     let states = this.options.force_hover
-    console.log('states', states)
     for (var i = 0; i < states.length; i++) {
       let s1 = states[i], s2 = states[i+1]
       if (s1 == -1) {
-        await sleep(delay)
+        // await sleep(delay)
         continue
       }
       this.showState(s1)
       await sleep(delay)
+      this.hideState(s1)
       if (s2 == -1) {  // end of rollout
-        await sleep(1500)
+        // await sleep(delay)
         // let s3 = states[i+2]
         // this.highlight(s3)
         // await this.clickState(s3)
         // this.unhighlight(s3)
       } else {
         this.showEdge(s1, s2)
-        this.highlight(s2)
+        // this.highlight(s2)
         await this.clickState(s2)
-        this.unhighlight(s2)
+        // this.unhighlight(s2)
         this.hideEdge(s1, s2)
       }
-      this.hideState(s1)
     };
   }
 
   clickState(state) {
     return new Promise((resolve, reject) => {
+      $(`.GraphNavigation-State-${state}`).css('cursor', 'pointer')
       $(`.GraphNavigation-State-${state}`).one('click', () => {
+        $(`.GraphNavigation-State-${state}`).css('cursor', '')
         resolve()
       })
     })
