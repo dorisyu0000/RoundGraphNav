@@ -86,7 +86,8 @@ class Prolific(object):
                 print(f'https://app.prolific.co/researcher/workspaces/studies/{new_id}')
 
     def last_study(self, project_id):
-        return self.get(f'/projects/{project_id}/studies/')['results'][-1]['id']
+        studies = self.get(f'/projects/{project_id}/studies/')['results']
+        return [s for s in studies if s['status'] != 'UNPUBLISHED'][-1]['id']
 
     def approve_all(self, study_id, ignore_code=False):
         to_approve = []
