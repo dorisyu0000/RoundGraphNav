@@ -65,7 +65,7 @@ export class CircleGraph {
     this.cancellables = [];
 
     this.data = {
-      trial: _.pick(this.options, 'graph', 'n_steps', 'rewards', 'start', 'hover_edges', 'hover_rewards')
+      trial: _.pick(this.options, 'graph', 'n_steps', 'rewards', 'start', 'hover_edges', 'hover_rewards', 'expansions')
     }
     this.setupLogging()
   }
@@ -373,12 +373,14 @@ export class CircleGraph {
       await this.clickState(s2)
 
       this.hideEdge(s1, s2)
+      this.logger('force hover', {s1, s2, duration: delay})
       this.showState(s2)
       await sleep(delay)
 
       this.hideState(s2)
     };
     $(this.el).removeClass('forced-hovers')
+    this.logger('end forced hovers')
   }
 
   clickState(state) {
