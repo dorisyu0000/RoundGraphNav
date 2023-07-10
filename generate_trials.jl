@@ -163,8 +163,8 @@ function make_trials(; n=8, )
     prms = grid(
         # n_steps = [5],
         # n_roll = [1, 5],
-        n_steps = 3:5,
-        n_roll = 1:5
+        n_steps = 2:4,
+        n_roll = 1:4,
     )
     main = map(repeat(prms[:], 2)) do (;n_steps, n_roll)
         ForceHoverTrial(RolloutGenerator(n_roll); kws..., n_steps)
@@ -176,9 +176,9 @@ function make_trials(; n=8, )
         collect_all = sample_problem(; rewards=shuffle(rewards), kws...),
         learn_rewards,
         move2 = [sample_problem(;kws..., n_steps=2) for _ in 1:3],
-        practice_revealed = [sample_problem(;kws..., n_steps) for n_steps in 3:5],
+        practice_revealed = [sample_problem(;kws..., n_steps) for n_steps in 3:4],
         intro_hover = rollout_trial(3; kws..., n_steps=3),
-        practice_hover = [sample_problem(;kws..., n_steps) for n_steps in 3:5],
+        practice_hover = [sample_problem(;kws..., n_steps) for n_steps in 2:4],
         main,
         # vary_transition = sample_problem(;n, rdist),
         # calibration = intro,
@@ -197,7 +197,7 @@ function reward_graphics(n=8)
     Dict(zip(exponential_rewards(n), sample(emoji, n; replace=false)))
 end
 
-version = "v12"
+version = "v13"
 Random.seed!(hash(version))
 subj_trials = repeatedly(make_trials, 30)
 
@@ -207,7 +207,7 @@ base_params = (
     eye_tracking = false,
     hover_edges = true,
     hover_rewards = true,
-    points_per_cent = 3,
+    points_per_cent = 2,
     use_n_steps = true,
     vary_transition = false,
     # linear_rewards = true,
