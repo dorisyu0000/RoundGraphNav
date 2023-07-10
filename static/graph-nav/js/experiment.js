@@ -113,7 +113,7 @@ async function initializeExperiment() {
 
 
   var timeline = [
-    instruct_block('test', {enable_hover: true}),
+    // instruct_block('test', {enable_hover: true}),
     config.trials.eyetracking && bare_block('check_camera'),
     // instruct_block('test'),
     instruct_block('intro'),

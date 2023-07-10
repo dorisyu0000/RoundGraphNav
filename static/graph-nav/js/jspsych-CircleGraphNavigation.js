@@ -82,7 +82,7 @@ export class CircleGraph {
   showGraph() {
     this.root.append(this.wrapper)
     this.setupMouseTracking()
-    this.setupEyeTracking()
+    // this.setupEyeTracking()
 
     $(`.ShadowState img`).remove()
     if (!this.options.show_steps) {
@@ -174,11 +174,11 @@ export class CircleGraph {
       const state = parseInt(el.getAttribute('data-state'), 10);
       el.addEventListener('mouseenter', (e) => {
         this.logger('mouseenter', {state})
-        this.options.force_hover || this.hover(state)
+        this.options.expansions || this.hover(state)
       });
       el.addEventListener('mouseleave', (e) => {
         this.logger('mouseleave', {state})
-        this.options.force_hover || this.unhover(state)
+        this.options.expansions || this.unhover(state)
       });
     }
   }
@@ -257,6 +257,16 @@ export class CircleGraph {
     $("#GraphNavigation-points").html(this.score)
   }
 
+  showOutgoingEdges(state) {
+    console.log('showOutgoingEdges')
+    $(`.GraphNavigation-edge`).removeClass('is-visible');
+    $(`.GraphNavigation-arrow`).removeClass('is-visible');
+    console.log('DEBUG', this.graph, this.graph.successors(state))
+    for (const successor of this.graph.successors(state)) {
+      this.showEdge(state, successor)
+    }
+  }
+
   visitState(state, initial=false) {
     invariant(typeof(1) == 'number')
     this.logger('visit', {state, initial})
@@ -292,9 +302,11 @@ export class CircleGraph {
     $("#GraphNavigation-steps").html(stepsLeft)
     this.visitState(this.state, true)
 
-    if (this.options.force_hover) {
+    if (this.options.expansions) {
       await this.showForcedHovers()
+      this.showOutgoingEdges(this.state)
     }
+    console.log('done with forcedHovers')
 
     while (true) { // eslint-disable-line no-constant-condition
       // State transition
@@ -305,6 +317,9 @@ export class CircleGraph {
         ),
       });
       this.visitState(state)
+      if (this.options.expansions) {
+        this.showOutgoingEdges(state)
+      }
       path.push(state)
 
       stepsLeft -= 1;
@@ -339,34 +354,25 @@ export class CircleGraph {
     return path
   }
 
-  async showForcedHovers() {
+  async showForcedHovers(start=0, stop) {
+    $(this.el).addClass('forced-hovers')
     this.logger('begin forced hovers')
     let delay = 750
     // await sleep(delay)
-    let states = this.options.force_hover
-    for (var i = 0; i < states.length; i++) {
-      let s1 = states[i], s2 = states[i+1]
-      if (s1 == -1) {
-        // await sleep(delay)
-        continue
-      }
-      this.showState(s1)
+    for (var i = start; i < (stop ?? this.options.expansions.length); i++) {
+      let [s1, s2] = this.options.expansions[i]
+      console.log(s1, s2)
+
+      this.showEdge(s1, s2)
+      await this.clickState(s2)
+
+      this.hideEdge(s1, s2)
+      this.showState(s2)
       await sleep(delay)
-      this.hideState(s1)
-      if (s2 == -1) {  // end of rollout
-        // await sleep(delay)
-        // let s3 = states[i+2]
-        // this.highlight(s3)
-        // await this.clickState(s3)
-        // this.unhighlight(s3)
-      } else {
-        this.showEdge(s1, s2)
-        // this.highlight(s2)
-        await this.clickState(s2)
-        // this.unhighlight(s2)
-        this.hideEdge(s1, s2)
-      }
+
+      this.hideState(s2)
     };
+    $(this.el).removeClass('forced-hovers')
   }
 
   clickState(state) {
@@ -387,6 +393,7 @@ export class CircleGraph {
   }
 
   showState(state) {
+    this.logger('showState', {state})
     $(`.GraphNavigation-State-${state}`).addClass('is-visible')
   }
 
@@ -432,7 +439,7 @@ export class CircleGraph {
     this.rewards[state] = parseFloat(reward)
     let graphic = this.options.rewardGraphics[reward]
     $(`.GraphNavigation-State-${state}`).html(`
-      <img src="${graphicsUrl(graphic)}" />
+      <img src="${graphicsUrl(graphic)}" dragggable=false/>
     `)
   }
 
@@ -454,7 +461,7 @@ const stateTemplate = (state, graphic, options) => {
   }
   return `
   <div class="State GraphNavigation-State ${cls || ''}" style="${options.style || ''}" data-state="${state}">
-    <img src="${graphicsUrl(graphic)}" />
+    <img src="${graphicsUrl(graphic)}" dragggable=false/>
   </div>
   `;
 };

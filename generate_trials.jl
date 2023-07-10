@@ -93,21 +93,36 @@ function Random.rand(rng::AbstractRNG, s::Random.SamplerTrivial{<:Shuffler})
     shuffle(s[].x)
 end
 
+
+struct ForceHoverTrial
+    p::Problem
+    expansions::Vector{Tuple{Int, Int}}
+end
+
+function JSON.lower(t::ForceHoverTrial)
+    (;JSON.lower(t.p)..., expansions=map(e -> e .- 1, t.expansions))
+end
+
 abstract type HoverGenerator end
+
+function ForceHoverTrial(gen::HoverGenerator; kws...)
+    problem = sample_problem(;kws...)
+    expansions = generate(gen, problem)
+    ForceHoverTrial(problem, expansions)
+end
+
 
 struct RolloutGenerator <: HoverGenerator
     n::Int
 end
 
-function force_hover(p::Problem, force_hover::Vector{Int})
-    (;JSON.lower(p)..., force_hover = force_hover .- 1)
+function generate(g::RolloutGenerator, problem::Problem)
+    mapreduce(vcat, 1:g.n) do i
+        sliding_window(rollout(problem), 2)
+    end
 end
 
-force_hover(g::HoverGenerator, p::Problem) = force_hover(p, generate(g, p))
-
-function generate(g::RolloutGenerator, p::Problem)
-    reduce(vcat, [rollout(p); 0] for i in 1:g.n)
-end
+sliding_window(xs, n) = [(xs[i], xs[i+1]) for i in 1:length(xs)-1]
 
 function rollout(p::Problem)
     res = [p.start]
@@ -115,6 +130,18 @@ function rollout(p::Problem)
         push!(res, rand(children(p, res[end])))
     end
     res
+end
+
+struct RandomGenerator <: HoverGenerator
+    n::Int
+end
+
+function generate(g::RandomGenerator, problem::Problem)
+    repeatedly(g.n) do
+        a = rand(states(problem))
+        b = rand(children(problem, a))
+        (a, b)
+    end
 end
 
 function make_trials(; n=8, )
@@ -133,18 +160,28 @@ function make_trials(; n=8, )
     learn_rewards = (;trial_sets)
 
     intro = sample_problem(;kws..., rewards=zeros(n))
+    prms = grid(
+        # n_steps = [5],
+        # n_roll = [1, 5],
+        n_steps = 3:5,
+        n_roll = 1:5
+    )
+    main = map(repeat(prms[:], 2)) do (;n_steps, n_roll)
+        ForceHoverTrial(RolloutGenerator(n_roll); kws..., n_steps)
+    end |> shuffle
     (;
-        test = force_hover(RolloutGenerator(5), sample_problem(;kws..., n_steps=4)),
+        # test = ForceHoverTrial(RandomGenerator(10); kws..., n_steps=3),
+        # test = ForceHoverTrial(RolloutGenerator(1); kws..., n_steps=2),
         intro,
         collect_all = sample_problem(; rewards=shuffle(rewards), kws...),
         learn_rewards,
         move2 = [sample_problem(;kws..., n_steps=2) for _ in 1:3],
         practice_revealed = [sample_problem(;kws..., n_steps) for n_steps in 3:5],
-        calibration = intro,
-        # vary_transition = sample_problem(;n, rdist),
-        intro_hover = sample_problem(;kws...),
+        intro_hover = rollout_trial(3; kws..., n_steps=3),
         practice_hover = [sample_problem(;kws..., n_steps) for n_steps in 3:5],
-        main = [sample_problem(;kws..., n_steps) for n_steps in shuffle(repeat(3:5, 10))],
+        main,
+        # vary_transition = sample_problem(;n, rdist),
+        # calibration = intro,
         # eyetracking = [sample_problem(;kws..., n_steps) for n_steps in shuffle(repeat(3:5, 7))]
     )
 end
@@ -175,7 +212,7 @@ base_params = (
     # linear_rewards = true,
 )
 
-dest = "static/json/config/"
+dest = "static/json/config"
 rm(dest, recursive=true)
 mkpath(dest)
 foreach(enumerate(subj_trials)) do (i, trials)
@@ -184,9 +221,13 @@ foreach(enumerate(subj_trials)) do (i, trials)
         rewardGraphics = reward_graphics(8),
     )
     write("$dest/$i.json", json((;parameters, trials)))
+    println("$dest/$i.json")
+
 end
 
 # %% --------
+
+value(t::ForceHoverTrial) = value(t.p)
 
 bonus = map(subj_trials) do trials
     trials = mapreduce(vcat, [:main, :eyetracking]) do t
