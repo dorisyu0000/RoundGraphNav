@@ -257,11 +257,13 @@ export class CircleGraph {
     $("#GraphNavigation-points").html(this.score)
   }
 
-  showOutgoingEdges(state) {
-    console.log('showOutgoingEdges')
+  hideAllEdges() {
     $(`.GraphNavigation-edge`).removeClass('is-visible');
     $(`.GraphNavigation-arrow`).removeClass('is-visible');
-    console.log('DEBUG', this.graph, this.graph.successors(state))
+  }
+
+  showOutgoingEdges(state) {
+    this.hideAllEdges()
     for (const successor of this.graph.successors(state)) {
       this.showEdge(state, successor)
     }
@@ -306,7 +308,6 @@ export class CircleGraph {
       await this.showForcedHovers()
       this.showOutgoingEdges(this.state)
     }
-    console.log('done with forcedHovers')
 
     while (true) { // eslint-disable-line no-constant-condition
       // State transition
@@ -316,6 +317,12 @@ export class CircleGraph {
           g.states.filter(s => !g.successors(this.state).includes(s))
         ),
       });
+      if (this.options.expansions) {
+        this.hideAllEdges()
+        this.showEdge(this.state, state)
+        this.showState(state)
+        await sleep(500)
+      }
       this.visitState(state)
       if (this.options.expansions) {
         this.showOutgoingEdges(state)
@@ -361,7 +368,6 @@ export class CircleGraph {
     // await sleep(delay)
     for (var i = start; i < (stop ?? this.options.expansions.length); i++) {
       let [s1, s2] = this.options.expansions[i]
-      console.log(s1, s2)
 
       this.showEdge(s1, s2)
       await this.clickState(s2)
@@ -386,7 +392,6 @@ export class CircleGraph {
   }
 
   highlightEdge(s1, s2) {
-    console.log('highlight', s1, s2)
     $(this.el).addClass('SomeHighlighted')
     $(`.GraphNavigation-edge,.GraphNavigation-arrow`).removeClass('HighlightedEdge')
     $(`.GraphNavigation-edge-${s1}-${s2}`).addClass('HighlightedEdge')

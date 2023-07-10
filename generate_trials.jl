@@ -171,7 +171,7 @@ function make_trials(; n=8, )
     end |> shuffle
     (;
         # test = ForceHoverTrial(RandomGenerator(10); kws..., n_steps=3),
-        # test = ForceHoverTrial(RolloutGenerator(1); kws..., n_steps=2),
+        test = ForceHoverTrial(RolloutGenerator(1); kws..., n_steps=2),
         intro,
         collect_all = sample_problem(; rewards=shuffle(rewards), kws...),
         learn_rewards,
@@ -185,6 +185,7 @@ function make_trials(; n=8, )
         # eyetracking = [sample_problem(;kws..., n_steps) for n_steps in shuffle(repeat(3:5, 7))]
     )
 end
+
 
 # %% --------
 

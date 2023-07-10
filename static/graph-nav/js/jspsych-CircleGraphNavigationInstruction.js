@@ -373,7 +373,7 @@ addPlugin('intro_hover', async function intro_hover(root, trial) {
   $(".State > img").css({'opacity': ''})
   $(".GraphNavigation-edge").css({'opacity': ''})
   $(".GraphNavigation-arrow").css({'opacity': ''})
-  await sleep(1300)
+  await sleep(1000)
   await button()
 
   message(`On each round, we will show you parts of the board, one at a time.`)
@@ -401,8 +401,7 @@ addPlugin('intro_hover', async function intro_hover(root, trial) {
   message('Keep clicking where the arrow points to see more of the board.')
   cg.hideState(s2)
   cg.hideEdge(s1, s2)
-  hover = cg.showForcedHovers(1)
-  await hover
+  await cg.showForcedHovers(1)
   message(`Your current location will turn back to blue when it's time to select your moves.`)
   await button()
   message(`Good luck!`)
