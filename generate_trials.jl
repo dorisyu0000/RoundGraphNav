@@ -197,9 +197,9 @@ function reward_graphics(n=8)
     Dict(zip(exponential_rewards(n), sample(emoji, n; replace=false)))
 end
 
-version = "v10"
+version = "v12"
 Random.seed!(hash(version))
-subj_trials = repeatedly(make_trials, 1)
+subj_trials = repeatedly(make_trials, 30)
 
 # %% --------
 
