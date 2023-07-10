@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 import sys
 import os
-
-import requests
 import re
+import requests
+from configparser import ConfigParser
+from markdown import markdown
 
 class Prolific(object):
     """Prolific API wrapper"""
@@ -24,12 +25,16 @@ class Prolific(object):
         r = requests.request(method, url, **kws, headers={
             'Authorization': f'Token {self.token}',
         })
-        response = r.json()
-        if r.ok:
-            return response
-        else:
-            print(f'Bad request! {url}')
-            print(response)
+        try:
+            response = r.json()
+            if r.ok:
+                return response
+            else:
+                print(f'Bad request! {url}')
+                print(response)
+        except:
+            print("Problem parsing result")
+            return r
 
     def get(self, url, **kws):
         return self.request('GET', url, **kws)
@@ -40,6 +45,9 @@ class Prolific(object):
     def patch(self, url, json=None, **kws):
         return self.request('PATCH', url, json=json, **kws)
 
+    def delete(self, url, json=None, **kws):
+        return self.request('DELETE', url, json=json, **kws)
+
     def post_duplicate(self, study_id, **kws):
         # name, internal_name, description, total_available_places
 
@@ -48,9 +56,14 @@ class Prolific(object):
         if 'name' not in kws:
             kws['name'] = new['name'].replace(' Copy', '')
 
-        kws['reward'] = 400
-        kws['total_available_places'] = 5
-        kws['estimated_completion_time'] = 30
+        c = ConfigParser()
+        c.read('config.txt')
+
+        for k, v in dict(c['Prolific']).items():
+            if k == 'description':
+                v = markdown(v)
+            kws[k] = v
+        import IPython, time; IPython.embed(); time.sleep(0.5)
 
         new = self.patch(f'/studies/{new_id}/', kws)
 
@@ -59,14 +72,18 @@ class Prolific(object):
         for k in ['name', 'internal_name', 'description', 'reward', 'total_available_places', 'cost']:
             print(k + ': ' + str(new[k]))
         y = input(f'Go ahead? [y/N] ')
-        if y in 'yY':
+        if y.lower() == 'y':
             self.post(f'/studies/{new_id}/transition/', {
                 "action": "PUBLISH"
             })
             print('Posted! See submssisions at:')
             print(f'https://app.prolific.co/researcher/workspaces/studies/{new_id}/submissions')
         else:
-            print('NOT posting')
+            y = input('NOT posting. Keep draft? [Y/n] ')
+            if y.lower() == 'n':
+                self.delete('/studies/' + new['id'])
+            else:
+                print(f'https://app.prolific.co/researcher/workspaces/studies/{new_id}')
 
     def last_study(self, project_id):
         return self.get(f'/projects/{project_id}/studies/')['results'][-1]['id']

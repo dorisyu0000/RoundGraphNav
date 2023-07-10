@@ -11,6 +11,16 @@ organization_name = SOME UNKNOWN UNIVERSITY
 browser_exclude_rule = MSIE, mobile, tablet
 allow_repeats = true
 
+[Prolific]
+name = Puzzle Game
+reward = 500
+total_available_places = 10
+estimated_completion_time = 30
+description =
+    In this study, you will solve a series of puzzles that involve collecting items of varying value.
+
+    Based on your performance, you will earn **a bonus of up to $1.25!** (USD)
+
 [Database Parameters]
 database_url = sqlite:///participants.db
 table_name = participants
