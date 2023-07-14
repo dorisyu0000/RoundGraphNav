@@ -13,13 +13,13 @@ allow_repeats = true
 
 [Prolific]
 name = Puzzle Game
-reward = 500
-total_available_places = 10
-estimated_completion_time = 30
+reward = 350
+total_available_places = 20
+estimated_completion_time = 22
 description =
     In this study, you will solve a series of puzzles that involve collecting items of varying value.
 
-    Based on your performance, you will earn **a bonus of up to $1!** (USD)
+    Based on your performance, you will earn **a bonus of up to $1.50!** (USD)
 
 [Database Parameters]
 database_url = sqlite:///participants.db
