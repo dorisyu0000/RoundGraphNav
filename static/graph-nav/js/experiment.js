@@ -113,7 +113,6 @@ async function initializeExperiment() {
 
 
   var timeline = [
-    // instruct_block('test', {enable_hover: true}),
     config.trials.eyetracking && bare_block('check_camera'),
     // instruct_block('test'),
     instruct_block('intro'),
@@ -174,7 +173,14 @@ async function initializeExperiment() {
 
 
   const name = QUERY.get('name');
-  if (name) {
+  if (name == "test") {
+    timeline = [
+      instruct_block('test', {enable_hover: true}),
+      instruct_block('test', {enable_hover: true}),
+      instruct_block('test', {enable_hover: true}),
+      instruct_block('test', {enable_hover: true}),
+    ]
+  } else if (name) {
     while (timeline[0].name != name) {
       timeline.shift()
       if (timeline.length <= 0) throw new Error("Timeline is empty")
