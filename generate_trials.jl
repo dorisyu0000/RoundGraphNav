@@ -4,21 +4,39 @@ model_dir = "/Users/fred/projects/graphnav/model"
 include("$model_dir/problem.jl")
 include("$model_dir/utils.jl")
 
-function default_graph_requirement(sgraph)
-    is_connected(sgraph) || return false
-    # all(vertices(sgraph)) do v
-    #     length(neighbors(sgraph, v)) ≥ 1
-    # end
+# function default_graph_requirement(sgraph)
+#     is_connected(sgraph) || return false
+#     # all(vertices(sgraph)) do v
+#     #     length(neighbors(sgraph, v)) ≥ 1
+#     # end
+# end
+
+# function sample_graph(n; d=3, requirement=default_graph_requirement)
+#     for i in 1:10000
+#         sgraph = expected_degree_graph(fill(d, n)) |> random_orientation_dag
+#         # sgraph = expected_degree_graph(fill(2, n))
+#         requirement(sgraph) && return neighbor_list(sgraph)
+#     end
+#     error("Can't sample a graph!")
+# end
+
+function sample_graph(n, start)
+    g = DiGraph(n)
+    done = falses(n)
+    function rec(s, possible_descendents)
+        done[s] && return
+        done[s] = true
+        n_child = min(2, length(possible_descendents))
+        children = sample(possible_descendents, n_child; replace=false)
+        for s′ in children
+            add_edge!(g, s, s′)
+            rec(s′, setdiff(possible_descendents, s′))
+        end
+    end
+    rec(start, setdiff(1:n, start))
+    neighbor_list(g)
 end
 
-function sample_graph(n; d=3, requirement=default_graph_requirement)
-    for i in 1:10000
-        sgraph = expected_degree_graph(fill(d, n)) |> random_orientation_dag
-        # sgraph = expected_degree_graph(fill(2, n))
-        requirement(sgraph) && return neighbor_list(sgraph)
-    end
-    error("Can't sample a graph!")
-end
 
 neighbor_list(sgraph) = neighbors.(Ref(sgraph), vertices(sgraph))
 
@@ -30,8 +48,8 @@ function default_problem_requirement(problem)
     length(paths(problem; n_steps)) ≥ 2
 end
 
-function sample_problem_(;n, n_steps=-1, graph=sample_graph(n),
-                        rdist=nothing, rewards=rand(rdist), start=rand(1:n))
+function sample_problem_(;n, n_steps=-1, start=rand(1:n), graph=sample_graph(n, start),
+                        rdist=nothing, rewards=rand(rdist))
     rewards = copy(rewards)
     rewards[start] = 0
     Problem(graph, rewards, start, n_steps)
@@ -50,7 +68,7 @@ discrete_uniform(v) = DiscreteNonParametric(v, ones(length(v)) / length(v))
 function intro_graph(n)
     g = DiGraph(n)
     for i in 1:n
-        add_edge!(g, i, mod1(i+3, n))
+        add_edge!(g, i, mod1(i+1, n))
         add_edge!(g, i, mod1(i-2, n))
         # add_edge!(g, i, mod1(i+6, n))
     end
@@ -93,6 +111,16 @@ function Random.rand(rng::AbstractRNG, s::Random.SamplerTrivial{<:Shuffler})
     shuffle(s[].x)
 end
 
+struct IIDSampler{T}
+    n::Int
+    x::Vector{T}
+end
+
+function Random.rand(rng::AbstractRNG, s::Random.SamplerTrivial{<:IIDSampler})
+    (;n, x) = s[]
+    rand(x, n)
+end
+
 
 struct ForceHoverTrial
     p::Problem
@@ -126,8 +154,11 @@ sliding_window(xs, n) = [(xs[i], xs[i+1]) for i in 1:length(xs)-1]
 
 function rollout(p::Problem)
     res = [p.start]
-    for i in 1:p.n_steps
-        push!(res, rand(children(p, res[end])))
+    n_steps = p.n_steps <= 0 ? 100 : p.n_steps
+    for i in 1:n_steps
+        childs = children(p, res[end])
+        isempty(childs) && break
+        push!(res, rand(childs))
     end
     res
 end
@@ -147,40 +178,29 @@ end
 function make_trials(; n=8, )
     graph = neighbor_list(intro_graph(n))
     rewards = exponential_rewards(n)
-    rdist = Shuffler(rewards)
+    rdist = IIDSampler(n, rewards)
+    # rdist = Shuffler(rewards)
 
     # rewards = shuffle(repeat([-10, -5, 5, 10], cld(n, 4)))[1:n]
-    kws = (;n, graph, rdist)
+    kws = (;n, rdist)
 
-    trial_sets = map(1:10) do _
-        mapreduce(vcat, 1:3) do _
-            sample_pairs(rewards)
-        end
-    end
-    learn_rewards = (;trial_sets)
-
-    intro = sample_problem(;kws..., rewards=zeros(n))
+    intro = sample_problem(;graph, kws..., rewards=zeros(n))
     prms = grid(
-        # n_steps = [5],
-        # n_roll = [1, 5],
         n_steps = 2:4,
         n_roll = 1:4,
     )
+
     main = map(repeat(prms[:], 2)) do (;n_steps, n_roll)
-        ForceHoverTrial(RolloutGenerator(n_roll); kws..., n_steps)
+        ForceHoverTrial(RolloutGenerator(n_roll); kws...)
     end |> shuffle
     (;
-        # test = ForceHoverTrial(RandomGenerator(10); kws..., n_steps=3),
-        test = ForceHoverTrial(RolloutGenerator(1); kws..., n_steps=2),
+        test = ForceHoverTrial(RolloutGenerator(1); kws...),
         intro,
-        collect_all = sample_problem(; rewards=shuffle(rewards), kws...),
-        learn_rewards,
-        move2 = [sample_problem(;kws..., n_steps=2) for _ in 1:3],
-        practice_revealed = [sample_problem(;kws..., n_steps) for n_steps in 3:4],
-        intro_hover = rollout_trial(3; kws..., n_steps=3),
-        practice_hover = [sample_problem(;kws..., n_steps) for n_steps in 2:4],
+        practice_revealed = [sample_problem(;kws...) for i in 1:2],
+        intro_hover = ForceHoverTrial(RolloutGenerator(3); kws...),
+        practice_hover = [sample_problem(;kws...) for i in 1:2],
         main,
-        # vary_transition = sample_problem(;n, rdist),
+        vary_transition = sample_problem(;n, rdist),
         # calibration = intro,
         # eyetracking = [sample_problem(;kws..., n_steps) for n_steps in shuffle(repeat(3:5, 7))]
     )
@@ -199,7 +219,7 @@ end
 
 version = "v13"
 Random.seed!(hash(version))
-subj_trials = repeatedly(make_trials, 30)
+subj_trials = repeatedly(make_trials, 1)
 
 # %% --------
 
@@ -208,8 +228,8 @@ base_params = (
     hover_edges = true,
     hover_rewards = true,
     points_per_cent = 2,
-    use_n_steps = true,
-    vary_transition = false,
+    use_n_steps = false,
+    vary_transition = true,
     # linear_rewards = true,
 )
 
