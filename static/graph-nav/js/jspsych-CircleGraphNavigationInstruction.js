@@ -157,9 +157,9 @@ addPlugin('intro_hover', async function intro_hover(root, trial) {
   message("But in the real game, they're hidden!")
   await sleep(500)
 
-  trial._rewards && $(".GraphReward").animate({'opacity': 0}, 1000)
-  trial._edges && $(".GraphNavigation-edge").animate({'opacity': 0}, 1000)
-  trial._edges && $(".GraphNavigation-arrow").animate({'opacity': 0}, 1000)
+  trial._rewards && $(".GraphReward").animate({'opacity': 0}, 800)
+  trial._edges && $(".GraphNavigation-edge").animate({'opacity': 0}, 800)
+  trial._edges && $(".GraphNavigation-arrow").animate({'opacity': 0}, 800)
   await sleep(1000)
 
   cg.options.hover_rewards = trial._rewards
@@ -168,7 +168,6 @@ addPlugin('intro_hover', async function intro_hover(root, trial) {
   $(".GraphReward").css({'opacity': ''})
   $(".GraphNavigation-edge").css({'opacity': ''})
   $(".GraphNavigation-arrow").css({'opacity': ''})
-  await sleep(1000)
   await button()
 
   message(`On each round, we will show you parts of the board, one at a time.`)
