@@ -73,7 +73,7 @@ addPlugin('intro', async function intro(root, trial) {
 
   message(`
     The goal of the game is to collect points on the board.<br>
-    Try collecting this 4!
+    Try collecting this +4!
   `)
   let goal = _.sample(cg.graph.successors(cg.state))
   // $("#gn-points").show()
@@ -96,9 +96,10 @@ addPlugin('intro', async function intro(root, trial) {
   await cg.navigate({n_steps: -1, goal, leave_open: true})
 
   message(`
-    <i>Ouch!</i> You lost 4 points for collecting that one!<br>
-    (<span class="win">green</span> is good and <span class="loss">red</span> is bad)
+    <i>Ouch!</i> You lost 4 points for collecting that one!
   `)
+    // <br>
+    // (<span class="win">green</span> is good and <span class="loss">red</span> is bad)
   cg.removeGraph()
   await button()
 

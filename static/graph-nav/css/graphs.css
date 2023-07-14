@@ -60,15 +60,6 @@ img {
   position: absolute;
 }
 
-.loss {
-  color: #9E0002;
-  font-weight: 500;
-}
-.win {
-  color: #0F7003;
-  font-weight: 500;
-}
-
 @keyframes zoomup {
   0% {
     opacity: 0;
@@ -84,6 +75,33 @@ img {
     opacity: 0;
   }
 }
+
+.floatup {
+    animation-fill-mode: forwards;
+    animation: floatup 1s ease forwards;
+}
+
+@keyframes floatup {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-50px);
+/*    filter: blur(1px);*/
+    opacity: 0;
+  }
+}
+
+.loss {
+  color: #9E0002;
+  font-weight: 500;
+}
+.win {
+  color: #0F7003;
+  font-weight: 500;
+}
+
+
 
 .GraphNavigation-header-left {
   float: left;
@@ -188,13 +206,13 @@ img {
   background-color: #F7A100;
 }
 .GraphNavigation-current {
-  background-image: url('/static/graph-nav/images/openmoji/2733.svg');
+/*  background-image: url('/static/graph-nav/images/openmoji/2733.svg');*/
 }
 .GraphNavigation-goal {
-  background-image: url('/static/graph-nav/images/openmoji/2B50.svg');
+/*  background-image: url('/static/graph-nav/images/openmoji/2B50.svg');*/
 }
 .GraphNavigation-probe {
-  background-image: url('/static/graph-nav/images/openmoji/2754.svg');
+/*  background-image: url('/static/graph-nav/images/openmoji/2754.svg');*/
   background-color: white;
   border: 2px solid black !important;
   border-radius: 100% !important;
@@ -218,25 +236,25 @@ img {
   background-color: #EDE0FF;
 }
 .GraphNavigation.withGraphic .GraphNavigation-current {
-  background-image: none;
+/*  background-image: none;*/
   background-color: #1B79FF;
 }
 
 .GraphNavigation.forced-hovers .GraphNavigation-current {
-  background-image: none;
+/*  background-image: none;*/
   background-color: #FF6FA0;
 }
 
 .GraphNavigation.withGraphic .GraphNavigation-goal {
-  background-image: none;
+/*  background-image: none;*/
   background-color: #ffeb3b;
 }
 .GraphNavigation.withGraphic .GraphNavigation-probe {
-  background-image: none;
+/*  background-image: none;*/
   background-color: #2196f3;
 }
 .GraphNavigation.withGraphic .GraphNavigation-cue {
-  background-image: none;
+/*  background-image: none;*/
   background-color: #ccc;
 }
 
@@ -287,9 +305,9 @@ img {
   display: block;
 }
 
-.GraphNavigation.withGraphic .GraphNavigation-current > .GraphReward {
+/*.GraphNavigation.withGraphic .GraphNavigation-current > .GraphReward {
   display: none;
-}
+}*/
 
 /* Process tracing on rewards */
 .GraphNavigation.hideStates .State > .GraphReward {

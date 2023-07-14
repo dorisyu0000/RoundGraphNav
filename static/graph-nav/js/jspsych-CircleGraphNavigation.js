@@ -8,6 +8,7 @@ import {bfs} from './graphs.js';
 const BLOCK_SIZE = 100;
 window.$ = $
 
+let ensureSign = x => x > 0 ? "+" + x : "" + x
 
 export class CircleGraph {
   constructor(root, options) {
@@ -241,20 +242,11 @@ export class CircleGraph {
     });
   }
 
-  async addScore(points, state) {
+  addScore(points, state) {
     if (points == 0) {
       return
     }
     this.setScore(this.score + points)
-    let cls = (points < 0) ? "loss" : "win"
-    let sign = (points < 0) ? "" : "+"
-    let pop = $("<span>")
-    .addClass('pop ' + cls)
-    .text(sign + points)
-    .appendTo($(`.GraphNavigation-ShadowState-${state}`))
-
-    await sleep(1500)
-    pop.remove()
   }
 
   setScore(score) {
@@ -274,20 +266,23 @@ export class CircleGraph {
     }
   }
 
-  visitState(state, initial=false) {
+  async visitState(state, initial=false) {
     invariant(typeof(1) == 'number')
     this.logger('visit', {state, initial})
+    this.onStateVisit(state);
 
+    this.setCurrentState(state);
     if (!initial) {
       this.addScore(this.rewards[state], state)
+      if (this.options.consume) {
+        this.rewards[state] = 0
+        // let cls = (points < 0) ? "loss" : "win"
+        // let sign = (points < 0) ? "" : "+"
+        await sleep(200)
+        $(`.GraphNavigation-State-${state} > .GraphReward`).addClass('floatup')
+        // $(`.GraphNavigation-State-${state} > .GraphReward`).remove()
+      }
     }
-    if (this.options.consume) {
-      this.rewards[state] = 0
-      $(`.GraphNavigation-State-${state} .GraphReward`).remove()
-      // $(`.GraphNavigation-State-${state} .GraphReward`).remove()
-    }
-    this.onStateVisit(state);
-    this.setCurrentState(state);
   }
 
   async navigate(options) {
@@ -326,10 +321,10 @@ export class CircleGraph {
         this.hideAllEdges()
         this.showEdge(this.state, state)
         this.showState(state)
-        await sleep(500)
       }
       this.visitState(state)
       if (this.options.expansions) {
+        await sleep(500)
         this.showOutgoingEdges(state)
       }
       path.push(state)
@@ -375,6 +370,7 @@ export class CircleGraph {
       let [s1, s2] = this.options.expansions[i]
 
       this.showEdge(s1, s2)
+      await sleep(100)
       // await this.clickState(s2)
       await getKeyPress()
 
@@ -423,6 +419,7 @@ export class CircleGraph {
   }
 
   hover(state) {
+    return
     this.showState(state)
     for (const successor of this.graph.successors(state)) {
       this.showEdge(state, successor)
@@ -433,6 +430,7 @@ export class CircleGraph {
   }
 
   unhover(state) {
+    return
     this.hideState(state)
     for (const successor of this.graph.successors(state)) {
       this.hideEdge(state, successor)
@@ -453,7 +451,7 @@ export class CircleGraph {
     let graphic = this.options.rewardGraphics[reward]
     $(`.GraphNavigation-State-${state}`).html(
       $('<div>', {'class': 'GraphReward'}).html(`
-        ${reward == 0 ? '' : Math.abs(reward)}
+        ${reward == 0 ? '' : ensureSign(reward)}
       `).addClass(reward < 0 ? "loss" : "win")
     )
   }
