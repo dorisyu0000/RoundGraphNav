@@ -95,7 +95,10 @@ addPlugin('intro', async function intro(root, trial) {
   cg.setReward(goal, -4)
   await cg.navigate({n_steps: -1, goal, leave_open: true})
 
-  message(`<i>Ouch!</i> You lost 4 points for collecting that one!`)
+  message(`
+    <i>Ouch!</i> You lost 4 points for collecting that one!<br>
+    (<span class="win">green</span> is good and <span class="loss">red</span> is bad)
+  `)
   cg.removeGraph()
   await button()
 
@@ -306,8 +309,7 @@ addPlugin('backstep', async function backstep(root, trial) {
 addPlugin('vary_transition', async function vary_transition(root, trial) {
   setup(root)
   message(`
-    So far we've been playing with one set of connections (the arrows).<br>
-    But in the real game, the connections change on every round.
+    Both the connections and points change on every round of the game.
   `)
   cg = new CircleGraph($("#cgi-root"), trial);
   cg.showGraph()
@@ -319,9 +321,12 @@ addPlugin('vary_transition', async function vary_transition(root, trial) {
   `)
   let terminal = _.keys(_.pickBy(cg.graph._adjacency, _.isEmpty))
   for (const s of terminal) {
-    $(`.GraphNavigation-State-${s}`).addClass('GraphNavigation-State-Highlighted')
+    cg.highlight(s)
   }
   await button()
+  for (const s of terminal) {
+    cg.unhighlight(s)
+  }
 
   message(`
     Try to make as many points as you can!
@@ -336,15 +341,8 @@ addPlugin('intro_hover', async function intro_hover(root, trial) {
   message("Just one more thing...")
   await button()
 
-  // let hidden_things = []
-  // trial.
   let hidden_things = [
-    trial._rewards && "items",
-    trial._edges && "connections"
-  ].filter(x=>x).join(" and ")
-
-  let hidden_thing = [
-    trial._rewards && "item",
+    trial._rewards && "points",
     trial._edges && "connections"
   ].filter(x=>x).join(" and ")
 
@@ -357,7 +355,7 @@ addPlugin('intro_hover', async function intro_hover(root, trial) {
   message("But in the real game, they're hidden!")
   await sleep(500)
 
-  trial._rewards && $(".State > img").animate({'opacity': 0}, 1000)
+  trial._rewards && $(".GraphReward").animate({'opacity': 0}, 1000)
   trial._edges && $(".GraphNavigation-edge").animate({'opacity': 0}, 1000)
   trial._edges && $(".GraphNavigation-arrow").animate({'opacity': 0}, 1000)
   await sleep(1000)
@@ -365,7 +363,7 @@ addPlugin('intro_hover', async function intro_hover(root, trial) {
   cg.options.hover_rewards = trial._rewards
   cg.options.hover_edges = trial._edges
   cg.setupMouseTracking()
-  $(".State > img").css({'opacity': ''})
+  $(".GraphReward").css({'opacity': ''})
   $(".GraphNavigation-edge").css({'opacity': ''})
   $(".GraphNavigation-arrow").css({'opacity': ''})
   await sleep(1000)
@@ -374,7 +372,7 @@ addPlugin('intro_hover', async function intro_hover(root, trial) {
   message(`On each round, we will show you parts of the board, one at a time.`)
   await button()
 
-  message(`Your current location will turn red during this phase of the game.`)
+  message(`Your current location will turn pink during this phase of the game.`)
   $(cg.el).addClass('forced-hovers')
   await button()
 

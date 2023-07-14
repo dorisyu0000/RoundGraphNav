@@ -391,8 +391,8 @@ export class CircleGraph {
       let [s1, s2] = this.options.expansions[i]
 
       this.showEdge(s1, s2)
-      // await this.clickState(s2)
-      await getKeyPress(['t'])
+      await this.clickState(s2)
+      // await getKeyPress(['t'])
 
       this.hideEdge(s1, s2)
       this.logger('force hover', {s1, s2, duration: delay})
@@ -467,7 +467,6 @@ export class CircleGraph {
   setReward(state, reward) {
     this.rewards[state] = parseFloat(reward)
     let graphic = this.options.rewardGraphics[reward]
-    console.log('setReward', state, reward, graphic)
     $(`.GraphNavigation-State-${state}`).html(
       $('<div>', {'class': 'GraphReward'}).html(`
         ${reward == 0 ? '' : Math.abs(reward)}

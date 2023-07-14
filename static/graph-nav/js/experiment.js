@@ -116,17 +116,18 @@ async function initializeExperiment() {
     config.trials.eyetracking && bare_block('check_camera'),
     // instruct_block('test'),
     instruct_block('intro'),
-    instruct_block('collect_all'),
-    instruct_block('learn_rewards'),
+    // instruct_block('collect_all'),
+    // instruct_block('learn_rewards'),
     // instruct_block('backstep'),
-    params.use_n_steps && practice_block('move2',`
-      In the real game, you get to move more than once. The number of moves
-      for the current round is shown after you click the start button. Give
-      it a shot!
-    `),
+    // params.use_n_steps && practice_block('move2',`
+    //   In the real game, you get to move more than once. The number of moves
+    //   for the current round is shown after you click the start button. Give
+    //   it a shot!
+    // `),
+    // params.vary_transition && instruct_block('practice_fixed'),
     params.vary_transition && instruct_block('vary_transition'),
     practice_block('practice_revealed', `
-      Let's try a few practice rounds with more moves.
+      Let's try a few more practice rounds.
     `),
     (params.hover_rewards || params.hover_edges) && instruct_block('intro_hover', {
       _edges: params.hover_edges,
@@ -179,7 +180,7 @@ async function initializeExperiment() {
       instruct_block('test', {enable_hover: true}),
       instruct_block('test', {enable_hover: true}),
       instruct_block('test', {enable_hover: true}),
-    ]
+    ].concat(timeline)
   } else if (name) {
     while (timeline[0].name != name) {
       timeline.shift()

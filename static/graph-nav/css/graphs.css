@@ -62,9 +62,11 @@ img {
 
 .loss {
   color: #9E0002;
+  font-weight: 500;
 }
 .win {
   color: #0F7003;
+  font-weight: 500;
 }
 
 @keyframes zoomup {
@@ -222,7 +224,7 @@ img {
 
 .GraphNavigation.forced-hovers .GraphNavigation-current {
   background-image: none;
-  background-color: #FF5B83;
+  background-color: #FF6FA0;
 }
 
 .GraphNavigation.withGraphic .GraphNavigation-goal {
@@ -278,23 +280,23 @@ img {
   user-select: none;
 }
 
-.GraphNavigation .State > img {
+.GraphNavigation .State > .GraphReward {
   display: none;
 }
-.GraphNavigation.withGraphic .State > img {
+.GraphNavigation.withGraphic .State > .GraphReward {
   display: block;
 }
 
-.GraphNavigation.withGraphic .GraphNavigation-current > img {
+.GraphNavigation.withGraphic .GraphNavigation-current > .GraphReward {
   display: none;
 }
 
 /* Process tracing on rewards */
-.GraphNavigation.hideStates .State > img {
+.GraphNavigation.hideStates .State > .GraphReward {
   transition: opacity 100ms;
   opacity: 0;
 }
-.GraphNavigation.hideStates .State.is-visible > img {
+.GraphNavigation.hideStates .State.is-visible > .GraphReward {
   opacity: 1;
 }
 

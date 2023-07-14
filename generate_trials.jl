@@ -197,7 +197,7 @@ function make_trials(; n=8, )
         test = ForceHoverTrial(RolloutGenerator(1); kws...),
         intro,
         practice_revealed = [sample_problem(;kws...) for i in 1:2],
-        intro_hover = ForceHoverTrial(RolloutGenerator(3); kws...),
+        intro_hover = ForceHoverTrial(RolloutGenerator(2); kws...),
         practice_hover = [sample_problem(;kws...) for i in 1:2],
         main,
         vary_transition = sample_problem(;n, rdist),
