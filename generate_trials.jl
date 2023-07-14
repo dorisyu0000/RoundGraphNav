@@ -27,6 +27,7 @@ function sample_graph(n, start)
         done[s] && return
         done[s] = true
         n_child = min(2, length(possible_descendents))
+        n_child < 2 && return
         children = sample(possible_descendents, n_child; replace=false)
         for s′ in children
             add_edge!(g, s, s′)
@@ -217,7 +218,7 @@ function reward_graphics(n=8)
     Dict(zip(exponential_rewards(n), sample(emoji, n; replace=false)))
 end
 
-version = "v14"
+version = "v15"
 Random.seed!(hash(version))
 subj_trials = repeatedly(make_trials, 30)
 
