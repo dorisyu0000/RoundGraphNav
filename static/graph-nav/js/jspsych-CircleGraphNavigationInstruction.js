@@ -141,7 +141,7 @@ addPlugin('vary_transition', async function vary_transition(root, trial) {
 addPlugin('intro_hover', async function intro_hover(root, trial) {
   setup(root)
   message("Just one more thing...")
-  // await button()
+  await button()
 
   let hidden_things = [
     trial._rewards && "points",
@@ -152,10 +152,10 @@ addPlugin('intro_hover', async function intro_hover(root, trial) {
   cg = new CircleGraph($("#cgi-root"), trial);
   cg.showGraph()
   cg.setCurrentState(trial.start)
-  // await button()
+  await button()
 
   message("But in the real game, they're hidden!")
-  // await sleep(500)
+  await sleep(500)
 
   trial._rewards && $(".GraphReward").animate({'opacity': 0}, 800)
   trial._edges && $(".GraphNavigation-edge").animate({'opacity': 0}, 800)
