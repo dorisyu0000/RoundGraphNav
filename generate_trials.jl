@@ -186,13 +186,13 @@ function make_trials(; n=8, )
 
     intro = sample_problem(;graph, kws..., rewards=zeros(n))
     prms = grid(
-        n_steps = 2:4,
-        n_roll = 1:4,
+        n_roll = [1,2,4,8],
     )
 
-    main = map(repeat(prms[:], 2)) do (;n_steps, n_roll)
+    main = map(repeat(prms[:], 6)) do (;n_roll)
         ForceHoverTrial(RolloutGenerator(n_roll); kws...)
     end |> shuffle
+
     (;
         test = ForceHoverTrial(RolloutGenerator(1); kws...),
         intro,
@@ -217,9 +217,9 @@ function reward_graphics(n=8)
     Dict(zip(exponential_rewards(n), sample(emoji, n; replace=false)))
 end
 
-version = "v13"
+version = "v14"
 Random.seed!(hash(version))
-subj_trials = repeatedly(make_trials, 1)
+subj_trials = repeatedly(make_trials, 30)
 
 # %% --------
 

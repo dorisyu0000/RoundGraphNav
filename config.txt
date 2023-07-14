@@ -14,12 +14,12 @@ allow_repeats = true
 [Prolific]
 name = Puzzle Game
 reward = 350
-total_available_places = 20
-estimated_completion_time = 22
+total_available_places = 2
+estimated_completion_time = 25
 description =
     In this study, you will solve a series of puzzles that involve collecting items of varying value.
 
-    Based on your performance, you will earn **a bonus of up to $1.50!** (USD)
+    Based on your performance, you will earn **a bonus of up to $1.80!** (USD)
 
 [Database Parameters]
 database_url = sqlite:///participants.db
@@ -39,7 +39,7 @@ secret_key = 'this is my secret key which is hard to guess, i should change this
 adserver_revproxy_host = graph-nav.herokuapp.com
 
 [Task Parameters]
-experiment_code_version = v13
+experiment_code_version = v14
 num_conds = 30
 num_counters = 1
 
