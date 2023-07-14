@@ -72,8 +72,8 @@ addPlugin('intro', async function intro(root, trial) {
   $(`.GraphNavigation-State`).removeClass('GraphNavigation-State-Highlighted')
 
   message(`
-    The goal of the game is to earn points by collecting items from the board.<br>
-    Try collecting this item!
+    The goal of the game is to collect points on the board.<br>
+    Try collecting this 4!
   `)
   let goal = _.sample(cg.graph.successors(cg.state))
   // $("#gn-points").show()
@@ -82,18 +82,13 @@ addPlugin('intro', async function intro(root, trial) {
   await cg.navigate({n_steps: -1, goal, leave_state: true})
 
   message(`
-    Nice! You got 4 points for collecting that item.
-  `)
-  await button()
-
-  message(`
     In the non-practice games, those points will become a cash bonus!<br>
     (${trial.bonus.describeScheme()})
   `)
   await button()
 
   message(`
-    Now try collecting this item.
+    Now try collecting this one.
   `)
 
   goal = _.sample(cg.graph.successors(cg.state))
