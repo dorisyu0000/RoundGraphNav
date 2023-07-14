@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import sys
+import subprocess
 import os
 import re
 import requests
@@ -50,6 +51,15 @@ class Prolific(object):
 
     def post_duplicate(self, study_id, **kws):
         # name, internal_name, description, total_available_places
+
+        diff = subprocess.getoutput('git diff --stat heroku/master')
+        if diff != '':
+            print("WARNING: Some changes not pushed to Heroku")
+            print(diff)
+            y = input('Continue anyway? [y/N] ')
+            if y.lower() != 'y':
+                print('Aborting')
+                exit(1)
 
         new = self.post(f'/studies/{study_id}/clone/')
         new_id = new['id']
