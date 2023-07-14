@@ -63,7 +63,6 @@ class Prolific(object):
             if k == 'description':
                 v = markdown(v)
             kws[k] = v
-        import IPython, time; IPython.embed(); time.sleep(0.5)
 
         new = self.patch(f'/studies/{new_id}/', kws)
 
@@ -85,8 +84,15 @@ class Prolific(object):
             else:
                 print(f'https://app.prolific.co/researcher/workspaces/studies/{new_id}')
 
+    def studies(self, project_id):
+        return self.get(f'/projects/{project_id}/studies/')['results']
+
+    def total_cost(self, project_id):
+        studies = self.studies(project_id)
+        return sum(s['total_cost'] for s in studies) / 100
+
     def last_study(self, project_id):
-        studies = self.get(f'/projects/{project_id}/studies/')['results']
+        studies = self.studies(project_id)
         return [s for s in studies if s['status'] != 'UNPUBLISHED'][-1]['id']
 
     def approve_all(self, study_id, ignore_code=False):
@@ -190,8 +196,6 @@ class Prolific(object):
         missing_base = round(inc[i][0], 2)
         new_base = (basepay / 100) + inc[i][0]
         print(f'base pay short by ${missing_base:.2f}, should be ${new_base:.2f}')
-
-
 
 
 def get_project_id():
