@@ -8,6 +8,23 @@ import {bfs} from './graphs.js';
 const BLOCK_SIZE = 100;
 window.$ = $
 
+function getKeyPress(options) {
+  return new Promise(function(resolve) {
+    return jsPsych.pluginAPI.getKeyboardResponse({
+      valid_responses: options,
+      persist: false,
+      allow_held_key: false,
+      callback_function: (info) => {
+        info.key = String.fromCharCode(info.key);
+        if (info.key == ' ') {
+          info.key = 'space';
+        }
+        return resolve(info);
+      }
+    });
+  });
+};
+
 export class CircleGraph {
   constructor(root, options) {
     this.root = $(root)
@@ -60,6 +77,10 @@ export class CircleGraph {
     </div>
     `)
     this.wrapper.append(this.el)
+    .appendTo(this.root)
+    .hide()
+
+    this.setRewards(options.rewards)
 
     // Making sure it is easy to clean up event listeners...
     this.cancellables = [];
@@ -80,11 +101,11 @@ export class CircleGraph {
   }
 
   showGraph() {
-    this.root.append(this.wrapper)
+    this.wrapper.show()
     this.setupMouseTracking()
     // this.setupEyeTracking()
 
-    $(`.ShadowState img`).remove()
+    $(`.ShadowState .GraphReward`).remove()
     if (!this.options.show_steps) {
       $("#gn-steps").hide()
     }
@@ -278,8 +299,8 @@ export class CircleGraph {
     }
     if (this.options.consume) {
       this.rewards[state] = 0
-      $(`.GraphNavigation-State-${state} img`).remove()
-      // $(`.GraphNavigation-State-${state} img`).remove()
+      $(`.GraphNavigation-State-${state} .GraphReward`).remove()
+      // $(`.GraphNavigation-State-${state} .GraphReward`).remove()
     }
     this.onStateVisit(state);
     this.setCurrentState(state);
@@ -289,7 +310,7 @@ export class CircleGraph {
     let path = []
     this.logger('navigate', options)
     // $(`.GraphNavigation-State`).css({opacity: 1})
-    // $('img').css({opacity: 1})
+    // $('.GraphReward').css({opacity: 1})
     // $(`.GraphNavigation-terminated`).removeClass('GraphNavigation-terminated');
     options = options || {};
     if (this.state === undefined) {
@@ -339,7 +360,7 @@ export class CircleGraph {
           // $(`.GraphNavigation-State-${state}`).animate({opacity: .1}, 500)
         } else if (options.leave_open) {
           $(`.GraphNavigation-State-${state}`).animate({opacity: 0}, 500)  // works because shadow state
-          $('.State img').animate({opacity: 0}, 500)
+          $('.State .GraphReward').animate({opacity: 0}, 500)
           await sleep(1000)
           // $(this.el).animate({opacity: 0}, 500); await sleep(500)
           // $(this.el).empty()
@@ -370,7 +391,8 @@ export class CircleGraph {
       let [s1, s2] = this.options.expansions[i]
 
       this.showEdge(s1, s2)
-      await this.clickState(s2)
+      // await this.clickState(s2)
+      await getKeyPress(['t'])
 
       this.hideEdge(s1, s2)
       this.logger('force hover', {s1, s2, duration: delay})
@@ -445,9 +467,12 @@ export class CircleGraph {
   setReward(state, reward) {
     this.rewards[state] = parseFloat(reward)
     let graphic = this.options.rewardGraphics[reward]
-    $(`.GraphNavigation-State-${state}`).html(`
-      <img src="${graphicsUrl(graphic)}" dragggable=false/>
-    `)
+    console.log('setReward', state, reward, graphic)
+    $(`.GraphNavigation-State-${state}`).html(
+      $('<div>', {'class': 'GraphReward'}).html(`
+        ${reward == 0 ? '' : Math.abs(reward)}
+      `).addClass(reward < 0 ? "loss" : "win")
+    )
   }
 
   setRewards(rewards) {
@@ -468,9 +493,9 @@ const stateTemplate = (state, graphic, options) => {
   }
   return `
   <div class="State GraphNavigation-State ${cls || ''}" style="${options.style || ''}" data-state="${state}">
-    <img src="${graphicsUrl(graphic)}" dragggable=false/>
   </div>
   `;
+    // <img src="${graphicsUrl(graphic)}" dragggable=false/>
 };
 
 export const renderSmallEmoji = (graphic, cls) => `
@@ -610,8 +635,6 @@ function renderCircleGraph(graph, gfx, goal, options) {
     .replaceAll("-State-", "-ShadowState-")
     .replaceAll("\"State ", "\"State ShadowState ")
   })
-  window.states = states
-  window.shadowStates = shadowStates
 
   const succ = [];
   const arrows = [];
