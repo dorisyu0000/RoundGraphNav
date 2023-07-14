@@ -1,4 +1,4 @@
-import {numString, markdown, makePromise, parseHTML, trialErrorHandling, graphicsUrl, setTimeoutPromise, addPlugin, documentEventPromise, invariant, makeButton, sleep} from './utils.js';
+import {getKeyPress, numString, markdown, makePromise, parseHTML, trialErrorHandling, graphicsUrl, setTimeoutPromise, addPlugin, documentEventPromise, invariant, makeButton, sleep} from './utils.js';
 import _ from '../../lib/lodash-min.js';
 import $ from '../../lib/jquery-min.js';
 import jsPsych from '../../lib/jspsych-exported.js';
@@ -141,7 +141,7 @@ addPlugin('vary_transition', async function vary_transition(root, trial) {
 addPlugin('intro_hover', async function intro_hover(root, trial) {
   setup(root)
   message("Just one more thing...")
-  await button()
+  // await button()
 
   let hidden_things = [
     trial._rewards && "points",
@@ -152,10 +152,10 @@ addPlugin('intro_hover', async function intro_hover(root, trial) {
   cg = new CircleGraph($("#cgi-root"), trial);
   cg.showGraph()
   cg.setCurrentState(trial.start)
-  await button()
+  // await button()
 
   message("But in the real game, they're hidden!")
-  await sleep(500)
+  // await sleep(500)
 
   trial._rewards && $(".GraphReward").animate({'opacity': 0}, 800)
   trial._edges && $(".GraphNavigation-edge").animate({'opacity': 0}, 800)
@@ -183,16 +183,16 @@ addPlugin('intro_hover', async function intro_hover(root, trial) {
   cg.showEdge(s1, s2)
   await button()
 
-  message(`You can show the item at that location by clicking on it. Try it out!`)
-  cg.highlight(s2)
-  await cg.clickState(s2)
+  message(`Press any key to reveal the number of points at that location.`)
+  // cg.highlight(s2)
+  await getKeyPress()
   message(`Thats it!`)
 
   cg.unhighlight(s2)
   cg.showState(s2)
   await button()
 
-  message('Keep clicking where the arrow points to see more of the board.')
+  message('Keep pressing a key to see more of the board.')
   cg.hideState(s2)
   cg.hideEdge(s1, s2)
   await cg.showForcedHovers(1)

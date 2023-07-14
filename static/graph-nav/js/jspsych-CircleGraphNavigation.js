@@ -1,4 +1,4 @@
-import {numString, markdown, makePromise, parseHTML, trialErrorHandling, graphicsUrl, sleep, addPlugin, documentEventPromise, invariant, makeButton} from './utils.js';
+import {getKeyPress, numString, markdown, makePromise, parseHTML, trialErrorHandling, graphicsUrl, sleep, addPlugin, documentEventPromise, invariant, makeButton} from './utils.js';
 import {Graph} from './graphs.js';
 import _ from '../../lib/underscore-min.js';
 import $ from '../../lib/jquery-min.js';
@@ -8,22 +8,6 @@ import {bfs} from './graphs.js';
 const BLOCK_SIZE = 100;
 window.$ = $
 
-function getKeyPress(options) {
-  return new Promise(function(resolve) {
-    return jsPsych.pluginAPI.getKeyboardResponse({
-      valid_responses: options,
-      persist: false,
-      allow_held_key: false,
-      callback_function: (info) => {
-        info.key = String.fromCharCode(info.key);
-        if (info.key == ' ') {
-          info.key = 'space';
-        }
-        return resolve(info);
-      }
-    });
-  });
-};
 
 export class CircleGraph {
   constructor(root, options) {
@@ -391,8 +375,8 @@ export class CircleGraph {
       let [s1, s2] = this.options.expansions[i]
 
       this.showEdge(s1, s2)
-      await this.clickState(s2)
-      // await getKeyPress(['t'])
+      // await this.clickState(s2)
+      await getKeyPress()
 
       this.hideEdge(s1, s2)
       this.logger('force hover', {s1, s2, duration: delay})

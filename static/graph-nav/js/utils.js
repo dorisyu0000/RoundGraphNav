@@ -4,6 +4,24 @@ import openmoji from '../images/openmoji/openmoji.js';
 import {handleError} from '../../js/setup.js';
 import showdown from '../../lib/showdown-min.js';
 
+export function getKeyPress(options) {
+  return new Promise(function(resolve) {
+    return jsPsych.pluginAPI.getKeyboardResponse({
+      valid_responses: options,
+      persist: false,
+      allow_held_key: false,
+      callback_function: (info) => {
+        info.key = String.fromCharCode(info.key);
+        if (info.key == ' ') {
+          info.key = 'space';
+        }
+        return resolve(info);
+      }
+    });
+  });
+};
+
+
 export function sleep(ms) {
   return new Promise(function(resolve) {
     return window.setTimeout(resolve, ms);
