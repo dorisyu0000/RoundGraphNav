@@ -213,3 +213,15 @@ addPlugin('text', async function text(root, trial) {
   $(root).empty()
   jsPsych.finishTrial({})
 })
+
+addPlugin('practice', async function practice(root, trial) {
+  setup(root)
+  message(trial.message)
+  // if (trial.first) await button()
+
+  cg = new CircleGraph($("#cgi-root"), trial);
+  await cg.showStartScreen(trial)
+  await cg.navigate()
+  $(root).empty()
+  jsPsych.finishTrial(cg.data)
+})
