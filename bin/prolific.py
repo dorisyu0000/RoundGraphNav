@@ -144,8 +144,8 @@ class Prolific(object):
         missing = set(bonuses.keys()) - set(participants)
         if missing:
             print('WARNING: some entries of bonuses.csv do not have submissions. Skipping these.')
-            for m in missing:
-                print('  ', m)
+            print('\n'.join(f'{p},{bonus:.2f}' for p, bonus in bonuses.items() if p in missing))
+            print()
 
         new_bonus = {
             p: bonuses.get(p, 0) - previous_bonus[p] for p in participants
