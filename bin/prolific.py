@@ -205,7 +205,7 @@ class Prolific(object):
 
         missing_base = round(inc[i][0], 2)
         new_base = (basepay / 100) + inc[i][0]
-        print(f'base pay short by ${missing_base:.2f}, should be ${new_base:.2f}')
+        print(f'base pay is off by ${-missing_base:+.2f}, should be ${new_base:.2f}')
 
 
 def get_project_id():

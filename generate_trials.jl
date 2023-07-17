@@ -20,6 +20,8 @@ include("$model_dir/utils.jl")
 #     error("Can't sample a graph!")
 # end
 
+neighbor_list(sgraph) = neighbors.(Ref(sgraph), vertices(sgraph))
+
 function sample_graph(n, start)
     g = DiGraph(n)
     done = falses(n)
@@ -37,9 +39,6 @@ function sample_graph(n, start)
     rec(start, setdiff(1:n, start))
     neighbor_list(g)
 end
-
-
-neighbor_list(sgraph) = neighbors.(Ref(sgraph), vertices(sgraph))
 
 function default_problem_requirement(problem)
     n_steps = problem.n_steps
