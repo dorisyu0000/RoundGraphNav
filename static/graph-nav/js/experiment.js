@@ -29,6 +29,26 @@ function formWithValidation({stimulus, validate}) {
   };
 }
 
+function mapObject(obj, fn) {
+  return Object.keys(obj).reduce(function(res, key) {
+    res[key] = fn(obj[key]);
+    return res;
+  }, {});
+};
+
+function maybeJson(s) {
+  try {
+    return JSON.parse(s);
+  } catch (error) {
+    return s;
+  }
+};
+
+function updateExisting(target, src) {
+  Object.keys(target)
+        .forEach(k => target[k] = (src.hasOwnProperty(k) ? src[k] : target[k]));
+}
+
 const QUERY = new URLSearchParams(location.search);
 
 async function initializeExperiment() {
@@ -45,7 +65,14 @@ async function initializeExperiment() {
   window.config = config
   const params = config.parameters
   params.show_points = false
-  params.forced_hovers = true
+  params.forced_hovers = false
+  params.keep_hover = false
+  params.show_hovered_reward = false
+  params.show_predecessors = false
+  params.show_successor_rewards = false
+
+  updateExisting(params, mapObject(Object.fromEntries(QUERY), maybeJson))
+
 
   const bonus = new Bonus({points_per_cent: params.points_per_cent, initial: 50})
 
