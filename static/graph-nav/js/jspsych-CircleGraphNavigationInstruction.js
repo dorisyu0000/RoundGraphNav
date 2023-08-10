@@ -171,37 +171,96 @@ addPlugin('intro_hover', async function intro_hover(root, trial) {
   $(".GraphNavigation-arrow").css({'opacity': ''})
   await button()
 
-  message(`On each round, we will show you parts of the board, one at a time.`)
-  await button()
+  if (trial.forced_hovers) {
+    // FORCED HOVER
+    message(`On each round, we will show you parts of the board, one at a time.`)
+    await button()
 
-  message(`Your current location will turn pink during this phase of the game.`)
-  $(cg.el).addClass('forced-hovers')
-  await button()
+    message(`Your current location will turn pink during this phase of the game.`)
+    $(cg.el).addClass('forced-hovers')
+    await button()
 
-  message(`For example, here is one location you could move to from your initial location.`)
-  // let hover = cg.showForcedHovers(0, 1)
-  let [s1, s2] = trial.expansions[0]
-  cg.showEdge(s1, s2)
-  await button()
+    message(`For example, here is one location you could move to from your initial location.`)
+    // let hover = cg.showForcedHovers(0, 1)
+    let [s1, s2] = trial.expansions[0]
+    cg.showEdge(s1, s2)
+    await button()
 
-  message(`Press any key to reveal the number of points at that location.`)
-  // cg.highlight(s2)
-  await getKeyPress()
-  message(`Thats it!`)
+    message(`Press any key to reveal the number of points at that location.`)
+    // cg.highlight(s2)
+    await getKeyPress()
+    message(`Thats it!`)
 
-  cg.unhighlight(s2)
-  cg.showState(s2)
-  await button()
+    cg.unhighlight(s2)
+    cg.showState(s2)
+    await button()
 
-  message('Keep pressing a key to see more of the board.')
-  cg.hideState(s2)
-  cg.hideEdge(s1, s2)
-  await cg.showForcedHovers(1)
-  message(`Your current location will turn back to blue when it's time to select your moves.`)
-  await button()
-  message(`Good luck!`)
-  cg.options.expansions = []
-  await cg.navigate()
+    message('Keep pressing a key to see more of the board.')
+    cg.hideState(s2)
+    cg.hideEdge(s1, s2)
+    await cg.showForcedHovers(1)
+    message(`Your current location will turn back to blue when it's time to select your moves.`)
+    await button()
+    message(`Good luck!`)
+    cg.options.expansions = []
+    await cg.navigate()
+  } else {
+    // FREE HOVER
+    message(`
+      You can reveal the ${hidden_things} at a location by hovering over it.<br>
+      Hover over every location to continue.
+    `)
+    cg.options.hover_rewards = trial._rewards
+    cg.options.hover_edges = trial._edges
+    cg.setupMouseTracking()
+
+    // trial._rewards && cg.el.classList.add('hideStates')
+    // trial._edges && cg.el.classList.add('hideEdges')
+
+    $(".State > img").css({'opacity': ''})
+    $(".GraphNavigation-edge").css({'opacity': ''})
+    $(".GraphNavigation-arrow").css({'opacity': ''})
+
+    let {promise, resolve} = makePromise();
+
+    let setEqual = (xs, ys) => xs.size === ys.size && [...xs].every((x) => ys.has(x));
+    let hovered = new Set()
+    let all_states = new Set(cg.graph.states)
+    let done = false
+
+    cg.logger_callback = (event, info) => {
+      if (event == 'mouseenter') {
+        hovered.add(info.state)
+        window.hovered = hovered
+        window.all_states = all_states
+        if (setEqual(hovered, all_states)) {
+          done = true
+          resolve()
+        }
+      }
+    }
+    sleep(15000).then(() => {
+      if (done) return
+    message(`
+      <b>Hover over every location to continue.</b><br>
+      <i>Your current location counts too!</i>
+    `)
+    })
+    await promise
+
+    message(`
+      You still move around by clicking on a location.<br>
+      Collect all the items to continue.
+    `)
+    // cg.options.hover_edges = true
+    // cg.options.hover_rewards = false
+    // await cg.navigate()  IF ACYCLIC
+    await cg.navigate({
+      // leave_open: true,
+      termination: (cg, s) => !_.some(cg.rewards)
+    })
+
+  }
 
   $(root).empty()
   jsPsych.finishTrial(cg.data)

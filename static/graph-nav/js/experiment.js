@@ -45,6 +45,7 @@ async function initializeExperiment() {
   window.config = config
   const params = config.parameters
   params.show_points = false
+  params.forced_hovers = false
 
   const bonus = new Bonus({points_per_cent: params.points_per_cent, initial: 50})
 

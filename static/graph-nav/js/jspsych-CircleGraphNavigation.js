@@ -180,11 +180,11 @@ export class CircleGraph {
       const state = parseInt(el.getAttribute('data-state'), 10);
       el.addEventListener('mouseenter', (e) => {
         this.logger('mouseenter', {state})
-        this.options.expansions || this.hover(state)
+        this.options.forced_hovers || this.hover(state)
       });
       el.addEventListener('mouseleave', (e) => {
         this.logger('mouseleave', {state})
-        this.options.expansions || this.unhover(state)
+        this.options.forced_hovers || this.unhover(state)
       });
     }
   }
@@ -304,7 +304,7 @@ export class CircleGraph {
     $("#GraphNavigation-steps").html(stepsLeft)
     this.visitState(this.state, true)
 
-    if (this.options.expansions) {
+    if (this.options.forced_hovers) {
       await this.showForcedHovers()
       this.showOutgoingEdges(this.state)
     }
@@ -317,13 +317,13 @@ export class CircleGraph {
           g.states.filter(s => !g.successors(this.state).includes(s))
         ),
       });
-      if (this.options.expansions) {
+      if (this.options.forced_hovers) {
         this.hideAllEdges()
         this.showEdge(this.state, state)
         this.showState(state)
       }
       this.visitState(state)
-      if (this.options.expansions) {
+      if (this.options.forced_hovers) {
         await sleep(500)
         this.showOutgoingEdges(state)
       }
@@ -419,7 +419,7 @@ export class CircleGraph {
   }
 
   hover(state) {
-    return
+    if (this.options.forced_hovers) return
     this.showState(state)
     for (const successor of this.graph.successors(state)) {
       this.showEdge(state, successor)
@@ -430,7 +430,7 @@ export class CircleGraph {
   }
 
   unhover(state) {
-    return
+    if (this.options.forced_hovers) return
     this.hideState(state)
     for (const successor of this.graph.successors(state)) {
       this.hideEdge(state, successor)
