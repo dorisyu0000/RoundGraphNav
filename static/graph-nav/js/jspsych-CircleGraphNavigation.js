@@ -10,6 +10,8 @@ window.$ = $
 
 let ensureSign = x => x > 0 ? "+" + x : "" + x
 
+const FAST_MODE = (new URLSearchParams(location.search)).get('fast') && true
+
 export class CircleGraph {
   constructor(root, options) {
     this.root = $(root)
@@ -107,6 +109,10 @@ export class CircleGraph {
   }
 
   async showStartScreen(trial) {
+    if (FAST_MODE) {
+      this.showGraph()
+      return
+    }
     if (trial.bonus) {
       $('<p>')
       .addClass('Graph-bonus')
