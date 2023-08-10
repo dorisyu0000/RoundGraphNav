@@ -17,7 +17,7 @@ reward = 500
 total_available_places = 1
 estimated_completion_time = 35
 description =
-    In this study, you will solve a series of puzzles that involve collecting items of varying value.
+    In this study, you will solve a series of puzzles.
 
     Based on your performance, you will earn **a bonus of up to $2.50!** (USD)
 
