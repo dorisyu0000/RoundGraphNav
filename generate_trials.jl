@@ -189,7 +189,7 @@ function make_trials(; n=8, )
         n_roll = [1,2,4,8],
     )
 
-    main = map(repeat(prms[:], 6)) do (;n_roll)
+    main = map(repeat(prms[:], 10)) do (;n_roll)
         ForceHoverTrial(RolloutGenerator(n_roll); kws...)
     end |> shuffle
 

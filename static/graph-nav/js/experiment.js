@@ -69,7 +69,8 @@ async function initializeExperiment() {
   params.keep_hover = false
   params.show_hovered_reward = false
   params.show_predecessors = false
-  params.show_successor_rewards = false
+  params.show_successor_rewards = true
+  params.show_hovered_reward = false
 
   updateExisting(params, mapObject(Object.fromEntries(QUERY), maybeJson))
 

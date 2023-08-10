@@ -207,7 +207,7 @@ addPlugin('intro_hover', async function intro_hover(root, trial) {
   } else {
     // FREE HOVER
     message(`
-      You can reveal the ${hidden_things} at a location by hovering over it.<br>
+      You can reveal the ${hidden_things} by hovering over different locations.<br>
       Hover over every location to continue.
     `)
     cg.options.hover_rewards = trial._rewards
