@@ -28,6 +28,8 @@ export class CircleGraph {
     options.successorKeys = options.graphRenderOptions.successorKeys
     options.show_steps = options.show_steps ?? options.n_steps > 0
     options.show_points = options.show_points ?? true
+    options.show_successor_rewards = options.show_successor_rewards ?? true
+    options.keep_hover = options.keep_hover ?? true
 
 
     this.rewards = [...options.rewards] ?? Array(options.graph.length).fill(0)
@@ -370,23 +372,27 @@ export class CircleGraph {
   async showForcedHovers(start=0, stop) {
     $(this.el).addClass('forced-hovers')
     this.logger('begin forced hovers')
-    let delay = 750
+    let delay = 1000
     // await sleep(delay)
+    this.hover(this.options.expansions[0][0])
     for (var i = start; i < (stop ?? this.options.expansions.length); i++) {
       let [s1, s2] = this.options.expansions[i]
-
-      this.showEdge(s1, s2)
-      await sleep(100)
-      // await this.clickState(s2)
-      await getKeyPress()
-
-      this.hideEdge(s1, s2)
-      this.logger('force hover', {s1, s2, duration: delay})
-      this.showState(s2)
+      // this.showEdge(s1, s2)
       await sleep(delay)
+      this.highlight(s2)
+      await this.hoverState(s2)
+      this.unhighlight(s2)
+      // await getKeyPress()
 
-      this.hideState(s2)
+      // this.hideEdge(s1, s2)
+      this.logger('force hover', {s1, s2, duration: delay})
+      this.hover(s2)
+      // this.showState(s2)
+      // await sleep(delay)
+
+      // this.hideState(s2)
     };
+    await sleep(delay)
     $(this.el).removeClass('forced-hovers')
     this.logger('end forced hovers')
   }
@@ -396,6 +402,14 @@ export class CircleGraph {
       $(`.GraphNavigation-State-${state}`).css('cursor', 'pointer')
       $(`.GraphNavigation-State-${state}`).one('click', () => {
         $(`.GraphNavigation-State-${state}`).css('cursor', '')
+        resolve()
+      })
+    })
+  }
+
+  hoverState(state) {
+    return new Promise((resolve, reject) => {
+      $(`.GraphNavigation-State-${state}`).one('mouseover', () => {
         resolve()
       })
     })
@@ -425,10 +439,15 @@ export class CircleGraph {
   }
 
   hover(state) {
-    if (this.options.forced_hovers) return
-    this.showState(state)
+    // if (this.options.forced_hovers) return
+    if (this.options.keep_hover) {
+      $(`.GraphNavigation-State`).removeClass('is-visible')
+      this.hideAllEdges()
+    }
+    if (this.options.show_hovered_reward) this.showState(state)
     for (const successor of this.graph.successors(state)) {
       this.showEdge(state, successor)
+      if (this.options.show_successor_rewards) this.showState(successor)
     }
     if (this.options.show_predecessors) {
       for (const pred of this.graph.predecessors(state)) {
@@ -439,9 +458,11 @@ export class CircleGraph {
 
   unhover(state) {
     if (this.options.forced_hovers) return
-    this.hideState(state)
+    if (this.options.keep_hover) return
+    if (this.options.show_hovered_reward) this.hideState(state)
     for (const successor of this.graph.successors(state)) {
       this.hideEdge(state, successor)
+      if (this.options.show_successor_rewards) this.hideState(successor)
     }
     if (this.options.show_predecessors) {
       for (const pred of this.graph.predecessors(state)) {
