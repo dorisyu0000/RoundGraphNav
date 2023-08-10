@@ -439,6 +439,7 @@ export class CircleGraph {
   }
 
   hover(state) {
+    this.logger('hover', {state})
     // if (this.options.forced_hovers) return
     if (this.options.keep_hover) {
       $(`.GraphNavigation-State`).removeClass('is-visible')
