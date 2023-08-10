@@ -239,7 +239,7 @@ addPlugin('intro_hover', async function intro_hover(root, trial) {
         }
       }
     }
-    sleep(15000).then(() => {
+    sleep(10000).then(() => {
       if (done) return
     message(`
       <b>Hover over every location to continue.</b><br>
@@ -250,16 +250,9 @@ addPlugin('intro_hover', async function intro_hover(root, trial) {
 
     message(`
       You still move around by clicking on a location.<br>
-      Collect all the items to continue.
+      Try to get as many points as you can!
     `)
-    // cg.options.hover_edges = true
-    // cg.options.hover_rewards = false
-    // await cg.navigate()  IF ACYCLIC
-    await cg.navigate({
-      // leave_open: true,
-      termination: (cg, s) => !_.some(cg.rewards)
-    })
-
+    await cg.navigate()
   }
 
   $(root).empty()
