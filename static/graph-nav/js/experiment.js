@@ -66,7 +66,7 @@ async function initializeExperiment() {
   const params = config.parameters
   params.show_points = false
   params.forced_hovers = false
-  params.keep_hover = false
+  params.keep_hover = true
   params.show_hovered_reward = false
   params.show_predecessors = false
   params.show_successor_rewards = true
