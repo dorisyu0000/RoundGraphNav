@@ -424,8 +424,10 @@ export class CircleGraph {
     for (const successor of this.graph.successors(state)) {
       this.showEdge(state, successor)
     }
-    for (const pred of this.graph.predecessors(state)) {
-      this.showEdge(pred, state)
+    if (this.options.show_predecessors) {
+      for (const pred of this.graph.predecessors(state)) {
+        this.showEdge(pred, state)
+      }
     }
   }
 
@@ -435,8 +437,10 @@ export class CircleGraph {
     for (const successor of this.graph.successors(state)) {
       this.hideEdge(state, successor)
     }
-    for (const pred of this.graph.predecessors(state)) {
-      this.hideEdge(pred, state)
+    if (this.options.show_predecessors) {
+      for (const pred of this.graph.predecessors(state)) {
+        this.hideEdge(pred, state)
+      }
     }
   }
 
