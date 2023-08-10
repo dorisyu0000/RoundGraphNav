@@ -103,7 +103,10 @@ class Prolific(object):
 
     def last_study(self, project_id):
         studies = self.studies(project_id)
-        return [s for s in studies if s['status'] != 'UNPUBLISHED'][-1]['id']
+        return [s for s in studies
+            if s['status'] != 'UNPUBLISHED'
+            and s['internal_name'].startswith('graph-nav')
+        ][-1]['id']
 
     def approve_all(self, study_id, ignore_code=False):
         to_approve = []
