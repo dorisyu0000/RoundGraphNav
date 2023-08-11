@@ -179,28 +179,18 @@ function make_trials(; n=8, )
     graph = neighbor_list(intro_graph(n))
     rewards = exponential_rewards(n)
     rdist = IIDSampler(n, rewards)
-    # rdist = Shuffler(rewards)
-
-    # rewards = shuffle(repeat([-10, -5, 5, 10], cld(n, 4)))[1:n]
     kws = (;n, rdist)
-
     intro = sample_problem(;graph, kws..., rewards=zeros(n))
-    prms = grid(
-        n_roll = [1,2,4,8],
-    )
-
-    main = map(repeat(prms[:], 10)) do (;n_roll)
-        ForceHoverTrial(RolloutGenerator(n_roll); kws...)
-    end |> shuffle
+    main = [sample_problem(;kws...) for i in 1:50]
 
     (;
-        test = ForceHoverTrial(RolloutGenerator(1); kws...),
+        # test = ForceHoverTrial(RolloutGenerator(1); kws...),
         intro,
         practice_revealed = [sample_problem(;kws...) for i in 1:2],
-        intro_hover = ForceHoverTrial(RolloutGenerator(2); kws...),
+        intro_hover = sample_problem(;kws...),
         practice_hover = [sample_problem(;kws...) for i in 1:2],
         main,
-        vary_transition = sample_problem(;n, rdist),
+        vary_transition = sample_problem(;kws...),
         # calibration = intro,
         # eyetracking = [sample_problem(;kws..., n_steps) for n_steps in shuffle(repeat(3:5, 7))]
     )

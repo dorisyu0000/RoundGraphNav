@@ -196,11 +196,11 @@ async function initializeExperiment() {
       `,
       button_label: 'Submit',
       questions: [
+        {'prompt': 'How was the length? Would you rather the study be shorter and pay less?',
+         'rows': 2, columns: 60},
         {'prompt': 'Did you have any difficulty with the interface? Any odd (or "buggy") behavior?',
          'rows': 2, columns: 60},
         {'prompt': 'Was any part of the instructions difficult to understand?',
-         'rows': 2, columns: 60},
-        {'prompt': 'Do you have any suggestions on how we can improve the instructions or interface?',
          'rows': 2, columns: 60},
         {'prompt': 'Any other comments?',
          'rows': 2, columns: 60}
