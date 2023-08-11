@@ -439,6 +439,7 @@ export class CircleGraph {
   }
 
   hover(state) {
+    if (!(this.options.hover_edges || this.options.hover_rewards)) return
     this.logger('hover', {state})
     // if (this.options.forced_hovers) return
     if (this.options.keep_hover) {

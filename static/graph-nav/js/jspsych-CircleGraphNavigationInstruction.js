@@ -8,6 +8,8 @@ import {psiturk} from '../../js/setup.js';
 
 window._ = _
 
+const FAST_MODE = (new URLSearchParams(location.search)).get('fast') && true
+
 function button(txt='continue', options={}) {
   return makeButton($("#cgi-top"), txt, {
     css: {'margin-top': '8px'},
@@ -141,8 +143,9 @@ addPlugin('vary_transition', async function vary_transition(root, trial) {
 
 addPlugin('intro_hover', async function intro_hover(root, trial) {
   setup(root)
+  window.trial = trial
   message("Just one more thing...")
-  await button()
+  FAST_MODE || await button()
 
   let hidden_things = [
     trial._rewards && "points",
@@ -153,22 +156,24 @@ addPlugin('intro_hover', async function intro_hover(root, trial) {
   cg = new CircleGraph($("#cgi-root"), trial);
   cg.showGraph()
   cg.setCurrentState(trial.start)
-  await button()
+  FAST_MODE || await button()
 
   message("But in the real game, they're hidden!")
-  await sleep(500)
 
-  trial._rewards && $(".GraphReward").animate({'opacity': 0}, 800)
-  trial._edges && $(".GraphNavigation-edge").animate({'opacity': 0}, 800)
-  trial._edges && $(".GraphNavigation-arrow").animate({'opacity': 0}, 800)
-  await sleep(1000)
-
+  if (!FAST_MODE) { // animated hiding
+    await sleep(500)
+    trial._rewards && $(".GraphReward").animate({'opacity': 0}, 800)
+    trial._edges && $(".GraphNavigation-edge").animate({'opacity': 0}, 800)
+    trial._edges && $(".GraphNavigation-arrow").animate({'opacity': 0}, 800)
+    await sleep(1000)
+  }
   cg.options.hover_rewards = trial._rewards
   cg.options.hover_edges = trial._edges
   cg.setupMouseTracking()
   $(".GraphReward").css({'opacity': ''})
   $(".GraphNavigation-edge").css({'opacity': ''})
   $(".GraphNavigation-arrow").css({'opacity': ''})
+
   await button()
 
   if (trial.forced_hovers) {
@@ -228,18 +233,35 @@ addPlugin('intro_hover', async function intro_hover(root, trial) {
     let all_states = new Set(cg.graph.states)
     let done = false
 
+
+    let terminal = _.keys(_.pickBy(cg.graph._adjacency, _.isEmpty))
+    trial.terminal = terminal
     cg.logger_callback = (event, info) => {
-      if (event == 'mouseenter') {
+      if (!done && event == 'mouseenter') {
         hovered.add(info.state)
-        window.hovered = hovered
-        window.all_states = all_states
+        console.log('callback', String(info.state))
+        if (trial.show_successor_rewards) {
+          if (terminal.includes(String(info.state))) {
+            message(`
+              If nothing appears, it means that location has no outgoing connections.
+              <br>
+              Hover over every location to continue.
+            `)
+          } else {
+            message(`
+              Hovering a location shows its outgoing connections.
+              <br>
+              Hover over every location to continue.
+            `)
+          }
+        }
         if (setEqual(hovered, all_states)) {
           done = true
           resolve()
         }
       }
     }
-    sleep(10000).then(() => {
+    sleep(15000).then(() => {
       if (done) return
     message(`
       <b>Hover over every location to continue.</b><br>

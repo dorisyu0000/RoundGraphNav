@@ -91,6 +91,14 @@ async function initializeExperiment() {
     return {name, type: name, ...params, ...options}
   }
 
+  const started = {}
+  function log_start(name) {
+    if (!started[name]) {
+      console.log('logging start of', name)
+      psiturk.recordUnstructuredData(`${name}_time`, new Date())
+    }
+  }
+
   function instruct_block(name, options={}) {
     console.log('instruct', name, options)
     if (!_.has(config.trials, name)) throw new Error(`${name} not in config.trials`)
@@ -103,6 +111,7 @@ async function initializeExperiment() {
       hover_rewards: options.enable_hover ? params.hover_rewards : false,
       ...options,
       ...config.trials[name],
+      on_start: () => log_start(name)
     }
   }
 
@@ -117,6 +126,7 @@ async function initializeExperiment() {
       hover_rewards: options.enable_hover ? params.hover_rewards : false,
       ...options,
       timeline: config.trials[name],
+      on_start: () => log_start(name)
     }
   }
 
@@ -137,12 +147,12 @@ async function initializeExperiment() {
       type: 'main',
       ...options,
       timeline: config.trials[name],
+      on_start: () => log_start('main')
     }
   }
 
-
   var timeline = [
-    config.trials.eyetracking && bare_block('check_camera'),
+    // config.trials.eyetracking && bare_block('check_camera'),
     // instruct_block('test'),
     instruct_block('intro'),
     // instruct_block('collect_all'),
@@ -170,12 +180,12 @@ async function initializeExperiment() {
       points for free. Good luck!
     `),
     main_block(),
-    config.trials.eyetracking && bare_block('setup_eyetracking', {
-      n_trial: config.trials.eyetracking.length
-    }),
-    config.trials.eyetracking && instruct_block('calibration'),
-    config.trials.eyetracking && main_block('eyetracking'),
-    config.trials.eyetracking && instruct_block('calibration'),
+    // config.trials.eyetracking && bare_block('setup_eyetracking', {
+    //   n_trial: config.trials.eyetracking.length
+    // }),
+    // config.trials.eyetracking && instruct_block('calibration'),
+    // config.trials.eyetracking && main_block('eyetracking'),
+    // config.trials.eyetracking && instruct_block('calibration'),
     {
       type: 'survey-text',
       preamble: `
