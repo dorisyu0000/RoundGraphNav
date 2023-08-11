@@ -213,24 +213,11 @@ subj_trials = repeatedly(make_trials, 30)
 
 # %% --------
 
-base_params = (
-    eye_tracking = false,
-    hover_edges = true,
-    hover_rewards = true,
-    points_per_cent = 2,
-    use_n_steps = false,
-    vary_transition = true,
-    # linear_rewards = true,
-)
-
 dest = "static/json/config"
 rm(dest, recursive=true)
 mkpath(dest)
 foreach(enumerate(subj_trials)) do (i, trials)
-    parameters = (;
-        base_params...,
-        rewardGraphics = reward_graphics(8),
-    )
+    parameters = (;)
     write("$dest/$i.json", json((;parameters, trials)))
     println("$dest/$i.json")
 

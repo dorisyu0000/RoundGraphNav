@@ -4,6 +4,27 @@ import openmoji from '../images/openmoji/openmoji.js';
 import {handleError} from '../../js/setup.js';
 import showdown from '../../lib/showdown-min.js';
 
+export function mapObject(obj, fn) {
+  return Object.keys(obj).reduce(function(res, key) {
+    res[key] = fn(obj[key]);
+    return res;
+  }, {});
+};
+
+export function maybeJson(s) {
+  try {
+    return JSON.parse(s);
+  } catch (error) {
+    return s;
+  }
+};
+
+export function updateExisting(target, src) {
+  Object.keys(target)
+        .forEach(k => target[k] = (src.hasOwnProperty(k) ? src[k] : target[k]));
+}
+
+
 export function getKeyPress(options) {
   return new Promise(function(resolve) {
     return jsPsych.pluginAPI.getKeyboardResponse({

@@ -1,10 +1,10 @@
 import {AdaptiveTasks} from './adaptive.js';
-import {invariant, markdown, graphics, graphicsLoading, random} from './utils.js';
+import {invariant, markdown, graphics, graphicsLoading, random, updateExisting, mapObject, maybeJson} from './utils.js';
 import {renderSmallEmoji} from './jspsych-CircleGraphNavigation.js';
 import './jspsych-CircleGraphNavigationInstruction.js';
 import allconfig from './configuration/configuration.js';
 import {handleError, psiturk, requestSaveData, startExperiment, CONDITION} from '../../js/setup.js';
-import _ from '../../lib/underscore-min.js';
+import _ from '../../lib/lodash-min.js';
 import $ from '../../lib/jquery-min.js';
 import jsPsych from '../../lib/jspsych-exported.js';
 import {circleXY} from './graphs.js';
@@ -29,32 +29,12 @@ function formWithValidation({stimulus, validate}) {
   };
 }
 
-function mapObject(obj, fn) {
-  return Object.keys(obj).reduce(function(res, key) {
-    res[key] = fn(obj[key]);
-    return res;
-  }, {});
-};
-
-function maybeJson(s) {
-  try {
-    return JSON.parse(s);
-  } catch (error) {
-    return s;
-  }
-};
-
-function updateExisting(target, src) {
-  Object.keys(target)
-        .forEach(k => target[k] = (src.hasOwnProperty(k) ? src[k] : target[k]));
-}
-
 const QUERY = new URLSearchParams(location.search);
 
 async function initializeExperiment() {
   psiturk.recordUnstructuredData('browser', window.navigator.userAgent);
   psiturk.recordUnstructuredData('start_time', new Date());
-  console.log('Aug 10, 2023 4:50:35 PM')
+  console.log('Aug 11, 2023 4:25:05 PM')
 
   const config = await $.getJSON(`static/json/config/${CONDITION+1}.json`);
   // config.trials.test = config.trials.main[1]
@@ -63,17 +43,28 @@ async function initializeExperiment() {
   console.log('bonused_rounds', bonused_rounds)
 
   window.config = config
-  const params = config.parameters
-  params.show_points = false
-  params.forced_hovers = false
-  params.keep_hover = true
-  params.show_hovered_reward = false
-  params.show_predecessors = false
-  params.show_successor_rewards = true
-  params.show_hovered_reward = false
+  console.log('MERGE', _.merge)
+  const params = _.merge({
+    eye_tracking: false,
+    hover_edges: true,
+    hover_rewards: true,
+    points_per_cent: 2,
+    use_n_steps: false,
+    vary_transition: true,
+    show_points: false,
+    forced_hovers: false,
+    keep_hover: true,
+    show_hovered_reward: false,
+    show_predecessors: false,
+    show_successor_rewards: true,
+  }, config.parameters)
 
   updateExisting(params, mapObject(Object.fromEntries(QUERY), maybeJson))
 
+  for (const key in params) {
+    if (key == "rewardGraphics" || key == "graphRenderOptions") continue
+    psiturk.recordUnstructuredData(key, params[key])
+  }
 
   const bonus = new Bonus({points_per_cent: params.points_per_cent, initial: 50})
 
