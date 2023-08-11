@@ -213,11 +213,13 @@ subj_trials = repeatedly(make_trials, 30)
 
 # %% --------
 
+points_per_cent = 2
+
 dest = "static/json/config"
 rm(dest, recursive=true)
 mkpath(dest)
 foreach(enumerate(subj_trials)) do (i, trials)
-    parameters = (;)
+    parameters = (;points_per_cent)
     write("$dest/$i.json", json((;parameters, trials)))
     println("$dest/$i.json")
 
@@ -232,7 +234,7 @@ bonus = map(subj_trials) do trials
         get(trials, t, [])
     end
     points = 50 + sum(value.(trials))
-    points / (base_params.points_per_cent * 100)
+    points / (points_per_cent * 100)
 end
 
 using UnicodePlots
