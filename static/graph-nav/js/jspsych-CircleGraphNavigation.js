@@ -39,12 +39,13 @@ export class CircleGraph {
     if (options.consume) {
       this.rewards[options.start] = 0
     }
-    options.rewardGraphics[0] = options.rewardGraphics[0] ?? ""
-    options.graphics = this.rewards.map(x => options.rewardGraphics[x])
+
+    // options.rewardGraphics[0] = options.rewardGraphics[0] ?? ""
+    // options.graphics = this.rewards.map(x => options.rewardGraphics[x])
 
     this.graph = new Graph(options.graph)
     this.el = parseHTML(renderCircleGraph(
-      this.graph, options.graphics, options.goal,
+      this.graph, options.goal,
       {
         edgeShow: options.edgeShow,
         successorKeys: options.successorKeys,
@@ -481,7 +482,7 @@ export class CircleGraph {
 
   setReward(state, reward) {
     this.rewards[state] = parseFloat(reward)
-    let graphic = this.options.rewardGraphics[reward]
+    // let graphic = this.options.rewardGraphics[reward]
     $(`.GraphNavigation-State-${state}`).html(
       $('<div>', {'class': 'GraphReward'}).html(`
         ${reward == 0 ? '' : ensureSign(reward)}
@@ -497,7 +498,7 @@ export class CircleGraph {
 }
 
 
-const stateTemplate = (state, graphic, options) => {
+const stateTemplate = (state, options) => {
   let cls = `GraphNavigation-State-${state}`;
   if (options.goal) {
     cls += ' GraphNavigation-goal';
@@ -586,7 +587,7 @@ function normrot([x, y], [sx, sy]) {
   return {norm, rot};
 }
 
-function renderCircleGraph(graph, gfx, goal, options) {
+function renderCircleGraph(graph, goal, options) {
   options = options || {};
   options.edgeShow = options.edgeShow || (() => true);
   const successorKeys = options.successorKeys;
@@ -612,7 +613,7 @@ function renderCircleGraph(graph, gfx, goal, options) {
 
   const states = graph.states.map(state => {
     const [x, y] = xy.coordinate[state];
-    return stateTemplate(state, gfx[state], {
+    return stateTemplate(state, {
       probe: state == options.probe,
       goal: state == goal,
       style: `transform: translate(${x - BLOCK_SIZE/2}px,${y - BLOCK_SIZE/2}px);`,
