@@ -7,6 +7,9 @@ import requests
 from configparser import ConfigParser
 from markdown import markdown
 import random
+from fire import Fire
+from functools import cached_property
+
 
 class Prolific(object):
     """Prolific API wrapper"""
@@ -27,16 +30,13 @@ class Prolific(object):
         r = requests.request(method, url, **kws, headers={
             'Authorization': f'Token {self.token}',
         })
-        try:
-            response = r.json()
-            if r.ok:
-                return response
-            else:
-                print(f'Bad request! {url}')
-                print(response)
-        except:
-            print("Problem parsing result")
-            return r
+        response = r.json()
+        if r.ok:
+            return response
+        else:
+            print(f'Problem with API request: {url}')
+            print(response)
+            exit(1)
 
     def get(self, url, **kws):
         return self.request('GET', url, **kws)
@@ -214,26 +214,8 @@ class Prolific(object):
         new_base = (basepay / 100) + inc[i][0]
         print(f'base pay is off by ${-missing_base:+.2f}, should be ${new_base:.2f}')
 
-
-def get_project_id():
-    if os.path.isfile('.project_id'):
-        with open('.project_id') as f:
-            return f.read()
-    else:
-        print(
-            "Please enter your prolific project id.\n"
-            "You can find this in the URL when you select your project on the the prolific website, e.g\n"
-            "https://app.prolific.co/researcher/workspaces/projects/644364ccfceb189178b7187c\n"
-            "You can also enter the whole URL"
-        )
-        project_id = input("project id: ")
-        if 'projects/' in project_id:
-            project_id = project_id.split('projects/')[1].strip()
-
-        with open('.project_id', 'w') as f:
-            f.write(project_id)
-            print("Saved to .project_id - we won't ask again.")
-        return project_id
+    def add_places(self, study_id, new_total):
+        self.patch(f'/studies/{study_id}/', dict(total_available_places=new_total))
 
 
 def generate_internal_name():
@@ -246,34 +228,96 @@ def generate_internal_name():
     return ' '.join([project_name, version, sha])
 
 
-def main():
-    token = os.getenv('PROLIFIC_TOKEN')
-    if not token:
-        print('You must set the PROLIFIC_TOKEN environment variable to use this script.')
-        exit(1)
+class CLI(object):
 
-    project_id = get_project_id()
-    prolific = Prolific(token)
-    cmd = sys.argv[1]
+    def approve_and_bonus(self):
+        """Approve all submissions of the last study and assign bonuses in bonus.csv.
 
-    if cmd == 'approve_and_bonus':
-        # NOTE: we're currently assuming you want to approve and bonus the last study
-        # you ran. This could easily be generalized of course.
-        study_id = prolific.last_study(project_id)
-        prolific.approve_all(study_id)
+        The "last" study refers to the most recently posted study within your project
+        """
+        self._prolific.approve_all(self._study_id)
 
         import pandas as pd
         bonuses = dict(pd.read_csv('bonus.csv', header=None).set_index(0)[1])
-        prolific.assign_bonuses(study_id, bonuses)
+        self._prolific.assign_bonuses(self._study_id, bonuses)
 
-    elif cmd == 'post_duplicate':
-        study_id = prolific.last_study(project_id)
-        prolific.post_duplicate(study_id, internal_name=generate_internal_name())
+    def post_duplicate(self):
+        """Post a duplicate of the last study using current fields in config.txt. """
+        self._prolific.post_duplicate(self._study_id, internal_name=generate_internal_name())
 
-    elif cmd == 'check_wage':
-        study_id = prolific.last_study(project_id)
-        prolific.check_wage(study_id)
+    def check_wage(self):
+        """Summrarize wage for last study."""
+        self._prolific.check_wage(self._study_id)
 
+    def add_places(self, new_total):
+        """Set the total number of participants for the last study to `new_total`
+
+        You can also lower the number of places, though not below the current number of
+        completed + active participants.
+        """
+        self._prolific.add_places(self._study_id, new_total)
+
+    def pause(self):
+        self._prolific.post(f'/studies/{self._study_id}/transition/', {
+            "action": "PAUSE"
+        })
+
+    def start(self):
+        self._prolific.post(f'/studies/{self._study_id}/transition/', {
+            "action": "START"
+        })
+
+
+    @cached_property
+    def _token(self):
+        token = os.getenv('PROLIFIC_TOKEN')
+        if token:
+            return token
+        if os.path.isfile(".token"):
+            with open('.token') as f:
+                token = f.read()
+                if token:
+                    return token
+        token = input('PROLIFIC_TOKEN environment variable not found. Please enter it here: ')
+        if not token.strip():
+            print("Exiting.")
+            exit(1)
+        if input("Would you like to save it for future use? [y/N]") == "y":
+            with open('.token', 'w') as f:
+                f.write(token)
+            with open(".gitignore", "a") as f:
+                f.write('\n.token')
+            print("Saved to .token — we added this file to your .gitignore as well.")
+            return token
+
+    @cached_property
+    def _prolific(self):
+        return Prolific(self._token)
+
+    @cached_property
+    def _project_id(self):
+        if os.path.isfile('.project_id'):
+            with open('.project_id') as f:
+                return f.read()
+        else:
+            print(
+                "Please enter your prolific project id.\n"
+                "You can find this in the URL when you select your project on the the prolific website, e.g\n"
+                "https://app.prolific.co/researcher/workspaces/projects/644364ccfceb189178b7187c\n"
+                "You can also enter the whole URL"
+            )
+            project_id = input("project id: ")
+            if 'projects/' in project_id:
+                project_id = project_id.split('projects/')[1].strip()
+
+            with open('.project_id', 'w') as f:
+                f.write(project_id)
+                print("Saved to .project_id - we won't ask again.")
+            return project_id
+
+    @cached_property
+    def _study_id(self):
+        return self._prolific.last_study(self._project_id)
 
 if __name__ == '__main__':
-    main()
+    Fire(CLI)
