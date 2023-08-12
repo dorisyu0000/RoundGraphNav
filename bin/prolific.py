@@ -6,6 +6,7 @@ import re
 import requests
 from configparser import ConfigParser
 from markdown import markdown
+import random
 
 class Prolific(object):
     """Prolific API wrapper"""
@@ -68,7 +69,6 @@ class Prolific(object):
 
         c = ConfigParser()
         c.read('config.txt')
-
         for k, v in dict(c['Prolific']).items():
             if k == 'description':
                 v = markdown(v)
@@ -77,9 +77,13 @@ class Prolific(object):
         new = self.patch(f'/studies/{new_id}/', kws)
 
         new['cost'] = f"${new['total_cost'] / 100:.2f}"
-
         for k in ['name', 'internal_name', 'description', 'reward', 'total_available_places', 'cost']:
             print(k + ': ' + str(new[k]))
+        preview_link = new['external_study_url'].replace(
+            '{{%PROLIFIC_PID%}}', 'debug' + str(random.randint(0, 100000000))
+        ).replace('{{%SESSION_ID%}}', 'debug').replace('{{%STUDY_ID%}}', 'debug')
+        print(preview_link)
+
         y = input(f'Go ahead? [y/N] ')
         if y.lower() == 'y':
             self.post(f'/studies/{new_id}/transition/', {
