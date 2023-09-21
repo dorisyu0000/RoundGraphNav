@@ -13,9 +13,9 @@ allow_repeats = true
 
 [Prolific]
 name = Puzzle Game
-reward = 400
-total_available_places = 1
-estimated_completion_time = 30
+reward = 225
+total_available_places = 9
+estimated_completion_time = 20
 description =
     In this study, you will solve a series of puzzles.
 

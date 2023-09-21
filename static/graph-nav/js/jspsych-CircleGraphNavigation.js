@@ -81,13 +81,13 @@ export class CircleGraph {
     this.setupLogging()
   }
 
-  highlight(state) {
+  highlight(state, postfix='') {
     this.logger('highlight', {state})
-    $(`.GraphNavigation-State-${state}`).addClass('GraphNavigation-State-Highlighted')
+    $(`.GraphNavigation-State-${state}`).addClass(`GraphNavigation-State-Highlighted${postfix}`)
   }
-  unhighlight(state) {
+  unhighlight(state, postfix='') {
     this.logger('unhighlight', {state})
-    $(`.GraphNavigation-State-${state}`).removeClass('GraphNavigation-State-Highlighted')
+    $(`.GraphNavigation-State-${state}`).removeClass(`GraphNavigation-State-Highlighted${postfix}`)
   }
 
   showGraph() {
@@ -116,6 +116,31 @@ export class CircleGraph {
       this.showGraph()
       return
     }
+    if (this.options.actions) {
+      $('<div>')
+      .addClass('pressspace')
+      .css({
+        'text-align': 'left',
+        'font-size': 20,
+        'margin-top': 100,
+        'margin-bottom': -125,
+      })
+      .html(markdown(`
+        ## Participant Playback
+
+        - step through actions with space
+        - the next hovered state is highlighted in yellow (green for initial state)
+        - you can change which participant and trial you are viewing with url parameters, e.g.
+          \`?demo=v15/P02&trial=3\`
+        - press enter to begin
+      `))
+      .appendTo(this.root)
+      await getKeyPress(['enter'])
+      $('.pressspace').remove()
+      this.showGraph()
+      return
+    }
+
     if (trial.bonus) {
       $('<p>')
       .addClass('Graph-bonus')
@@ -130,6 +155,7 @@ export class CircleGraph {
       .text(trial.bonus.reportBonus())
       .appendTo(this.root)
     }
+
     await makeButton(this.root, 'start', {css: {'margin-top': '210px'}, post_delay: 0})
     $('.Graph-bonus').remove()
     await sleep(200)
@@ -180,10 +206,11 @@ export class CircleGraph {
     if (this.options.hover_rewards) this.el.classList.add('hideStates');
     if (this.options.hover_edges) this.el.classList.add('hideEdges');
 
-
+    if (this.options.actions) return  // demo mode
     // don't double up the event listeners
     if (this.mouseTrackingEnabled) return
     this.mouseTrackingEnabled = true
+
 
     for (const el of this.el.querySelectorAll('.State:not(.ShadowState)')) {
       const state = parseInt(el.getAttribute('data-state'), 10);
@@ -313,6 +340,11 @@ export class CircleGraph {
     $("#GraphNavigation-steps").html(stepsLeft)
     this.visitState(this.state, true)
 
+    if (this.options.actions) {
+      await this.showDemo()
+      return
+    }
+
     if (this.options.forced_hovers) {
       await this.showForcedHovers()
       this.showOutgoingEdges(this.state)
@@ -368,6 +400,24 @@ export class CircleGraph {
       // await sleep(5)
     }
     return path
+  }
+
+  async showDemo() {
+    for (var i = 0; i < this.options.actions.length; i++) {
+      let a = this.options.actions[i]
+      let a2 = this.options.actions[i+1]
+      // this.highlight(a.state, '3')
+      if (a2?.type == "fixate") this.highlight(a2.state, '2')
+      if (a.type == "move") {
+        this.hover(a.state)
+        this.visitState(a.state)
+      } else {
+        this.hover(a.state)
+      }
+      await getKeyPress(['t', 'space'])
+      // this.unhighlight(a.state, '3')
+      this.unhighlight(a2?.state, '2')
+    }
   }
 
   async showForcedHovers(start=0, stop) {

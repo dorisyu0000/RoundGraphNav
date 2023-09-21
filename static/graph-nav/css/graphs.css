@@ -240,6 +240,25 @@ img {
   background-color: #1B79FF;
 }
 
+
+.GraphNavigation.withGraphic .GraphNavigation-State-Highlighted2 {
+  border-color: #ECBB00;
+  background-color: #FFF5C9;
+}
+.GraphNavigation.withGraphic .GraphNavigation-State-Highlighted2.GraphNavigation-current {
+  border-color: #22A61E;
+  background-color: #75DD72;
+}
+
+.GraphNavigation.withGraphic .GraphNavigation-State-Highlighted3 {
+  border-color: #F3C379;
+  background-color: #FFFAF1;
+}
+.GraphNavigation.withGraphic .GraphNavigation-State-Highlighted3.GraphNavigation-current {
+  border-color: #85BA3B;
+  background-color: #ABDA6A;
+}
+
 .GraphNavigation.forced-hovers .GraphNavigation-current {
 /*  background-image: none;*/
   background-color: #FF6FA0;

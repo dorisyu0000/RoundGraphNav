@@ -36,7 +36,12 @@ async function initializeExperiment() {
   psiturk.recordUnstructuredData('start_time', new Date());
   console.log('Aug 11, 2023 4:25:05 PM')
 
-  const config = await $.getJSON(`static/json/config/${CONDITION+1}.json`);
+  let demo = QUERY.get('demo')
+  const DEMO = demo !== null
+  console.log('demo', demo, DEMO)
+  const config = await $.getJSON(
+    demo ? `static/json/demos/${demo}.json` : `static/json/config/${CONDITION+1}.json`
+  )
   // config.trials.test = config.trials.main[1]
   const bonused_rounds = config.trials.main.length +
     (config.trials.eyetracking ?? []).length
@@ -75,7 +80,7 @@ async function initializeExperiment() {
     // width: 800,
     // height: 800,
     scaleEdgeFactor: 1,
-    fixedXY: circleXY(config.trials.intro.graph.length)
+    fixedXY: circleXY(config.trials.main[0].graph.length)
   };
 
   function bare_block(name, options={}) {
@@ -91,7 +96,7 @@ async function initializeExperiment() {
   }
 
   function instruct_block(name, options={}) {
-    console.log('instruct', name, options)
+    if (DEMO) return {}
     if (!_.has(config.trials, name)) throw new Error(`${name} not in config.trials`)
     return {
       name,
@@ -107,6 +112,7 @@ async function initializeExperiment() {
   }
 
   function practice_block(name, message, options={}) {
+    if (DEMO) return {}
     if (!_.has(config.trials, name)) throw new Error(`${name} not in config.trials`)
     return {
       name,
@@ -122,6 +128,7 @@ async function initializeExperiment() {
   }
 
   function text_block(message) {
+    if (DEMO) return {}
     return {
       type: 'text',
       message: message
@@ -203,7 +210,7 @@ async function initializeExperiment() {
   ].filter(x=>x)  // skip the falses
 
 
-  const name = QUERY.get('name');
+  const name = DEMO ? 'main' : QUERY.get('name');
   if (name == "test") {
     timeline = [
       instruct_block('test', {enable_hover: true}),
@@ -217,15 +224,19 @@ async function initializeExperiment() {
       if (timeline.length <= 0) throw new Error("Timeline is empty")
     }
   }
-  let skip = QUERY.get('skip');
+  let skip = QUERY.get('skip') || QUERY.get('trial');
   if (skip != null) {
-    timeline = timeline.slice(skip);
+    if (DEMO) {
+      timeline[0].timeline = timeline[0].timeline.slice(skip)
+    } else {
+      timeline = timeline.slice(skip);
+    }
   }
 
   window.timeline = timeline
   if (timeline.length <= 0) throw new Error("Timeline is empty")
 
-  configureProgress(timeline);
+  if (!DEMO) configureProgress(timeline);
   // timeline.splice(0, 0, {type: 'fullscreen', fullscreen_mode: true})
 
   return startExperiment({

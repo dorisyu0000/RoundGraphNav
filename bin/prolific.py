@@ -8,7 +8,7 @@ from configparser import ConfigParser
 from markdown import markdown
 import random
 from fire import Fire
-from functools import cached_property
+from functools import cache, cached_property
 
 
 class Prolific(object):
@@ -25,7 +25,7 @@ class Prolific(object):
     def request(self, method, url, **kws):
         if url.startswith('/'):
             url = 'https://api.prolific.co/api/v1' + url
-        if not url.endswith('/'):
+        if not url.endswith('/') and '?' not in url:  # adding / prevents redirecting POST requests
             url += '/'
         r = requests.request(method, url, **kws, headers={
             'Authorization': f'Token {self.token}',
@@ -112,13 +112,20 @@ class Prolific(object):
             and s['internal_name'].startswith('graph-nav')
         ][-1]['id']
 
+    @cache
+    def submissions(self, study_id):
+        res = self.get(f'/studies/{study_id}/submissions?limit=1000')
+        if len(res['results']) != res['meta']['count']:
+            print("Some submissions were not retrieved. You might have to implemnent paging.")
+            exit(1)
+        return res['results']
+
     def approve_all(self, study_id, ignore_code=False):
         to_approve = []
         bad_code = []
-        submissions = self.get(f'/studies/{study_id}/submissions')['results']
         completion_code = self.get(f'/studies/{study_id}/')['completion_code']
 
-        for sub in submissions:
+        for sub in self.submissions(study_id):
             if sub['status'] != 'AWAITING REVIEW':
                 continue
             if ignore_code or sub['study_code'] == completion_code:
@@ -141,8 +148,8 @@ class Prolific(object):
 
 
     def assign_bonuses(self, study_id, bonuses):
-        submissions = self.get(f'/studies/{study_id}/submissions')['results']
-        previous_bonus = {sub['participant_id']: sum(sub['bonus_payments']) / 100 for sub in submissions}
+        previous_bonus = {sub['participant_id']: sum(sub['bonus_payments']) / 100
+                          for sub in self.submissions(study_id)}
 
         # n_bonused = sum(previous_bonus > 0)
         # if n_bonused:
@@ -266,6 +273,9 @@ class CLI(object):
         self._prolific.post(f'/studies/{self._study_id}/transition/', {
             "action": "START"
         })
+
+    def link(self):
+        return f"https://app.prolific.co/researcher/workspaces/studies/{self._study_id}/submissions"
 
 
     @cached_property
