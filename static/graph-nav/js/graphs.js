@@ -185,7 +185,7 @@ export function clockwiseKeys(graph, stateOrder) {
 
 export function circleXY(N) {
   return _.range(N).map(idx => {
-    const angle = idx * 2 * Math.PI / N;
+    const angle = 3 * Math.PI / 2 + (idx * 2 * Math.PI / N);
     let x = (Math.cos(angle) + 1) / 2;
     let y = (Math.sin(angle) + 1) / 2;
     return [x, y];

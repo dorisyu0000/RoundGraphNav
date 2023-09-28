@@ -242,6 +242,7 @@ export class CircleGraph {
       onlyShowCurrentEdges: this.options.graphRenderOptions.onlyShowCurrentEdges,
       ...options,
     });
+    this.hover(state)
   }
 
   clickTransition(options) {
@@ -495,9 +496,11 @@ export class CircleGraph {
     // if (this.options.forced_hovers) return
     if (this.options.keep_hover) {
       $(`.GraphNavigation-State`).removeClass('is-visible')
+      $(`.GraphNavigation-State`).removeClass('hovered')
       this.hideAllEdges()
     }
     if (this.options.show_hovered_reward) this.showState(state)
+    $(`.GraphNavigation-State-${state}`).addClass('hovered')
     for (const successor of this.graph.successors(state)) {
       this.showEdge(state, successor)
       if (this.options.show_successor_rewards) this.showState(successor)
@@ -512,6 +515,9 @@ export class CircleGraph {
   unhover(state) {
     if (this.options.forced_hovers) return
     if (this.options.keep_hover) return
+    console.log('unhover', state)
+    $(`.GraphNavigation-State-${state}`).removeClass('hovered')
+
     if (this.options.show_hovered_reward) this.hideState(state)
     for (const successor of this.graph.successors(state)) {
       this.hideEdge(state, successor)

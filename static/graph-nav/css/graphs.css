@@ -237,7 +237,12 @@ img {
 }
 .GraphNavigation.withGraphic .GraphNavigation-current {
 /*  background-image: none;*/
-  background-color: #1B79FF;
+  background-color: #1B79FF !important;
+}
+
+.GraphNavigation.withGraphic .hovered {
+/*  background-image: none;*/
+  background-color: #B5D4FF;
 }
 
 
