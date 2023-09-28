@@ -1,4 +1,5 @@
 using Graphs
+using Random
 
 model_dir = "/Users/fred/projects/graphnav/model"
 include("$model_dir/problem.jl")
@@ -22,23 +23,37 @@ include("$model_dir/utils.jl")
 
 neighbor_list(sgraph) = neighbors.(Ref(sgraph), vertices(sgraph))
 
-function sample_graph(n, start)
-    g = DiGraph(n)
-    done = falses(n)
-    function rec(s, possible_descendents)
-        done[s] && return
-        done[s] = true
-        n_child = min(2, length(possible_descendents))
-        n_child < 2 && return
-        children = sample(possible_descendents, n_child; replace=false)
-        for s′ in children
-            add_edge!(g, s, s′)
-            rec(s′, setdiff(possible_descendents, s′))
+"Adjacency list representation of the tree with specified branching at each depth"
+function tree(branching::Vector{Int})
+    t = Vector{Int}[]
+    function rec!(d)
+        children = Int[]
+        push!(t, children)
+        idx = length(t)
+        if d <= length(branching)
+            for i in 1:branching[d]
+                child = rec!(d+1)
+                push!(children, child)
+            end
         end
+        return idx
     end
-    rec(start, setdiff(1:n, start))
-    neighbor_list(g)
+    rec!(1)
+    t
 end
+
+function sample_graph()
+    # base = [[2, 3], [4, 5], [6, 7], [], [], [], []]
+    base = tree([2, 2, 2])
+    perm = randperm(length(base))
+    graph = map(base[perm]) do x
+        Int[findfirst(isequal(i), perm) for i in x]
+    end
+    start = findfirst(isequal(1), perm)
+    graph, start
+end
+
+
 
 function default_problem_requirement(problem)
     n_steps = problem.n_steps
@@ -48,8 +63,8 @@ function default_problem_requirement(problem)
     length(paths(problem; n_steps)) ≥ 2
 end
 
-function sample_problem_(;n, n_steps=-1, start=rand(1:n), graph=sample_graph(n, start),
-                        rdist=nothing, rewards=rand(rdist))
+function sample_problem_(;n_steps=-1, rdist=nothing, rewards=rand(rdist))
+    graph, start = sample_graph()
     rewards = copy(rewards)
     rewards[start] = 0
     Problem(graph, rewards, start, n_steps)
@@ -175,12 +190,12 @@ function generate(g::RandomGenerator, problem::Problem)
     end
 end
 
-function make_trials(; n=8, )
-    graph = neighbor_list(intro_graph(n))
-    rewards = exponential_rewards(n)
+function make_trials(; )
+    n = 15
+    rewards = exponential_rewards(8)
     rdist = IIDSampler(n, rewards)
-    kws = (;n, rdist)
-    intro = sample_problem(;graph, kws..., rewards=zeros(n))
+    kws = (;rdist)
+    intro = sample_problem(;kws..., rewards=zeros(n))
     main = [sample_problem(;kws...) for i in 1:50]
 
     (;
@@ -207,11 +222,14 @@ function reward_graphics(n=8)
     Dict(zip(exponential_rewards(n), sample(emoji, n; replace=false)))
 end
 
-version = "v15"
+version = "v16"
 Random.seed!(hash(version))
 subj_trials = repeatedly(make_trials, 30)
 
 # %% --------
+
+subj_trials[1][1].start
+subj_trials[1][1].graph
 
 points_per_cent = 2
 
