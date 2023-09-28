@@ -205,6 +205,7 @@ export class CircleGraph {
   }
 
   async plan(intro=false) {
+    this.logger('begin imagination mode')
     if (this.options.actions) return  // demo mode
     // don't double up the event listeners
     if (this.planningPhaseActive) return
@@ -218,7 +219,7 @@ export class CircleGraph {
       el.classList.add('PathIdentification-selectable')
       el.addEventListener('click', (e) => {
         if (this.planningPhaseActive) {
-          this.logger('click', {state})
+          this.logger('imagine', {state})
           this.hover(state)
         }
       });
@@ -236,6 +237,7 @@ export class CircleGraph {
       exit imagination mode
     `
     await makeButton(this.root, msg, {css: {'margin-top': '-600px', 'z-index': '12', 'position': 'relative'}, post_delay: 0})
+    this.logger('exit imagination mode')
     this.planningPhaseActive = false
     $('.GraphNavigation').css('opacity', 1)
     $(`.GraphNavigation-State`).removeClass('PathIdentification-selectable')
