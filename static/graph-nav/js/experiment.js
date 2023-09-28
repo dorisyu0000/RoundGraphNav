@@ -48,7 +48,6 @@ async function initializeExperiment() {
   console.log('bonused_rounds', bonused_rounds)
 
   window.config = config
-  console.log('MERGE', _.merge)
   const params = _.merge({
     eye_tracking: false,
     hover_edges: true,

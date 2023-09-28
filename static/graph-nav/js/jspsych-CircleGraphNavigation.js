@@ -10,7 +10,7 @@ window.$ = $
 
 let ensureSign = x => x > 0 ? "+" + x : "" + x
 
-const FAST_MODE = (new URLSearchParams(location.search)).get('fast') && true
+const FAST_MODE = (new URLSearchParams(location.search)).get('fast') == '1'
 
 export class CircleGraph {
   constructor(root, options) {
@@ -204,13 +204,14 @@ export class CircleGraph {
     }
   }
 
-  async plan() {
+  async plan(intro=false) {
     if (this.options.actions) return  // demo mode
     // don't double up the event listeners
     if (this.planningPhaseActive) return
     this.planningPhaseActive = true
 
     $('.GraphNavigation').css('opacity', .7)
+    $('.GraphNavigation-arrow,.GraphReward,.GraphNavigation-edge').css('transition', 'opacity 500ms')
 
     for (const el of this.el.querySelectorAll('.State:not(.ShadowState)')) {
       const state = parseInt(el.getAttribute('data-state'), 10);
@@ -223,17 +224,22 @@ export class CircleGraph {
       });
     }
 
+    if (!intro) {
+      await this.showImaginationModeButton()
+    }
+    // this.unhoverAll()
+    // await sleep(100)
+  }
+
+  async showImaginationModeButton() {
     let msg = `
-      <i><b>imagination mode</b></i><br>
-      click here when ready
+      exit imagination mode
     `
     await makeButton(this.root, msg, {css: {'margin-top': '-600px', 'z-index': '12', 'position': 'relative'}, post_delay: 0})
     this.planningPhaseActive = false
     $('.GraphNavigation').css('opacity', 1)
     $(`.GraphNavigation-State`).removeClass('PathIdentification-selectable')
-
-    // this.unhoverAll()
-    // await sleep(100)
+    $('.GraphNavigation-arrow,.GraphReward,.GraphNavigation-edge').css('transition', '')
   }
 
   cancel() {
@@ -504,8 +510,8 @@ export class CircleGraph {
     this.hideAllEdges()
   }
 
-  hover(state) {
-    if (!(this.options.hover_edges || this.options.hover_rewards)) return
+  async hover(state) {
+    // if (!(this.options.hover_edges || this.options.hover_rewards)) return
     this.logger('hover', {state})
     // if (this.options.forced_hovers) return
     if (this.options.keep_hover) {
