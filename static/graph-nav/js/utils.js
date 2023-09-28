@@ -54,8 +54,9 @@ export async function makeButton(div, text, opts={}) {
 
   let id = text.toLowerCase().replace(' ', '-')
   let btn = $('<button>', {class: cls, id})
-  .text(text)
+  .html(text)
   .css(css)
+  // .css('white-space', 'normal')
   .appendTo(div)
 
   if (pre_delay > 0) {

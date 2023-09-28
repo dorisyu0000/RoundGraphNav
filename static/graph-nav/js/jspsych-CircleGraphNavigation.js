@@ -90,9 +90,11 @@ export class CircleGraph {
     $(`.GraphNavigation-State-${state}`).removeClass(`GraphNavigation-State-Highlighted${postfix}`)
   }
 
-  showGraph() {
+  async showGraph() {
+    if (this.options.hover_rewards) this.el.classList.add('hideStates');
+    if (this.options.hover_edges) this.el.classList.add('hideEdges');
+    await sleep(100)
     this.wrapper.show()
-    this.setupMouseTracking()
     // this.setupEyeTracking()
 
     $(`.ShadowState .GraphReward`).remove()
@@ -202,27 +204,36 @@ export class CircleGraph {
     }
   }
 
-  setupMouseTracking() {
-    if (this.options.hover_rewards) this.el.classList.add('hideStates');
-    if (this.options.hover_edges) this.el.classList.add('hideEdges');
-
+  async plan() {
     if (this.options.actions) return  // demo mode
     // don't double up the event listeners
-    if (this.mouseTrackingEnabled) return
-    this.mouseTrackingEnabled = true
+    if (this.planningPhaseActive) return
+    this.planningPhaseActive = true
 
+    $('.GraphNavigation').css('opacity', .7)
 
     for (const el of this.el.querySelectorAll('.State:not(.ShadowState)')) {
       const state = parseInt(el.getAttribute('data-state'), 10);
-      el.addEventListener('mouseenter', (e) => {
-        this.logger('mouseenter', {state})
-        this.options.forced_hovers || this.hover(state)
-      });
-      el.addEventListener('mouseleave', (e) => {
-        this.logger('mouseleave', {state})
-        this.options.forced_hovers || this.unhover(state)
+      el.classList.add('PathIdentification-selectable')
+      el.addEventListener('click', (e) => {
+        if (this.planningPhaseActive) {
+          this.logger('click', {state})
+          this.hover(state)
+        }
       });
     }
+
+    let msg = `
+      <i><b>imagination mode</b></i><br>
+      click here when ready
+    `
+    await makeButton(this.root, msg, {css: {'margin-top': '-600px', 'z-index': '12', 'position': 'relative'}, post_delay: 0})
+    this.planningPhaseActive = false
+    $('.GraphNavigation').css('opacity', 1)
+    $(`.GraphNavigation-State`).removeClass('PathIdentification-selectable')
+
+    // this.unhoverAll()
+    // await sleep(100)
   }
 
   cancel() {
@@ -325,9 +336,6 @@ export class CircleGraph {
   async navigate(options) {
     let path = []
     this.logger('navigate', options)
-    // $(`.GraphNavigation-State`).css({opacity: 1})
-    // $('.GraphReward').css({opacity: 1})
-    // $(`.GraphNavigation-terminated`).removeClass('GraphNavigation-terminated');
     options = options || {};
     if (this.state === undefined) {
       this.setCurrentState(this.options.start)
@@ -490,14 +498,18 @@ export class CircleGraph {
     $(`.GraphNavigation-edge-${state}-${successor}`).removeClass('is-visible')
   }
 
+  unhoverAll() {
+    $(`.GraphNavigation-State`).removeClass('is-visible')
+    $(`.GraphNavigation-State`).removeClass('hovered')
+    this.hideAllEdges()
+  }
+
   hover(state) {
     if (!(this.options.hover_edges || this.options.hover_rewards)) return
     this.logger('hover', {state})
     // if (this.options.forced_hovers) return
     if (this.options.keep_hover) {
-      $(`.GraphNavigation-State`).removeClass('is-visible')
-      $(`.GraphNavigation-State`).removeClass('hovered')
-      this.hideAllEdges()
+      this.unhoverAll()
     }
     if (this.options.show_hovered_reward) this.showState(state)
     $(`.GraphNavigation-State-${state}`).addClass('hovered')
@@ -837,6 +849,9 @@ addPlugin('main', trialErrorHandling(async function main(root, trial) {
   // trial.n_steps = -1;
   cg = new CircleGraph($(root), trial);
   await cg.showStartScreen(trial)
+  cg.setCurrentState(cg.options.start)
+  // cg.visitState(cg.state, true)
+  await cg.plan()
   await cg.navigate()
   trial.bonus.addPoints(cg.score)
   cg.data.current_bonus = trial.bonus.dollars()

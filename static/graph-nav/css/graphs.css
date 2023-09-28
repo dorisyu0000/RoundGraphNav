@@ -1,5 +1,11 @@
 /* Graph-related style */
 
+.GraphNavigation-occluder {
+  z-index: 11;
+  background-color: white;
+  opacity: .1;
+}
+
 .forced-hovers {
 
 }
@@ -242,7 +248,7 @@ img {
 
 .GraphNavigation.withGraphic .hovered {
 /*  background-image: none;*/
-  background-color: #B5D4FF;
+  background-color: #B8D8FF;
 }
 
 
@@ -396,7 +402,7 @@ img {
 }
 
 .GraphTraining-successors .State:hover {
-  cursor: pointer;
+/*  cursor: pointer;*/
   background-color: #ccc;
 }
 
