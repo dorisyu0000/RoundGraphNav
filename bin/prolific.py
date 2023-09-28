@@ -238,7 +238,7 @@ def generate_internal_name():
 class CLI(object):
 
     def approve_and_bonus(self):
-        """Approve all submissions of the last study and assign bonuses in bonus.csv.
+        """Approve all submissions of the last study and assign bonuses in bonus.csv
 
         The "last" study refers to the most recently posted study within your project
         """
@@ -249,7 +249,7 @@ class CLI(object):
         self._prolific.assign_bonuses(self._study_id, bonuses)
 
     def post_duplicate(self):
-        """Post a duplicate of the last study using current fields in config.txt. """
+        """Post a duplicate of the last study using current fields in config.txt"""
         self._prolific.post_duplicate(self._study_id, internal_name=generate_internal_name())
 
     def check_wage(self):
@@ -265,16 +265,19 @@ class CLI(object):
         self._prolific.add_places(self._study_id, new_total)
 
     def pause(self):
+        """Temporarily pause recruiting new participants"""
         self._prolific.post(f'/studies/{self._study_id}/transition/', {
             "action": "PAUSE"
         })
 
     def start(self):
+        """Resume recruiting participants (after pausing)"""
         self._prolific.post(f'/studies/{self._study_id}/transition/', {
             "action": "START"
         })
 
     def link(self):
+        """Print the link to the submissions page for the most recently posted study"""
         return f"https://app.prolific.co/researcher/workspaces/studies/{self._study_id}/submissions"
 
 
