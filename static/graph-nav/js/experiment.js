@@ -227,7 +227,7 @@ async function initializeExperiment() {
   let skip = QUERY.get('skip') || QUERY.get('trial');
   if (skip != null) {
     if (DEMO) {
-      timeline[0].timeline = timeline[0].timeline.slice(skip)
+      timeline[0].timeline = timeline[0].timeline.slice(skip-1)
     } else {
       timeline = timeline.slice(skip);
     }
