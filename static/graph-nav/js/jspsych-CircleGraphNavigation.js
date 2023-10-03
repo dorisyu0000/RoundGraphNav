@@ -420,6 +420,14 @@ export class CircleGraph {
   }
 
   async showDemo() {
+    console.log(this.options.actions)
+    // if (this.options.actions.length == 0) return
+
+    let a0 = this.options.actions[0]
+    if (a0?.type == "fixate") this.highlight(a0.state, '2')
+    await getKeyPress(['t', 'space'])
+    if (a0?.type == "fixate") this.unhighlight(a0.state, '2')
+
     for (var i = 0; i < this.options.actions.length; i++) {
       let a = this.options.actions[i]
       let a2 = this.options.actions[i+1]
