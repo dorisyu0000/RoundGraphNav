@@ -6,6 +6,7 @@ from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 import hashlib
 import json
 from datetime import datetime
+from sqlalchemy.exc import OperationalError
 
 # set environment parameters so that we use the remote database
 
@@ -136,10 +137,13 @@ def reformat(version):
     identifiers = pd.read_csv(f'data/human_raw/{version}/identifiers.csv').set_index('wid')
     identifiers.join(participants.bonus).dropna().to_csv('bonus.csv', index=False, header=False)
 
-
 def main(version, debug, nofetch):
     if not nofetch:
-        write_csvs(version, debug)
+        try:
+            write_csvs(version, debug)
+        except OperationalError:
+            print("Cannot access database. Resetting the cached database url. Please try again.")
+            os.remove(".database_url")
     reformat(version)
 
 if __name__ == "__main__":
