@@ -18,6 +18,10 @@ export class CircleGraph {
       Object.assign(options, options.dynamicProperties());
     }
 
+    let gro = options.graphRenderOptions;
+    gro.successorKeysRender = gro.successorKeysRender || (key => key);
+    options.successorKeys = ['1','2','3','4']
+
     this.options = options;
     options.consume = options.consume ?? true
     options.edgeShow = options.edgeShow ?? (() => true);
@@ -192,6 +196,41 @@ export class CircleGraph {
     });
   }
 
+
+  keyCodeToState(keyCode) {
+    /*
+    Mapping keyCode to states.
+    */
+    const key = String.fromCharCode(keyCode).toUpperCase();
+    const idx = this.options.successorKeys[this.state].indexOf(key);
+    if (idx === -1) {
+      return null;
+    }
+    const succ = this.options.graph.successors(this.state)[idx];
+    if (!this.options.edgeShow(this.state, succ)) {
+      return null;
+    }
+    return succ;
+  }
+
+  keyTransition() {
+    /*
+    Returns a promise that is resolved with {state} when there is a keypress
+    corresponding to a valid state transition.
+    */
+    const p = documentEventPromise('keydown', (e) => {
+      const state = this.keyCodeToState(e.keyCode);
+      if (state !== null) {
+        e.preventDefault();
+        return {state};
+      }
+    });
+
+    this.cancellables.push(p.cancel);
+
+    return p;
+  }
+
   clickTransition(options) {
     options = options || {};
     /*
@@ -285,11 +324,14 @@ export class CircleGraph {
     while (true) { // eslint-disable-line no-constant-condition
       // State transition
       const g = this.graph;
-      const {state} = await this.clickTransition({
-        invalidStates: new Set(
-          g.states.filter(s => !g.successors(this.state).includes(s))
-        ),
-      });
+
+
+      const {state} = await this.keyTransition()
+      // this.clickTransition({
+      //   invalidStates: new Set(
+      //     g.states.filter(s => !g.successors(this.state).includes(s))
+      //   ),
+      // });
       this.visitState(state)
       path.push(state)
 
@@ -502,6 +544,21 @@ function renderCircleGraph(graph, gfx, goal, options) {
   window.states = states
   window.shadowStates = shadowStates
 
+  function addKey(key, state, successor, norm) {
+    const [x, y] = xy.scaled[state];
+    const [sx, sy] = xy.scaled[successor];
+    const [keyWidth, keyHeight] = [20, 28]; // HACK get from CSS
+    // We also add the key labels here
+    const mul = keyDistanceFactor * BLOCK_SIZE / 2;
+    keys.push(`
+      <div class="GraphNavigation-key GraphNavigation-key-${state}-${successor} GraphNavigation-key-${keyForCSSClass(key)}" style="
+        transform: translate(
+          ${x - keyWidth/2 + mul * (sx-x)/norm}px,
+          ${y - keyHeight/2 + mul * (sy-y)/norm}px)
+      ">${options.successorKeysRender(key)}</div>
+    `);
+  }
+
   const succ = [];
   const arrows = [];
   for (const state of graph.states) {
@@ -522,6 +579,8 @@ function renderCircleGraph(graph, gfx, goal, options) {
 
       // We also add the key labels here
       addArrow(state, successor, e.norm, e.rot);
+      addKey(successorKeys[state][idx], state, successor, e.norm);
+      addKey(successorKeys[successor][graph.successors(successor).indexOf(state)], successor, state, e.norm);
       // addArrow(successor, state, e.norm);
     });
   }
