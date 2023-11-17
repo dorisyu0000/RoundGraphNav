@@ -43,6 +43,8 @@ async function initializeExperiment() {
     "start":0,
     "n_steps":-1
   }
+  config.parameters.hover_edges = false
+  config.parameters.hover_rewards = false
 
   window.config = config
   const params = config.parameters
