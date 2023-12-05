@@ -171,8 +171,6 @@ export class CircleGraph {
         for (const pred of this.graph.predecessors(state)) {
           $(`.GraphNavigation-edge-${pred}-${state}`).addClass('is-visible')
         }
-        console.log(`mouseleave, ${state}`);
-
       });
       el.addEventListener('mouseleave', (e) => {
         this.logger('mouseleave', { state })
@@ -332,6 +330,7 @@ export class CircleGraph {
 
         this.el.removeEventListener('click', handler);
         resolve({ state });
+        resolve({ state });
       }
 
       this.el.addEventListener('click', handler);
@@ -429,6 +428,7 @@ export class CircleGraph {
           // $(this.el).empty()
         } else {
           await sleep(200)
+          $(this.el).animate({ opacity: 0 }, 200)
           $(this.el).animate({ opacity: 0 }, 200)
           await sleep(500)
         }
@@ -588,6 +588,9 @@ function renderCircleGraph(graph, gfx, goal, options) {
       style: `transform: translate(${x - BLOCK_SIZE / 2}px,${y - BLOCK_SIZE / 2}px);
       
       `,
+      style: `transform: translate(${x - BLOCK_SIZE / 2}px,${y - BLOCK_SIZE / 2}px);
+      
+      `,
     });
   });
 
@@ -688,6 +691,7 @@ function setCurrentState(display_element, graph, state, options) {
   options.edgeShow = options.edgeShow || (() => true);
   // showCurrentEdges enables rendering of current edges/keys. This is off for PathIdentification and AcceptReject.
   options.showCurrentEdges = typeof (options.showCurrentEdges) === 'undefined' ? true : options.showCurrentEdges;
+  options.showCurrentEdges = typeof (options.showCurrentEdges) === 'undefined' ? true : options.showCurrentEdges;
   const allKeys = _.unique(_.flatten(options.successorKeys));
 
   // Remove old classes!
@@ -706,6 +710,7 @@ function setCurrentState(display_element, graph, state, options) {
   }
 
   // Can call this to clcconear out current state too.
+  // Can call this to clcconear out current state too.
   if (state == null) {
     return;
   }
@@ -719,6 +724,7 @@ function setCurrentState(display_element, graph, state, options) {
 
   if (options.onlyShowCurrentEdges) {
     for (const el of display_element.querySelectorAll('.GraphNavigation-edge,.GraphNavigation-arrow')) {
+      // for (const el of display_element.querySelectorAll('.GraphNavigation-edge')) {
       // for (const el of display_element.querySelectorAll('.GraphNavigation-edge')) {
       el.style.opacity = 0;
     }
