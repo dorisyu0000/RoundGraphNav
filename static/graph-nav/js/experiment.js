@@ -34,7 +34,6 @@ const QUERY = new URLSearchParams(location.search);
 async function initializeExperiment() {
   psiturk.recordUnstructuredData('browser', window.navigator.userAgent);
   psiturk.recordUnstructuredData('start_time', new Date());
-  console.log('Jun 2, 2023 11:56:17 AM')
 
   const config = await $.getJSON(`static/json/config/${CONDITION+1}.json`);
   config.trials.test = {
@@ -49,6 +48,8 @@ async function initializeExperiment() {
   window.config = config
   const params = config.parameters
   params.show_points = false
+  params.hover_rewards = true
+  params.hover_edges = true
 
   const bonus = new Bonus({points_per_cent: params.points_per_cent, initial: 50})
 
