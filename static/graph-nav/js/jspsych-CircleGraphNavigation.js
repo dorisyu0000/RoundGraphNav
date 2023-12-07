@@ -189,9 +189,17 @@ export class CircleGraph {
   async getKeyResponse() {
     return new Promise((resolve) => {
         const keyHandler = (info) => {
-            const key = jsPsych.pluginAPI.convertKeyCodeToKeyCharacter(info.key);
-            if (key >= '1' && key <= '4') { 
+          const input_key = jsPsych.pluginAPI.convertKeyCodeToKeyCharacter(info.key);
+          let key; // Declare the 'key' variable
+      
+          if (input_key == 'q' || input_key == '1') {
+               key = '1';
+           }
+          if (input_key == 'p' || input_key == '2') {
+               key = '2';
+           }
 
+            if (key >= '1' && key <= '4') { 
                 const index = parseInt(key, 10) - 1; 
                 const validSuccessors = this.graph.successors(this.state);
 
@@ -653,7 +661,7 @@ function addArrow(state, successor, norm, rot, color) {
 
     successors.forEach((successor, idx) => {
         const e = xy.edge(state, successor);
-        const color = colors[idx % colors.length];  // 根据后继节点的索引选择颜色
+        const color = colors[idx % colors.length];  
 
         succ.push(`
           <div class="GraphNavigation-edge GraphNavigation-edge-${state}-${successor}" style="

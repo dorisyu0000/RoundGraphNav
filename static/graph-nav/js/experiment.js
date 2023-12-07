@@ -128,10 +128,12 @@ async function initializeExperiment() {
     practice_block('practice_revealed', `
       Let's try a few practice rounds with more moves.
     `),
-    (params.hover_rewards || params.hover_edges) && instruct_block('intro_hover', {
-      _edges: params.hover_edges,
-      _rewards: params.hover_rewards,
-    }),
+    
+    // (params.hover_rewards || params.hover_edges) && instruct_block('intro_hover', {
+    //   _edges: params.hover_edges,
+    //   _rewards: params.hover_rewards,
+    // }),
+
     text_block(`
       You've got it! Now you're ready to play the game for real.
       In the remaining ${config.trials.main.length} rounds, your
@@ -139,6 +141,7 @@ async function initializeExperiment() {
       <b>${bonus.describeScheme()}.</b> We'll start you off with ${bonus.initial}
       points for free. Good luck!
     `),
+
     params.eye_tracking && instruct_block('calibration'),
     build_main(),
     {

@@ -45,7 +45,7 @@ addPlugin('intro', async function intro(root, trial) {
   cg.setCurrentState(trial.start)
   await button()
 
-  message(`You can move by clicking on a location that has an arrow pointing<br>from your current location. Try it now!`)
+  message(`You can move by pressing keys to move from your current location.<br>Press “P" for 🟦 if you want to move in the direction of a blue arrow<br>or press "Q" for 🟥 if you want to move in the direction of a red arrow. Try it now!`)
   let next_states = cg.graph.successors(trial.start)
   for (const s of next_states) {
     $(`.GraphNavigation-State-${s}`).addClass('GraphNavigation-State-Highlighted')
@@ -58,7 +58,9 @@ addPlugin('intro', async function intro(root, trial) {
   message(`
     The goal of the game is to earn points by collecting items from the board.<br>
     Try collecting this item!
-  `)
+    ${describeActions()}
+  `
+  )
   let goal = _.sample(cg.graph.successors(cg.state))
   // $("#gn-points").show()
   cg.setReward(goal, 4)
@@ -78,6 +80,7 @@ addPlugin('intro', async function intro(root, trial) {
 
   message(`
     Now try collecting this item.
+    ${describeActions()}
   `)
 
   goal = _.sample(cg.graph.successors(cg.state))
@@ -100,7 +103,6 @@ function describeRewards(rewardGraphics) {
   //   return `${renderSmallEmoji(rewardGraphics[reward])}is worth ${reward}`
   // })
   // return descriptions.slice(0, -1).join(', ') + ', and ' + descriptions.slice(-1)
-
   let vv =  vals.map(reward => `
     <div class="describe-rewards-box">
     ${renderSmallEmoji(rewardGraphics[reward])}<br>
@@ -110,6 +112,16 @@ function describeRewards(rewardGraphics) {
   return `
     <div class="describe-rewards">
       ${vv}
+    </div>
+  `
+}
+
+
+function describeActions() {
+  return `
+    <div class="describe-actions">
+      <div class="describe-actions-box"> 🟥 Arrow: Pressing "Q" </div>
+      <div class="describe-actions-box"> 🟦 Arrow: Pressing "P" </div>
     </div>
   `
 }
@@ -124,12 +136,15 @@ addPlugin('collect_all', async function collect_all(root, trial) {
   message(
     `Each kind of item is worth a different number of points:
     ${describeRewards(trial.rewardGraphics)}
+    If you wanna travel to the next state, you can press "P" or "Q" to move in the direction of the blue or red arrows.
+    ${describeActions()}
   `)
   await button()
 
   message(`
     Try collecting all the items <b>(even the bad ones for now)</b>.
     ${describeRewards(trial.rewardGraphics)}
+
   `)
   let cg = new CircleGraph($("#cgi-root"), trial);
   cg.showGraph(trial)

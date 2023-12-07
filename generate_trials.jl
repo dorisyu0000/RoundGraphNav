@@ -116,32 +116,27 @@ subj_trials = repeatedly(make_trials, 10)
 
 # %% --------
 
-base_params = (
-    hover_edges = true,
-    hover_rewards = true,
-    points_per_cent = 3,
-    use_n_steps = true,
-    vary_transition = false,
-    eye_tracking = false,
-    fixed_rewards = true,
-)
-
 dest = "static/json/config/"
 rm(dest, recursive=true)
 mkpath(dest)
 foreach(enumerate(subj_trials)) do (i, trials)
-    parameters = (;
-        base_params...,
+    parameters = (
         rewardGraphics = reward_graphics(8),
+        hover_edges = true,
+        hover_rewards = true,
+        points_per_cent = 10,
+        use_n_steps = true,
+        vary_transition = false,
+        eye_tracking = false,
+        fixed_rewards = true,
     )
     write("$dest/$i.json", json((;parameters, trials)))
 end
 
 # %% --------
 
-bonus = map(subj_trials) do trials
-    (50 + sum(value.(trials.main))) / (base_params.points_per_cent * 100)
-end
-
+# bonus = map(subj_trials) do trials
+#    (50 + sum(value.(trials.main))) / (parameters.points_per_cent * 100)
+# end
 using UnicodePlots
 histogram(bonus, nbins=10, vertical=true, height=10)

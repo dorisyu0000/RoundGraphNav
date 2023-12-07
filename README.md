@@ -16,8 +16,7 @@ python3 -m venv env
 pip install -r requirements.txt
 ```
 
-We also use Parcel to bundle JavaScript and CSS, which requires installation:
-```
+p```
 npm install
 ```
 
