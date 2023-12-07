@@ -171,8 +171,7 @@ export class CircleGraph {
         for (const pred of this.graph.predecessors(state)) {
           $(`.GraphNavigation-edge-${pred}-${state}`).addClass('is-visible')
         }
-        // 悬停断点
-        console.log(`鼠标悬停在状态 ${state}`);
+        console.log(`mouseleave, ${state}`);
 
       });
       el.addEventListener('mouseleave', (e) => {
@@ -187,8 +186,8 @@ export class CircleGraph {
       });
     }
   }
-  // Update -- 更新内容
-  // 获取键盘的数字去选择
+  // Update
+  // keyResponse for choose
   async getKeyResponse() {
     return new Promise((resolve) => {
         const keyHandler = (info) => {
@@ -218,7 +217,7 @@ export class CircleGraph {
 }
 
 
-  // 提示吐司的方法
+  // Toast massage for invalid selection
   showToast(message) {
     const toast = $('<div>')
         .addClass('toast-message')
@@ -320,7 +319,7 @@ export class CircleGraph {
         el.classList.add('PathIdentification-selectable');
       }
     }
-    console.log("点击了")
+    console.log("Click")
 
     return new Promise((resolve, reject) => {
       const handler = (e) => {
@@ -402,7 +401,7 @@ export class CircleGraph {
 
 
 
-      // Update -- 获取state，根据getKeyResponse
+      // Update -- get state based on getKeyResponse
       const { state } = await this.getKeyResponse();
 
       // const {state} = await this.keyTransition()
@@ -411,8 +410,6 @@ export class CircleGraph {
       // //     g.states.filter(s => !g.successors(this.state).includes(s))
       // //   ),
       // // });
-
-      // 给state赋值
       this.visitState(state)
       path.push(state)
 
@@ -594,8 +591,7 @@ function renderCircleGraph(graph, gfx, goal, options) {
     });
   });
 
-  // Update2 添加数据线的方法，由于我们已经在最上方定义了十个颜色的list，我们在创建addArrow
-  // 的时候去定义颜色，
+  // Update2 addArrow define color
   
 function addArrow(state, successor, norm, rot, color) {
     const [x, y] = xy.scaled[state];
