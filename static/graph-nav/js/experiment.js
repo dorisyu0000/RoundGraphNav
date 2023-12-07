@@ -55,13 +55,19 @@ async function initializeExperiment() {
 
   params.graphRenderOptions = {
     onlyShowCurrentEdges: false,
-    width: 700,
+    width: 600,
     height: 600,
+    // width: 800,
+    // height: 800,
     scaleEdgeFactor: 1,
-    fixedXY: circleXY(10)
+    fixedXY: circleXY(config.trials.intro.graph.length)
   };
 
-  function instruct_block(name) {
+  function bare_block(name) {
+    return {name, type: name}
+  }
+
+  function instruct_block(name, options={}) {
     if (!_.has(config.trials, name)) throw new Error(`${name} not in config.trials`)
     return {
       name,
@@ -70,6 +76,7 @@ async function initializeExperiment() {
       type: name,
       hover_edges: false,
       hover_rewards: false,
+      ...options,
       ...config.trials[name],
     }
   }
@@ -105,34 +112,25 @@ async function initializeExperiment() {
     }
   }
 
+
   var timeline = [
     // instruct_block('test'),
     instruct_block('intro'),
     instruct_block('collect_all'),
     instruct_block('learn_rewards'),
-    // practice_block('move2',`
-    //   In the real game, you get to move more than once. The number of moves
-    //   for the current round is shown after you click the start button. Give
-    //   it a shot!
-    // `),
     // instruct_block('backstep'),
-    // practice_block('practice_revealed', `
-    //   Let's try a few practice rounds with more moves.
-    // `),
-    instruct_block('vary_transition'),
-    practice_block('practice_revealed', `
-      Great! Let's try a few more practice rounds.
+    params.use_n_steps && practice_block('move2',`
+      In the real game, you get to move more than once. The number of moves
+      for the current round is shown after you click the start button. Give
+      it a shot!
     `),
-    instruct_block('intro_hover', {
-      hover_edges: true,
-      hover_rewards: params.hover_rewards,
-    }),
-    practice_block('practice_hover', `
-      Try three more practice games. Then we can begin the main section<br>
-      (where you can earn money!)
-    `, {
-      hover_edges: true,
-      hover_rewards: params.hover_rewards,
+    params.vary_transition && instruct_block('vary_transition'),
+    practice_block('practice_revealed', `
+      Let's try a few practice rounds with more moves.
+    `),
+    (params.hover_rewards || params.hover_edges) && instruct_block('intro_hover', {
+      _edges: params.hover_edges,
+      _rewards: params.hover_rewards,
     }),
     text_block(`
       You've got it! Now you're ready to play the game for real.
@@ -141,6 +139,7 @@ async function initializeExperiment() {
       <b>${bonus.describeScheme()}.</b> We'll start you off with ${bonus.initial}
       points for free. Good luck!
     `),
+    params.eye_tracking && instruct_block('calibration'),
     build_main(),
     {
       type: 'survey-text',
@@ -165,7 +164,8 @@ async function initializeExperiment() {
         psiturk.recordUnstructuredData('bonus', bonus.dollars());
       },
     }
-  ];
+  ].filter(x=>x)  // skip the falses
+
 
   const name = QUERY.get('name');
   if (name) {
@@ -185,10 +185,11 @@ async function initializeExperiment() {
   }
 
   configureProgress(timeline);
+  // timeline.splice(0, 0, {type: 'fullscreen', fullscreen_mode: true})
 
   return startExperiment({
     timeline,
-    show_progress_bar: true,
+    show_progress_bar: false,
     auto_update_progress_bar: false,
     auto_preload: false,
     exclusions: {
@@ -202,7 +203,7 @@ function configureProgress(timeline) {
   let done = 0;
   function on_finish() {
     done++;
-    jsPsych.setProgressBar(done/total);
+    // jsPsych.setProgressBar(done/total);
     requestSaveData();
   }
 
