@@ -1,6 +1,9 @@
 
 import { numString, markdown, makePromise, parseHTML, trialErrorHandling, graphicsUrl, sleep, addPlugin, documentEventPromise, invariant, makeButton } from './utils.js';
 import { Graph } from './graphs.js';
+
+import { numString, markdown, makePromise, parseHTML, trialErrorHandling, graphicsUrl, sleep, addPlugin, documentEventPromise, invariant, makeButton } from './utils.js';
+import { Graph } from './graphs.js';
 import _ from '../../lib/underscore-min.js';
 import $ from '../../lib/jquery-min.js';
 import jsPsych from '../../lib/jspsych-exported.js';
@@ -10,6 +13,31 @@ const BLOCK_SIZE = 100;
 window.$ = $
 const colors = ["#E57373", "#64B5F6", "#81C784", "#FFF176"]; 
 
+
+// descirbe the graph
+/**
+ * @typedef {Object} CircleGraphOptions
+ * @property {number[][]} graph - Adjacency matrix of the graph.
+ * @property {number} start - Starting state.
+ * @property {number} goal - Goal state.
+ * @property {number} n_steps - Number of steps allowed.
+ * @property {number[]} rewards - Reward for each state.
+ * @property {string[]} emojiGraphics - Graphics for each reward.
+ * @property {boolean} consume - Whether to consume rewards.
+ * @property {boolean} edgeShow - Whether to show edges.
+ * @property {boolean} show_steps - Whether to show steps.
+ * @property {boolean} show_points - Whether to show points.
+ * @property {boolean} hover_rewards - Whether to show rewards on hover.
+ * @property {boolean} hover_edges - Whether to show edges on hover.
+ * @property {boolean} probe - Whether to show probe.
+ * @property {boolean} leave_state - Whether to leave state on completion.
+ * @property {boolean} leave_open - Whether to leave open on completion.
+ * @property {boolean} show_current_edges - Whether to show current edges.
+ * @property {string[][]} successorKeys - Keys for each successor.
+ * @property {function} successorKeysRender - Render function for successor keys.
+ * @property {function} onStateVisit - Callback for state visit.
+ * @property {function} dynamicProperties - Dynamic properties.
+ */
 
 export class CircleGraph {
   constructor(root, options) {
@@ -40,8 +68,8 @@ export class CircleGraph {
     if (options.consume) {
       this.rewards[options.start] = 0
     }
-    options.rewardGraphics[0] = options.rewardGraphics[0] ?? ""
-    options.graphics = this.rewards.map(x => options.rewardGraphics[x])
+    options.emojiGraphics[0] = options.emojiGraphics[0] ?? ""
+    options.graphics = this.rewards.map(x => options.emojiGraphics[x])
 
     this.graph = new Graph(options.graph)
     this.el = parseHTML(renderCircleGraph(
@@ -184,6 +212,7 @@ export class CircleGraph {
       });
     }
   }
+
   // Update
   // keyResponse for choose
   async getKeyResponse() {
@@ -191,15 +220,16 @@ export class CircleGraph {
         const keyHandler = (info) => {
           const input_key = jsPsych.pluginAPI.convertKeyCodeToKeyCharacter(info.key);
           let key; // Declare the 'key' variable
-      
           if (input_key == 'q' || input_key == '1') {
-               key = '1';
-           }
+               key = '1';}
           if (input_key == 'p' || input_key == '2') {
-               key = '2';
-           }
+               key = '2';}
+          if (input_key == 'w' || input_key == '3') {
+               key = '3';}
+          if (input_key == 'o' || input_key == '4') {
+                key = '4';}
 
-            if (key >= '1' && key <= '4') { 
+          if (key >= '1' && key <= '4') { 
                 const index = parseInt(key, 10) - 1; 
                 const validSuccessors = this.graph.successors(this.state);
 
@@ -461,7 +491,7 @@ export class CircleGraph {
 
   setReward(state, reward) {
     this.rewards[state] = parseFloat(reward)
-    let graphic = this.options.rewardGraphics[reward]
+    let graphic = this.options.emojiGraphics[reward]
     $(`.GraphNavigation-State-${state}`).html(`
       <img src="${graphicsUrl(graphic)}" />
     `)
@@ -602,8 +632,7 @@ function renderCircleGraph(graph, gfx, goal, options) {
     });
   });
 
-  // Update2 addArrow define color
-  
+// Update2 addArrow define color
 function addArrow(state, successor, norm, rot, color) {
     const [x, y] = xy.scaled[state];
     const [sx, sy] = xy.scaled[successor];
@@ -773,13 +802,13 @@ function renderKeyInstruction(keys) {
   function renderInputInstruction(inst) {
     return `<span style="border: 1px solid black; border-radius: 3px; padding: 3px; font-weight: bold; display: inline-block;">${inst}</span>`;
   }
-
   if (keys.accept == 'Q') {
     return `${renderInputInstruction('Yes (q)')} &nbsp; ${renderInputInstruction('No (p)')}`;
   } else {
     return `${renderInputInstruction('No (q)')} &nbsp; ${renderInputInstruction('Yes (p)')}`;
   }
 }
+
 
 addPlugin('main', trialErrorHandling(async function main(root, trial) {
   trial.n_steps = -1;
@@ -791,4 +820,17 @@ addPlugin('main', trialErrorHandling(async function main(root, trial) {
   console.log('cg.data', cg.data);
   $(root).empty()
   jsPsych.finishTrial(cg.data)
+}));
+
+addPlugin('break', trialErrorHandling(async function breakTrial(root, trial) {
+  $(root).html(`
+    <div class="GraphNavigation">
+      <div class="GraphNavigation-break">
+        <p>Take a break! Press spacebar to continue.</p>
+      </div>
+    </div>
+  `);
+  await waitForSpace();
+  $(root).empty();
+  jsPsych.finishTrial();
 }));

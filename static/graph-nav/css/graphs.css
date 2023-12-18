@@ -1,21 +1,6 @@
 /* Graph-related style */
 
-.describe-rewards {
-/*  text-align: center;*/
-  margin: auto;
-/*  width: 600px;*/
-/*  border: thin black solid;*/
-}
-.describe-rewards-box {
-/*  float: left;*/
-  display: inline-block;
-  margin: 10 20 20 0;
-  font-weight: bold;
-}
 
-#cgi-top {
-  padding-top: 10;
-}
 #cgi-msg b {
   font-weight: 400;
   color: #7946C3;

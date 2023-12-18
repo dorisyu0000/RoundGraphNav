@@ -8,7 +8,10 @@ const stateTemplate = (state, graphic) => `
 <div class='State' data-state="${state}"><img src="${graphicsUrl(graphic)}" /></div>
 `;
 
+
+  
 function render(graph, gfx, state, goal) {
+  
   let succ = '';
   let successors = graph.successors(state);
   successors = jsPsych.randomization.repeat(successors, 1);
