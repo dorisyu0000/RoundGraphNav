@@ -35,8 +35,9 @@ async function initializeExperiment() {
   psiturk.recordUnstructuredData('browser', window.navigator.userAgent);
   psiturk.recordUnstructuredData('start_time', new Date());
 
-  const config = await $.getJSON(`static/json/config/${CONDITION+1}.json`);
-  //const config = await $.getJSON(`static/json/test_trial.json`);
+  // const config = await $.getJSON(`static/json/config/${CONDITION+1}.json`);
+  const config = await $.getJSON(`static/json/config/2.json`);
+  // const config = await $.getJSON(`static/json/test_trial.json`);
   config.trials.test = {
     "graph":[[1, 2], [3, 4], [5, 6], [7], [], [], [], []],
     "rewards":[5,5,5,5,5,5,5,5],
@@ -124,21 +125,21 @@ async function initializeExperiment() {
     // practice_block('practice_revealed', `
     //   Let's try a few practice rounds with more moves.
     // `),
-    instruct_block('vary_transition'),
-    practice_block('practice_revealed', `
-      Great! Let's try a few more practice rounds.
-    `),
+    // instruct_block('vary_transition'),
+    // practice_block('practice_revealed', `
+    //   Great! Let's try a few more practice rounds.
+    // `),
     // instruct_block('intro_hover', {
     //   hover_edges: true,
     //   hover_rewards: params.hover_rewards,
     // }),
-    practice_block('practice_hover', `
-      Try three more practice games. Then we can begin the main section<br>
-      (where you can earn money!)
-    `, {
-      hover_edges: false,
-      hover_rewards: false,
-    }),
+    // practice_block('practice_hover', `
+    //   Try three more practice games. Then we can begin the main section<br>
+    //   (where you can earn money!)
+    // `, {
+    //   hover_edges: false,
+    //   hover_rewards: false,
+    // }),
 
     text_block(`
       You've got it! Now you're ready to play the game for real.
