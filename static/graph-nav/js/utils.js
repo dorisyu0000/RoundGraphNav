@@ -157,6 +157,8 @@ export function SetIsEqual(a, b) {
   return true;
 }
 
+export const cpntours = ["pattern_1", "pattern_2","pattern_3","pattern_4","pattern_5","pattern_6","pattern_7","pattern_8"];
+
 export const graphics = [
 /*
   '🎈','🔑','🎀','🎁','🛒','📚','📌','✏️','🔮','🔨','💰','⚙️','💎','💡','⏰','🚲',
@@ -166,12 +168,17 @@ export const graphics = [
   '✈️','🍫','🍎','🧀','🍪','🌞','⛄️', '🐒','👑','👟', '🤖','🤡',
 ];
 
+export function contourUrl(controu){
+  return `static/graph-nav/images/contours/${controu}.png`;
+};
+
+
 export function graphicsUrl(emoji) {
   if (emoji == "") return ""
   const code = emoji.codePointAt(0).toString(16).toUpperCase();
   return 'data:image/svg+xml,'+encodeURIComponent(openmoji[code]);
 }
-
+  
 function loadImage(src) {
   // https://stackoverflow.com/questions/52059596/loading-an-image-on-web-browser-using-promise
   return new Promise((resolve, reject) => {

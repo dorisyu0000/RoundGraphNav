@@ -217,12 +217,14 @@ def make_trials():
     kws = {'n': n, 'rdist': rdist}
     trial_sets = []
 
-    for _ in range(5):
+    for _ in range(8):
         problem = learn_reward(**kws)
         trial_sets.append(problem)
 
-
     learn_rewards = {'trial_sets': trial_sets}
+    practice_revealed = [sample_problem(**kws)]
+    intro_hover = sample_problem(**kws)
+    practice_hover = [sample_problem(**kws)]
     intro = intro_problem(**kws, rewards=[0] * n)
     collect_all = intro_problem(**kws, rewards=rewards)
     main = [sample_problem(**kws)]
@@ -231,6 +233,9 @@ def make_trials():
         'intro': intro,
         'collect_all': collect_all,
         'learn_rewards': learn_rewards,
+        'practice_revealed': practice_revealed,
+        'intro_hover': intro_hover,
+        'practice_hover': practice_hover,
         'main': main
     }
     
@@ -241,9 +246,11 @@ def fixed_rewards(n):
     return list(range(-n2, 0)) + list(range(1, n2 + 1))
 
 def reward_graphics(n=8):
-    png = ["pattern_1.png", "pattern_2.png", "pattern_3.png", "pattern_4.png", "pattern_5.png", "pattern_6.png", "pattern_7.png", "pattern_8.png"]
-    return dict(zip(linear_rewards(n), random.sample(png, n)))
+    png = ["pattern_1", "pattern_2", "pattern_3", "pattern_4", "pattern_5", "pattern_6", "pattern_7", "pattern_8"]
+    if len(png) < n:
+        png.extend(["pattern_default"] * (n - len(png)))
 
+    return dict(zip(linear_rewards(n), png))
 
 # Generate trials
 subj_trials = [make_trials() for _ in range(10)]

@@ -35,9 +35,8 @@ async function initializeExperiment() {
   psiturk.recordUnstructuredData('browser', window.navigator.userAgent);
   psiturk.recordUnstructuredData('start_time', new Date());
 
-  // const config = await $.getJSON(`static/json/config/${CONDITION+1}.json`);
-  const config = await $.getJSON(`static/json/config/2.json`);
-  // const config = await $.getJSON(`static/json/test_trial.json`);
+  //const config = await $.getJSON(`static/json/config/${CONDITION+1}.json`);
+  const config = await $.getJSON(`static/json/test_trial.json`);
   config.trials.test = {
     "graph":[[1, 2], [3, 4], [5, 6], [7], [], [], [], []],
     "rewards":[5,5,5,5,5,5,5,5],
