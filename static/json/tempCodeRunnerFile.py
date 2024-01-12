@@ -1,2 +1,2 @@
-        else:
-            rewards = [0] * n  # Default rewards
+# Example usage:
+reward_graphics_dict = reward_graphics()

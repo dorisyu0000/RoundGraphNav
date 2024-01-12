@@ -76,7 +76,7 @@ addPlugin('intro', async function intro(root, trial) {
   `)
   let goal = _.sample(cg.graph.successors(cg.state))
   // $("#gn-points").show()
-  cg.setReward(goal, 10)
+  cg.setReward(goal, -1)
   console.log('goal', goal)
   await cg.navigate({n_steps: -1, goal, leave_state: true})
 
@@ -97,7 +97,7 @@ addPlugin('intro', async function intro(root, trial) {
   `)
 
   goal = _.sample(cg.graph.successors(cg.state))
-  cg.setReward(goal, -5)
+  cg.setReward(goal, 2)
   await cg.navigate({n_steps: -1, goal, leave_open: true})
 
   message(`<i>Ouch!</i> You lost 5 points for collecting that one!`)
@@ -152,6 +152,18 @@ addPlugin('collect_all', async function collect_all(root, trial) {
 addPlugin('learn_rewards', async function learn_rewards(root, info) {
   setup(root)
   let first = true
+   // Validate that info.trial_sets is an array and contains arrays before iterating
+  if (!Array.isArray(info.trial_sets)) {
+    console.error('info.trial_sets is not an array:', info.trial_sets);
+    // Handle the case where info.trial_sets is not what's expected
+    info.trial_sets = []; // Default to an empty array if necessary
+  }
+
+  for (let trial_set of info.trial_sets) {
+    if (!Array.isArray(trial_set)) {
+      console.error('trial_set is not an array:', trial_set);
+      continue; // Skip this iteration if trial_set is not an array
+    }
 
   for (let trial_set of info.trial_sets) {
     if (first) {
@@ -160,6 +172,7 @@ addPlugin('learn_rewards', async function learn_rewards(root, info) {
       `)
       first = false
     } else {
+
       message(`
         Hmm... You didn't always collect the best item. Let's try again.<br>
         Remember: ${describeRewards(info.emojiGraphics)} <br>
