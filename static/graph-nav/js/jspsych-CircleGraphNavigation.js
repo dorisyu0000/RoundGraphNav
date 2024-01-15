@@ -813,10 +813,11 @@ function renderKeyInstruction(keys) {
 addPlugin('main', trialErrorHandling(async function main(root, trial) {
   trial.n_steps = -1;
   cg = new CircleGraph($(root), trial);
-  await cg.showStartScreen(trial)
+  // await cg.showStartScreen(trial)
+  await cg.showGraph()
   await cg.navigate()
-  trial.bonus.addPoints(cg.score)
-  cg.data.current_bonus = trial.bonus.dollars()
+  // trial.bonus.addPoints(cg.score)
+  // cg.data.current_bonus = trial.bonus.dollars()
   console.log('cg.data', cg.data);
   $(root).empty()
   jsPsych.finishTrial(cg.data)
