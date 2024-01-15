@@ -186,7 +186,7 @@
   border-radius: 100%;
 
   background-image: none;
-  background-color: white;
+  background-color: gray; /* STATE BACKGROUND */
 }
 .GraphNavigation.withGraphic .GraphNavigation-State-Highlighted {
   border-color: #8437EE;
@@ -253,6 +253,7 @@
 }
 .GraphNavigation.withGraphic .State > img {
   display: block;
+  width: 50px;
 }
 
 .GraphNavigation.withGraphic .GraphNavigation-current > img {
