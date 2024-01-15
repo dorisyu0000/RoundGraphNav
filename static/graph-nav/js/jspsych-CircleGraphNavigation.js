@@ -816,7 +816,7 @@ addPlugin('main', trialErrorHandling(async function main(root, trial) {
   // await cg.showStartScreen(trial)
   await cg.showGraph()
   await cg.navigate()
-  // trial.bonus.addPoints(cg.score)
+  trial.bonus.addPoints(cg.score)
   // cg.data.current_bonus = trial.bonus.dollars()
   console.log('cg.data', cg.data);
   $(root).empty()

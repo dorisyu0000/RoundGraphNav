@@ -104,7 +104,7 @@ async function initializeExperiment() {
     return {
       name: 'main',
       type: 'main',
-      // bonus,
+      bonus,
       ...params,
       timeline: config.trials.main
     }
