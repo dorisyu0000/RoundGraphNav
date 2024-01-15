@@ -73,6 +73,35 @@ def paths(problem):
             return paths
     return rec(graph[start])
 
+def calculate_path_rewards(graph, rewards, start):
+    """Calculate the sum of rewards for each path in the graph."""
+    path_rewards = {}
+    n = len(graph)  # Number of nodes in the graph
+    if len(rewards) < n:
+        raise ValueError("The length of rewards must be at least as large as the number of nodes in the graph")
+
+    for node, children in enumerate(graph):
+        if node == start or node >= n:
+            continue  # Skip the start node and nodes outside the range
+        for child in children:
+            if child == start or child >= n:
+                continue
+            path = tuple(sorted([node, child]))
+            path_rewards[path] = rewards[node] + rewards[child]
+    return path_rewards
+
+def sample_requirement(rewards, graph, start, rdist, max_attempts=1000):
+    """Iteratively resample rewards until each path has a unique sum or maximum attempts are reached."""
+    for _ in range(max_attempts):
+        path_rewards = calculate_path_rewards(graph, rewards, start)
+        if len(set(path_rewards.values())) == len(path_rewards):
+            # Unique path rewards found
+            return rewards
+        rewards = rdist.rand()
+
+    # If max_attempts are reached without finding unique path rewards
+    return None  # or raise an exception
+
 def sample_graph(n,base=None):
     if base is None:
         base = [[1, 2], [3, 4], [5, 6]]
@@ -84,37 +113,55 @@ def sample_graph(n,base=None):
     start = perm.index(0)
     return graph, perm, start
 
+def sample_problem_1(n, n_steps=-1, rdist=None, rewards=None, graph=None, start=None):
+    if graph is None:
+        graph, perm, start = sample_graph(n,base = [[1, 2], [3, 4],[5],[],[],[],[7],[8,9],[7,9],[6]])
+    else:
+        perm = list(range(n))
+    if rewards is None and rdist is not None:
+        rewards = rdist.rand()
 
-def sample_problem_(n, n_steps=-1, rdist=None, rewards=None, graph=None, start=None):
+    rewards = sample_requirement(rewards, graph, start, rdist)
+
+    # all_rewards = [0] * n
+    #  # Assign rewards to non-leaf nodes, excluding the start node
+    # non_leaf_nodes = set()
+    # for node, children in enumerate(graph):
+    #     if children and node != start:  # Exclude start node
+    #         non_leaf_nodes.add(node)
+    #     for child in children:
+    #         if child != start:  # Exclude start node
+    #             non_leaf_nodes.add(child)
+    # # Distribute rewards among non-leaf, non-start nodes
+    # for rewards, node in zip(rewards, non_leaf_nodes):
+    #     all_rewards[node] = rewards
+    return {'graph': graph, 'rewards': rewards, 'start': start, 'n_steps': n_steps}
+
+def sample_problem_2(n, n_steps=-1, rdist=None, rewards=None, graph=None, start=None):
     """
     Sample a problem with n nodes and rewards given by rdist.
     Rewards are assigned only to non-leaf, non-start nodes.
     """
     if graph is None:
-        graph, perm, start = sample_graph(n)
+        graph, perm, start = sample_graph(n,base = [[1, 2], [3, 4],[5,6],[],[],[],[],[8],[9,8],[7]])
     else:
         perm = list(range(n))
-
     if rewards is None and rdist is not None:
         rewards = rdist.rand()
+    rewards = sample_requirement(rewards, graph, start, rdist)
+    # all_rewards = [0] * n
+    # # Assign rewards to non-leaf nodes, excluding the start node
+    # non_leaf_nodes = set()
+    # for node, children in enumerate(graph):
+    #     if children and node != start:  # Exclude start node
+    #         non_leaf_nodes.add(node)
+    #     for child in children:
+    #         if child != start:  # Exclude start node
+    #             non_leaf_nodes.add(child)
+    # for reward, node in zip(rewards, non_leaf_nodes):
+    #     all_rewards[node] = reward
 
-    # Initialize all rewards to 0
-    all_rewards = [0] * n
-
-    # Assign rewards to non-leaf nodes, excluding the start node
-    non_leaf_nodes = set()
-    for node, children in enumerate(graph):
-        if children and node != start:  # Exclude start node
-            non_leaf_nodes.add(node)
-        for child in children:
-            if child != start:  # Exclude start node
-                non_leaf_nodes.add(child)
-
-    # Distribute rewards among non-leaf, non-start nodes
-    for reward, node in zip(rewards, non_leaf_nodes):
-        all_rewards[node] = reward
-
-    return {'graph': graph, 'rewards': all_rewards, 'start': start, 'n_steps': n_steps}
+    return {'graph': graph, 'rewards': rewards, 'start': start, 'n_steps': n_steps}
 
 
 
@@ -150,7 +197,7 @@ def learn_reward(n, n_steps=1, rdist=None, rewards=None, graph=None, start=None)
 
 def sample_problem(**kwargs):
     for i in range(10000):
-        problem = sample_problem_(**kwargs)
+        problem = sample_problem_1(**kwargs)
         return problem
    
 def discrete_uniform(v):
@@ -171,11 +218,13 @@ class Shuffler:
 
 class IIDSampler:
     def __init__(self, n, x):
+        if n <= 0:
+            raise ValueError("n must be positive")
         self.n = n
         self.x = x
 
     def rand(self):
-        return random.sample(self.x, self.n)
+        return random.choices(self.x, k=self.n)
     
 def value(problem):
     """
@@ -207,32 +256,35 @@ def intro_problem(n, n_steps=-1, rdist=None, rewards=None, graph=None, start=Non
     random.shuffle(rewards)
     return {'graph': graph, 'rewards': rewards, 'start': start if start is not None else 0, 'n_steps': n_steps}
 
-
-# Example usage of the functions
-n = 9
-v = [1, 2, 3, 4]
-
-# Intro graph
-graph = intro_problem(n)
-print("Intro graph:", graph)
-
 def make_trials():
     n = 10
-    rewards = [-1,-2,-3, 1, 2, 3]
-    rdist = IIDSampler(6, rewards) 
+    rewards = [1,2,3,4,5]
+    rdist = IIDSampler(n, rewards) 
     kws = {'n': n, 'rdist': rdist}
     trial_sets = []
 
     for _ in range(6):
         problem = learn_reward(**kws)
-        trial_sets.append(problem)
+        trial_sets.append(problem)  
         
     main = [] 
+    # problem_1 = sample_problem_1(**kws)  
+    # problem_2 = sample_problem_2(**kws)
+    # main.append(problem_1)
+    # main.append(problem_2)
+
     for _ in range(20):
         n = 10
-        rewards = [-1,-2,-3, 1, 2, 3]
-        rdist = IIDSampler(6, rewards)
-        problem = sample_problem_(n, rdist=rdist)   
+        rewards = [1,2,3,4,5]
+        rdist = IIDSampler(n, rewards)
+        problem = sample_problem_1(n, rdist=rdist)   
+        main.append(problem)
+
+    for _ in range(20):
+        n = 10
+        rewards = [1,2,3,4,5]
+        rdist = IIDSampler(n, rewards)
+        problem = sample_problem_2(n, rdist=rdist)   
         main.append(problem)
 
     learn_rewards = {'trial_sets': [trial_sets]}
@@ -262,17 +314,13 @@ def reward_contours(n=8):
     return dict(zip(linear_rewards(n), png))
 from random import sample
 
-def reward_graphics(n=6):
+def reward_graphics(n,rewards):
     emojis = [
         "🎈", "🎀", "📌", "🔮", "💡", "⏰",
         "🍎", "🌞", "⛄️", "🐒", "👟", "🤖",
     ]
-    fixed_rewards = [str(i) for i in linear_rewards(n)]  # convert numbers to strings
+    fixed_rewards = [str(i) for i in rewards]  # convert numbers to strings
     return dict(zip(fixed_rewards, sample(emojis, n)))
-
-# Example usage:
-reward_graphics_dict = reward_graphics()
-reward_graphics_dict
 
 # Generate trials
 subj_trials = [make_trials() for _ in range(10)]
@@ -284,10 +332,10 @@ os.makedirs(dest, exist_ok=True)
 # Save trials as JSON
 for i, trials in enumerate(subj_trials, start=1):
     parameters = {
-        "emojiGraphics": reward_graphics(),
+        "emojiGraphics": reward_graphics(5,[1,2,3,4,5]),
         "hover_edges": False,
         "hover_rewards": False,
-        "points_per_cent": 10,
+        "points_per_cent": 5,
         "use_n_steps": True,
         "vary_transition": False,
         "fixed_rewards": True
@@ -297,8 +345,8 @@ for i, trials in enumerate(subj_trials, start=1):
 
 n = 10
 rewards = [-1,-2,-3, 1, 2, 3]
-rdist = IIDSampler(6, rewards)
-sampled_problem = sample_problem_(n, rdist=rdist)
+rdist = IIDSampler(n, rewards)
+sampled_problem = sample_problem_2(n, rdist=rdist)
 print("Sampled problem:", sampled_problem)
 
 # Example usage
