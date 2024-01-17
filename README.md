@@ -16,7 +16,7 @@ python3 -m venv env
 pip install -r requirements.txt
 ```
 
-p```
+```
 npm install
 ```
 
