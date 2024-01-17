@@ -376,15 +376,17 @@ export class CircleGraph {
   }
 
   async addScore(points, state) {
-    if (points == 0) {
-      return
-    }
     this.setScore(this.score + points)
-    let cls = (points < 0) ? "loss" : "win"
-    let sign = (points < 0) ? "" : "+"
+
+    let cls = {
+      "-1": "loss",
+      "0": "neutral",
+      "1": "win"
+    }[Math.sign(points)]
+    let plus = (points < 0) ? "" : "+"
     let pop = $("<span>")
       .addClass('pop ' + cls)
-      .text(sign + points)
+      .text(plus + points)
       .appendTo($(`.GraphNavigation-ShadowState-${state}`))
 
     await sleep(1500)

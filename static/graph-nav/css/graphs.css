@@ -43,6 +43,9 @@
 .win {
   color: #0F7003;
 }
+.neutral {
+  color: #8E8E8E;
+}
 
 @keyframes zoomup {
   0% {
