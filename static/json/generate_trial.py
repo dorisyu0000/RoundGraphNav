@@ -297,7 +297,7 @@ def intro_problem(n, n_steps=-1, rdist=None, rewards=None, graph=None, start=Non
 
 def make_trials():
     n = 10
-    rewards = [1, 2, 0, -1, -2]
+    rewards = [10, 20, 0, -10, -20]
     rdist = IIDSampler(n, rewards) 
     kws = {'n': n, 'rdist': rdist}
     trial_sets = []
@@ -333,7 +333,7 @@ def make_trials():
     intro_hover = sample_problem(**kws)
     practice_hover = [sample_problem(**kws)]
     intro = intro_problem(**kws, rewards=[None] * n)
-    collect_all = intro_problem(**kws, rewards= [1, 2, 0, -1, -2, 1, 2, 0, -1, -2])
+    collect_all = intro_problem(**kws, rewards= [10, 20, 0, -10, -20, 10, 20, 0, -10, -20])
     
 
     return {
@@ -371,7 +371,7 @@ os.makedirs(dest, exist_ok=True)
 # Save trials as JSON
 for i, trials in enumerate(subj_trials, start=1):
     parameters = {
-        "emojiGraphics": reward_graphics(5,[1, 2, 0, -1, -2]),
+        "emojiGraphics": reward_graphics(5,[10, 20, 0, -10, -20]),
         "hover_edges": False,
         "hover_rewards": False,
         "points_per_cent": 5,
