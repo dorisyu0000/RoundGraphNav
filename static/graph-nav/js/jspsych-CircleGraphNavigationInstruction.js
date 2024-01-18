@@ -78,10 +78,10 @@ addPlugin('intro', async function intro(root, trial) {
   // $("#gn-points").show()
   cg.setReward(goal, 1)
   console.log('goal', goal)
-  await cg.navigate({n_steps: -1, goal, leave_state: true})
+  await cg.navigate({n_steps: -10, goal, leave_state: true})
 
   message(`
-    Nice! You got 1 points for collecting that item.
+    Nice! You got 10 points for collecting that item.
   `)
   await button()
 
@@ -97,8 +97,8 @@ addPlugin('intro', async function intro(root, trial) {
     )
 
   goal = _.sample(cg.graph.successors(cg.state))
-  cg.setReward(goal, -1)
-  await cg.navigate({n_steps: -1, goal, leave_open: true})
+  cg.setReward(goal, -10)
+  await cg.navigate({n_steps: -10, goal, leave_open: true})
 
   message(`<i>Ouch!</i> You lost 1 points for collecting that one!`)
   cg.removeGraph()
