@@ -60,7 +60,7 @@ addPlugin('intro', async function intro(root, trial) {
   await button()
 
 
-  message(`You can move by pressing keys to move from your current location.<br>Press “P" for 🟦 if you want to move in the direction of a blue arrow<br>or press "Q" for 🟥 if you want to move in the direction of a red arrow. Try it now!`)
+  message(`You can move by pressing keys to move from your current location.<br>Press “B" for 🟦 if you want to move in the direction of a blue arrow<br>or press "R" for 🟥 if you want to move in the direction of a red arrow. Try it now!`)
   let next_states = cg.graph.successors(trial.start)
   for (const s of next_states) {
     $(`.GraphNavigation-State-${s}`).addClass('GraphNavigation-State-Highlighted')
@@ -201,11 +201,15 @@ addPlugin('learn_rewards', async function learn_rewards(root, info) {
 
 addPlugin('practice', async function practice(root, trial) {
   setup(root)
-  message(trial.message)
+  message(`
+  In the real game, you get to move twice. Give
+  it a shot! Try to get to the highest goal state.
+`)
   // if (trial.first) await button()
 
   cg = new CircleGraph($("#cgi-root"), trial);
-  await cg.showStartScreen(trial)
+  // await cg.showStartScreen(trial)
+  await cg.showGraph()
   await cg.navigate()
   $(root).empty()
   jsPsych.finishTrial(cg.data)
@@ -370,30 +374,28 @@ addPlugin('text', async function text(root, trial) {
 let ensureSign = x => x > 0 ? "+" + x : "" + x
 
 function describeRewards(emojiGraphics) {
-  let vals = _.sortBy(_.without(_.keys(emojiGraphics), "0"), parseFloat)
-  // let descriptions = vals.map(reward => {
-  //   return `${renderSmallEmoji(emojiGraphics[reward])}is worth ${reward}`
-  // })
-  // return descriptions.slice(0, -1).join(', ') + ', and ' + descriptions.slice(-1)
-  let vv =  vals.map(reward => `
+  let vals = _.sortBy(_.without(_.keys(emojiGraphics), "null"), parseFloat);
+  let vv = vals.map(reward => `
     <div class="describe-rewards-box">
-    ${renderSmallEmoji(emojiGraphics[reward])}
-    ${ensureSign(reward)}
+      ${renderSmallEmoji(emojiGraphics[reward])}
+      <div class="reward-value">${ensureSign(reward)}</div>
     </div>
-  `).join("")
+  `).join("");
+
   return `
-    <div class="describe-rewards">
+    <div class="describe-rewards-horizontal">
       ${vv}
     </div>
-  `
+  `;
 }
+
 
 
 function describeActions() {
   return `
     <div class="describe-actions">
-      <div class="describe-actions-box"> 🟥 Arrow: Pressing "Q" </div>
-      <div class="describe-actions-box"> 🟦 Arrow: Pressing "P" </div>
+      <div class="describe-actions-box"> 🟥 Arrow: Pressing "R" </div>
+      <div class="describe-actions-box"> 🟦 Arrow: Pressing "B" </div>
     </div>
   `
 }

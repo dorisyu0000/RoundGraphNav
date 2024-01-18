@@ -114,7 +114,8 @@ async function initializeExperiment() {
     // instruct_block('test'),
     instruct_block('intro'),
     instruct_block('collect_all'),
-    // instruct_block('learn_rewards'),
+    instruct_block('practice'),
+    instruct_block('learn_rewards'),
     // practice_block('move2',`
     //   In the real game, you get to move more than once. The number of moves
     //   for the current round is shown after you click the start button. Give

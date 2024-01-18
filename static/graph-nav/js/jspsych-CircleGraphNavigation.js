@@ -63,10 +63,10 @@ export class CircleGraph {
 
     this.rewards = [...options.rewards] ?? Array(options.graph.length).fill(0)
     this.onStateVisit = options.onStateVisit ?? ((s) => { })
-    this.score = options.score ?? 0
+    this.score = options.score ?? null
 
     if (options.consume) {
-      this.rewards[options.start] = 0
+      this.rewards[options.start] = null
     }
     options.emojiGraphics[0] = options.emojiGraphics[0] ?? ""
     options.graphics = this.rewards.map(x => options.emojiGraphics[x])
@@ -160,7 +160,7 @@ export class CircleGraph {
   setupLogging() {
     this.data = {
       events: [],
-      trial: _.pick(this.options, 'graph', 'n_steps', 'rewards', 'start', 'hover_edges', 'hover_rewards')
+      trial: _.pick(this.options, 'graph', 'n_steps', 'rewards', 'start', 'hover_edges', 'hover_rewards','trialNumber','bonus')
     }
     let start_time = Date.now()
     this.logger = function (event, info = {}) {
@@ -220,14 +220,11 @@ export class CircleGraph {
         const keyHandler = (info) => {
           const input_key = jsPsych.pluginAPI.convertKeyCodeToKeyCharacter(info.key);
           let key; // Declare the 'key' variable
-          if (input_key == 'q' || input_key == '1') {
+          if (input_key == 'r' || input_key == '1') {
                key = '1';}
-          if (input_key == 'p' || input_key == '2') {
+          if (input_key == 'b' || input_key == '2') {
                key = '2';}
-          if (input_key == 'w' || input_key == '3') {
-               key = '3';}
-          if (input_key == 'o' || input_key == '4') {
-                key = '4';}
+                    
 
           if (key >= '1' && key <= '4') { 
                 const index = parseInt(key, 10) - 1; 
@@ -376,8 +373,10 @@ export class CircleGraph {
   }
 
   async addScore(points, state) {
+    if (points == null) {
+      return
+    }
     this.setScore(this.score + points)
-
     let cls = {
       "-1": "loss",
       "0": "neutral",
@@ -815,15 +814,21 @@ function renderKeyInstruction(keys) {
 addPlugin('main', trialErrorHandling(async function main(root, trial) {
   trial.n_steps = -1;
   cg = new CircleGraph($(root), trial);
-  // await cg.showStartScreen(trial)
-  await cg.showGraph()
+  if (trial.trialNumber % 10 === 0) {
+    await cg.showStartScreen(trial);
+  }
+  else {
+    await cg.showGraph();
+  }
+  
   await cg.navigate()
   trial.bonus.addPoints(cg.score)
-  // cg.data.current_bonus = trial.bonus.dollars()
+  cg.data.current_bonus = trial.bonus.dollars()
   console.log('cg.data', cg.data);
   $(root).empty()
   jsPsych.finishTrial(cg.data)
 }));
+
 
 addPlugin('break', trialErrorHandling(async function breakTrial(root, trial) {
   $(root).html(`
