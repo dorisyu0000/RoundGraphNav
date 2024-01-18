@@ -142,7 +142,7 @@ addPlugin('collect_all', async function collect_all(root, trial) {
   cg.removeGraph()
   message(`
     Nice work! But in the real game, you should try to avoid the bad items.
-  `)
+  ` + describeRewards(trial.emojiGraphics))
   await button()
 
   $(root).empty()
@@ -156,7 +156,7 @@ addPlugin('learn_rewards', async function learn_rewards(root, info) {
   for (let trial_set of info.trial_sets) {
     if (first) {
       message(`Lets try a few easy ones. Try to collect the best item!
-        Remeember: ${describeActions()}
+        Remember: ${describeActions()}
       `)
       first = false
     } else {
@@ -183,13 +183,15 @@ addPlugin('learn_rewards', async function learn_rewards(root, info) {
       jsPsych.data.write(cg.data);
       psiturk.recordTrialData(cg.data)
     }
-    if (n_correct == trial_set.length) {
+
+    if (n_correct < trial_set.length - 3) {
       message(`Great job! It looks like you've figured out which items are best.`)
       await button()
       jsPsych.finishTrial({'trial_type': 'dummy', 'flag': 'dummy'})
       return
     }
   }
+
   // exhausted all the trial sets!
   message(`
     <b>It seems like you are having a hard time understanding the game.
@@ -199,11 +201,13 @@ addPlugin('learn_rewards', async function learn_rewards(root, info) {
   $('#cgi-msg').css('margin-top', 200)
 })
 
+
+
 addPlugin('practice', async function practice(root, trial) {
   setup(root)
   message(`
   In the real game, you get to move twice. Give
-  it a shot! Try to get to the highest goal state.
+  it a shot! Try to collect the best items. Remember: ${describeActions()}
 `)
   // if (trial.first) await button()
 

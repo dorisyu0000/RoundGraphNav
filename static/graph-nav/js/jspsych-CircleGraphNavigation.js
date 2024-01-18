@@ -11,7 +11,7 @@ import { bfs } from './graphs.js';
 
 const BLOCK_SIZE = 100;
 window.$ = $
-const colors = ["#E57373", "#64B5F6", "#81C784", "#FFF176"]; 
+const colors = ["#E57373", "#64B5F6", "#81C784", "#FFF176"];
 
 
 // descirbe the graph
@@ -51,7 +51,7 @@ export class CircleGraph {
 
     let gro = options.graphRenderOptions;
     gro.successorKeysRender = gro.successorKeysRender || (key => key);
-    options.successorKeys = ['1','2','3','4']
+    options.successorKeys = ['1', '2', '3', '4']
 
     this.options = options;
     options.consume = options.consume ?? true
@@ -160,7 +160,7 @@ export class CircleGraph {
   setupLogging() {
     this.data = {
       events: [],
-      trial: _.pick(this.options, 'graph', 'n_steps', 'rewards', 'start', 'hover_edges', 'hover_rewards','trialNumber','bonus')
+      trial: _.pick(this.options, 'graph', 'n_steps', 'rewards', 'start', 'hover_edges', 'hover_rewards', 'trialNumber', 'bonus')
     }
     let start_time = Date.now()
     this.logger = function (event, info = {}) {
@@ -217,68 +217,72 @@ export class CircleGraph {
   // keyResponse for choose
   async getKeyResponse() {
     return new Promise((resolve) => {
-        const keyHandler = (info) => {
-          const input_key = jsPsych.pluginAPI.convertKeyCodeToKeyCharacter(info.key);
-          let key; // Declare the 'key' variable
-          if (input_key == 'r' || input_key == '1') {
-               key = '1';}
-          if (input_key == 'b' || input_key == '2') {
-               key = '2';}
-                    
+      const keyHandler = (info) => {
+        const input_key = jsPsych.pluginAPI.convertKeyCodeToKeyCharacter(info.key);
+        let key; // Declare the 'key' variable
+        if (input_key == 'r' || input_key == '1') {
+          key = '1';
+        }
+        if (input_key == 'b' || input_key == '2') {
+          key = '2';
+        }
 
-          if (key >= '1' && key <= '4') { 
-                const index = parseInt(key, 10) - 1; 
-                const validSuccessors = this.graph.successors(this.state);
 
-                if (index < validSuccessors.length) { 
-                    const selectedState = validSuccessors[index];
-                    resolve({ state: selectedState });
-                } else {
-                    this.showToast("Invalid selection: not a valid successor.");
-                }
-            }
-        };
+        if (key >= '1' && key <= '4') {
+          const index = parseInt(key, 10) - 1;
+          const validSuccessors = this.graph.successors(this.state);
 
-        const keyboardListener = jsPsych.pluginAPI.getKeyboardResponse({
-            callback_function: keyHandler,
-            valid_responses: jsPsych.ALL_KEYS,
-            rt_method: 'performance',
-            persist: true,
-            allow_held_key: false
-        });
+          if (index < validSuccessors.length) {
+            const selectedState = validSuccessors[index];
+            resolve({ state: selectedState });
+          } else { }
+
+        } else {
+          this.showToast('Invalid selection.');
+        }
+      };
+
+
+      const keyboardListener = jsPsych.pluginAPI.getKeyboardResponse({
+        callback_function: keyHandler,
+        valid_responses: jsPsych.ALL_KEYS,
+        rt_method: 'performance',
+        persist: true,
+        allow_held_key: false
+      });
     });
-}
+  }
 
 
   // Toast massage for invalid selection
   showToast(message) {
     const toast = $('<div>')
-        .addClass('toast-message')
-        .text(message)
-        .css({
-            'display': 'none', 
-            'position': 'fixed', 
-            'top': '10%', 
-            'left': '50%',
-            'transform': 'translateX(-50%)',
-            'background-color': '#333', 
-            'color': 'white', 
-            'padding': '8px 16px',
-            'border-radius': '4px',
-            'box-shadow': '0 2px 4px rgba(0, 0, 0, 0.2)',
-            'z-index': '1000' 
-        });
+      .addClass('toast-message')
+      .text(message)
+      .css({
+        'display': 'none',
+        'position': 'fixed',
+        'top': '10%',
+        'left': '50%',
+        'transform': 'translateX(-50%)',
+        'background-color': '#333',
+        'color': 'white',
+        'padding': '8px 16px',
+        'border-radius': '4px',
+        'box-shadow': '0 2px 4px rgba(0, 0, 0, 0.2)',
+        'z-index': '1000'
+      });
 
     $(this.root).append(toast);
 
-    toast.fadeIn(400, function() {
-        setTimeout(() => {
-            toast.fadeOut(400, function() {
-                toast.remove();
-            });
-        }, 1500);
+    toast.fadeIn(400, function () {
+      setTimeout(() => {
+        toast.fadeOut(400, function () {
+          toast.remove();
+        });
+      }, 1500);
     });
-}
+  }
 
 
   // --------------------------------
@@ -327,7 +331,7 @@ export class CircleGraph {
       const state = this.keyCodeToState(e.keyCode);
       if (state !== null) {
         e.preventDefault();
-        return {state};
+        return { state };
       }
     });
 
@@ -633,8 +637,8 @@ function renderCircleGraph(graph, gfx, goal, options) {
     });
   });
 
-// Update2 addArrow define color
-function addArrow(state, successor, norm, rot, color) {
+  // Update2 addArrow define color
+  function addArrow(state, successor, norm, rot, color) {
     const [x, y] = xy.scaled[state];
     const [sx, sy] = xy.scaled[successor];
     arrows.push(`
@@ -676,8 +680,8 @@ function addArrow(state, successor, norm, rot, color) {
     keys.push(`
       <div class="GraphNavigation-key GraphNavigation-key-${state}-${successor} GraphNavigation-key-${keyForCSSClass(key)}" style="
         transform: translate(
-          ${x - keyWidth/2 + mul * (sx-x)/norm}px,
-          ${y - keyHeight/2 + mul * (sy-y)/norm}px)
+          ${x - keyWidth / 2 + mul * (sx - x) / norm}px,
+          ${y - keyHeight / 2 + mul * (sy - y) / norm}px)
       ">${options.successorKeysRender(key)}</div>
     `);
   }
@@ -690,19 +694,19 @@ function addArrow(state, successor, norm, rot, color) {
     const successors = graph.successors(state);
 
     successors.forEach((successor, idx) => {
-        const e = xy.edge(state, successor);
-        const color = colors[idx % colors.length];  
+      const e = xy.edge(state, successor);
+      const color = colors[idx % colors.length];
 
-        succ.push(`
+      succ.push(`
           <div class="GraphNavigation-edge GraphNavigation-edge-${state}-${successor}" style="
           width: ${e.norm}px;
           transform: translate(${x}px,${y - 1}px) rotate(${e.rot}rad);
           background-color: ${color}; 
           "></div>
         `);
-        addArrow(state, successor, e.norm, e.rot, color);
+      addArrow(state, successor, e.norm, e.rot, color);
     });
-}
+  }
 
 
   return `
@@ -820,7 +824,7 @@ addPlugin('main', trialErrorHandling(async function main(root, trial) {
   else {
     await cg.showGraph();
   }
-  
+
   await cg.navigate()
   trial.bonus.addPoints(cg.score)
   cg.data.current_bonus = trial.bonus.dollars()
