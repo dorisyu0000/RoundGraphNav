@@ -92,9 +92,9 @@ addPlugin('intro', async function intro(root, trial) {
   await button()
 
   message(`
-    Now try collecting this item.
-    ${describeActions()}
-  `)
+    Now try collecting this item.` 
+    // + describeActions()
+    )
 
   goal = _.sample(cg.graph.successors(cg.state))
   cg.setReward(goal, -1)
