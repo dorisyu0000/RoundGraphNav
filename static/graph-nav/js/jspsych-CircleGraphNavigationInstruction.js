@@ -60,7 +60,7 @@ addPlugin('intro', async function intro(root, trial) {
   await button()
 
 
-  message(`You can move by pressing keys to move from your current location.<br>Press “B" for 🟦 if you want to move in the direction of a blue arrow<br>or press "R" for 🟥 if you want to move in the direction of a red arrow. Try it now!`)
+  message(`You can move by clicking on a location that has an arrow pointing<br>from your current location. Try it now!`)
   let next_states = cg.graph.successors(trial.start)
   for (const s of next_states) {
     $(`.GraphNavigation-State-${s}`).addClass('GraphNavigation-State-Highlighted')
@@ -130,7 +130,7 @@ addPlugin('collect_all', async function collect_all(root, trial) {
 
   message(`
     Try collecting all the items <b>(even the bad ones for now)</b>.
-    ${describeActions()}
+    }
   `)
   let cg = new CircleGraph($("#cgi-root"), trial);
   cg.showGraph(trial)
@@ -156,14 +156,14 @@ addPlugin('learn_rewards', async function learn_rewards(root, info) {
   for (let trial_set of info.trial_sets) {
     if (first) {
       message(`Lets try a few easy ones. Try to collect the best item!
-        Remember: ${describeActions()}
+        
       `)
       first = false
     } else {
       message(`
         Hmm... You didn't always collect the best item. Let's try again.<br>
         Remember: ${describeRewards(info.emojiGraphics)} <br>
-        Also: ${describeActions()}
+        }
       `)
       await button()
       message(`Try to collect the best item! We'll continue when you always pick the best one.`)
@@ -207,7 +207,7 @@ addPlugin('practice', async function practice(root, trial) {
   setup(root)
   message(`
   In the real game, you get to move twice. Give
-  it a shot! Try to collect the best items. Remember: ${describeActions()}
+  it a shot! Try to collect the best items.}
 `)
   // if (trial.first) await button()
 
