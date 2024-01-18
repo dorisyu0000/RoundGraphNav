@@ -60,7 +60,7 @@ addPlugin('intro', async function intro(root, trial) {
   await button()
 
 
-  message(`You can move by clicking on a location that has an arrow pointing<br>from your current location. Try it now!`)
+  message(`You can move by clicking the state to move from your current location. Try it now!`)
   let next_states = cg.graph.successors(trial.start)
   for (const s of next_states) {
     $(`.GraphNavigation-State-${s}`).addClass('GraphNavigation-State-Highlighted')
