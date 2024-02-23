@@ -189,7 +189,7 @@
   border-radius: 100%;
 
   background-image: none;
-  background-color: gray; /* STATE BACKGROUND */
+  background-color: white; /* STATE BACKGROUND */
 }
 .GraphNavigation.withGraphic .GraphNavigation-State-Highlighted {
   border-color: #8437EE;
@@ -362,6 +362,27 @@
 .legal hr {
  border-color: #ccc;
 }
+
+/* Describe Reward*/ 
+
+.describe-rewards-horizontal {
+  display: flex; /* Align children in a row */
+  justify-content: center; /* Center children horizontally */
+  align-items: center; /* Align children's items in the middle vertically */
+  flex-wrap: wrap; /* Allow items to wrap as needed */
+}
+
+.describe-rewards-box {
+  display: flex; /* Use flexbox layout */
+  flex-direction: column; /* Stack children vertically */
+  align-items: center; /* Center children horizontally */
+  margin: 0 10px; /* Add horizontal margin between items */
+}
+
+.reward-value {
+  margin-top: 5px; /* Add some space between the image and the score */
+}
+
 
 /* The timer */
 
