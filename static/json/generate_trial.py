@@ -307,25 +307,18 @@ def make_trials():
         trial_sets.append(problem)  
         
     main = [] 
-    problem_1 = sample_problem_1(**kws)  
-    problem_2 = sample_problem_2(**kws)
-    main.append(problem_1)
-    main.append(problem_2)
     trialNumber = 1
 
-    for _ in range(30):
+    for _ in range(100):
         n = 10
         rdist = IIDSampler(n, rewards)
-        problem = sample_problem_1(n,trialNumber, rdist=rdist) 
-        trialNumber += 1  
-        main.append(problem)
-
-    for _ in range(30):
-        n = 10
-        rdist = IIDSampler(n, rewards)
-        problem = sample_problem_2(n,trialNumber, rdist=rdist)   
+        problem_1 = sample_problem_1(**kws, trialNumber = trialNumber)  
+        main.append(problem_1)
         trialNumber += 1 
-        main.append(problem)
+        problem_2 = sample_problem_2(**kws,trialNumber = trialNumber)
+        main.append(problem_2)
+        trialNumber += 1 
+
 
     learn_rewards = {'trial_sets': [trial_sets]}
     practice = sample_practice(**kws)
@@ -350,13 +343,13 @@ def reward_contours(n=5):
     if len(png) < n:
         png.extend(["pattern_default"] * (n - len(png)))
 
-    return dict(zip([-2,-1,0,1,2], png))
+    return dict(zip([-20,-10,0,10,20], png))
 from random import sample
 
-def reward_graphics(n,rewards):
+def reward_graphics(n = 5,rewards = [-20,-10,0,10,20]):
     emojis = [
-       '🔑','🎀','🎁','🛒','📚','📌','✏️','🔮','🔨','💰','💎','💡','⏰','🚲',
-  '✈️','🎣','🍫','🍎','🧀','🍌','🍪','🌞','⛄️','🐒','🐳','👑','👟','🤖','🤡'
+        '🎈','🔑','🎀','🎁','📌','✏️','🔮','💰','⚙️','💎','💡','⏰',
+        '✈️','🍫','🍎','🧀','🍪','🌞','⛄️', '🐒','👑','👟', '🤖','🤡',
     ]
     fixed_rewards = [str(i) for i in rewards]  # convert numbers to strings
     return dict(zip(fixed_rewards, sample(emojis, n)))
@@ -371,7 +364,7 @@ os.makedirs(dest, exist_ok=True)
 # Save trials as JSON
 for i, trials in enumerate(subj_trials, start=1):
     parameters = {
-        "emojiGraphics": reward_graphics(5,[10, 20, 0, -10, -20]),
+        "emojiGraphics": reward_graphics(),
         "hover_edges": False,
         "hover_rewards": False,
         "points_per_cent": 5,
@@ -383,7 +376,7 @@ for i, trials in enumerate(subj_trials, start=1):
         json.dump({"parameters": parameters, "trials": trials}, file, ensure_ascii=False)
 
 n = 10
-rewards = [-1,-2 , 0, 1, 2]
+rewards = [-10,-20 , 0, 10, 20]
 rdist = IIDSampler(n, rewards)
 sampled_problem = sample_practice(n,rdist=rdist)
 print("Sampled problem:", sampled_problem)

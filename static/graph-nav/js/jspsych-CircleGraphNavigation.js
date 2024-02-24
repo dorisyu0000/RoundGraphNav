@@ -11,9 +11,42 @@ import { bfs } from './graphs.js';
 
 const BLOCK_SIZE = 100;
 window.$ = $
+const colors = ["#00000"]
+// ["#E57373", "#64B5F6", "#81C784", "#FFF176"];
+
+
+// descirbe the graph
+/**
+ * @typedef {Object} CircleGraphOptions
+ * @property {number[][]} graph - Adjacency matrix of the graph.
+ * @property {number} start - Starting state.
+ * @property {number} goal - Goal state.
+ * @property {number} n_steps - Number of steps allowed.
+ * @property {number[]} rewards - Reward for each state.
+ * @property {string[]} emojiGraphics - Graphics for each reward.
+ * @property {boolean} consume - Whether to consume rewards.
+ * @property {boolean} edgeShow - Whether to show edges.
+ * @property {boolean} show_steps - Whether to show steps.
+ * @property {boolean} show_points - Whether to show points.
+ * @property {boolean} hover_rewards - Whether to show rewards on hover.
+ * @property {boolean} hover_edges - Whether to show edges on hover.
+ * @property {boolean} probe - Whether to show probe.
+ * @property {boolean} leave_state - Whether to leave state on completion.
+ * @property {boolean} leave_open - Whether to leave open on completion.
+ * @property {boolean} show_current_edges - Whether to show current edges.
+ * @property {string[][]} successorKeys - Keys for each successor.
+ * @property {function} successorKeysRender - Render function for successor keys.
+ * @property {function} onStateVisit - Callback for state visit.
+ * @property {function} dynamicProperties - Dynamic properties.
+ */
 
 export class CircleGraph {
   constructor(root, options) {
+
+    this.keyPressCounter = 0; 
+    this.colorSwapped = false;
+    this.orangeLineState = this.state;
+
     this.root = $(root)
     window.cg = this
     console.log('CircleGraph', options)
@@ -21,6 +54,10 @@ export class CircleGraph {
     if (options.dynamicProperties) {
       Object.assign(options, options.dynamicProperties());
     }
+
+    let gro = options.graphRenderOptions;
+    gro.successorKeysRender = gro.successorKeysRender || (key => key);
+    options.successorKeys = ['1', '2', '3', '4']
 
     this.options = options;
     options.consume = options.consume ?? true
@@ -30,9 +67,9 @@ export class CircleGraph {
     options.show_points = options.show_points ?? true
 
 
-    this.rewards = [...options.rewards] ?? Array(options.graph.length).fill(0)
+    this.rewards = [...options.rewards] ?? Array(options.graph.length).fill(null)
     this.onStateVisit = options.onStateVisit ?? ((s) => { })
-    this.score = options.score ?? null
+    this.score = options.score ?? 0
 
     if (options.consume) {
       this.rewards[options.start] = null
@@ -70,6 +107,7 @@ export class CircleGraph {
     this.setupLogging()
   }
 
+
   showGraph() {
     this.root.append(this.wrapper)
     this.setupMouseTracking()
@@ -84,35 +122,35 @@ export class CircleGraph {
   }
 
   async removeGraph() {
-    $(this.el).animate({opacity: 0}, 300);
+    $(this.el).animate({ opacity: 0 }, 300);
     await sleep(300)
     this.el.innerHTML = ""
-    $(this.el).css({opacity: 1});
+    $(this.el).css({ opacity: 1 });
   }
 
   async showStartScreen(trial) {
     if (trial.bonus) {
       $('<p>')
-      .addClass('Graph-bonus')
-      .css({
-        // 'position': 'absolute',
-        'font-size': 20,
-        // 'width': 500,
-        'margin-top': 100,
-        'margin-bottom': -125,
-        // 'font-weight': 'bold'
-      })
-      .text(trial.bonus.reportBonus())
-      .appendTo(this.root)
+        .addClass('Graph-bonus')
+        .css({
+          // 'position': 'absolute',
+          'font-size': 20,
+          // 'width': 500,
+          'margin-top': 100,
+          'margin-bottom': -125,
+          // 'font-weight': 'bold'
+        })
+        .text(trial.bonus.reportBonus())
+        .appendTo(this.root)
     }
     await makeButton(this.root, 'start', { css: { 'margin-top': '210px' }, post_delay: 0 })
     $('.Graph-bonus').remove()
     await sleep(200)
     if (trial.n_steps > 0) {
       let moves = $('<p>')
-      .text(numString(trial.n_steps, "move"))
-      .addClass('Graph-moves')
-      .appendTo(this.root)
+        .text(numString(trial.n_steps, "move"))
+        .addClass('Graph-moves')
+        .appendTo(this.root)
       await sleep(1000)
       moves.remove()
     }
@@ -129,14 +167,15 @@ export class CircleGraph {
   setupLogging() {
     this.data = {
       events: [],
-      trial: _.pick(this.options, 'graph', 'n_steps', 'rewards', 'start', 'hover_edges', 'hover_rewards', 'trialNumber', 'bonus')
+      trial: _.pick(this.options, 'graph', 'n_steps', 'rewards', 'start', 'hover_edges', 'hover_rewards', 'trialNumber', 'bonus'),
     }
     let start_time = Date.now()
     this.logger = function (event, info = {}) {
       if (this.logger_callback) this.logger_callback(event, info)
       if (!event.startsWith('mouse')) {
         console.log(event, info)
-}
+      }
+
 
       // console.log(event, info)
       this.data.events.push({
@@ -147,18 +186,19 @@ export class CircleGraph {
     }
   }
 
+
+
   setupMouseTracking() {
     if (this.options.hover_rewards) this.el.classList.add('hideStates');
     if (this.options.hover_edges) this.el.classList.add('hideEdges');
 
-    // don't double up the event listeners
     if (this.mouseTrackingEnabled) return
     this.mouseTrackingEnabled = true
 
     for (const el of this.el.querySelectorAll('.State:not(.ShadowState)')) {
       const state = parseInt(el.getAttribute('data-state'), 10);
       el.addEventListener('mouseenter', (e) => {
-        this.logger('mouseenter', {state})
+        this.logger('mouseenter', { state })
         el.classList.add('is-visible');
         for (const successor of this.graph.successors(state)) {
           $(`.GraphNavigation-edge-${state}-${successor}`).addClass('is-visible')
@@ -167,8 +207,9 @@ export class CircleGraph {
           $(`.GraphNavigation-edge-${pred}-${state}`).addClass('is-visible')
         }
       });
+      
       el.addEventListener('mouseleave', (e) => {
-        this.logger('mouseleave', {state})
+        this.logger('mouseleave', { state })
         el.classList.remove('is-visible');
         for (const successor of this.graph.successors(state)) {
           $(`.GraphNavigation-edge-${state}-${successor}`).removeClass('is-visible')
@@ -180,6 +221,146 @@ export class CircleGraph {
     }
   }
 
+  
+
+  async getKeyResponse() {
+    return new Promise((resolve) => {
+      const keyHandler = (info) => {
+
+        const input_key = jsPsych.pluginAPI.convertKeyCodeToKeyCharacter(info.key);
+
+
+        if (input_key === 'j') {
+          const successors = this.graph.successors(this.state); 
+          const node = this.state
+          successors.forEach((successor, index) => {
+            const arrowSelector = `.GraphNavigation-arrow.GraphNavigation-edge-${node}-${successor} .triangle`;
+            const arrowElement = this.el.querySelector(arrowSelector);
+            if (arrowElement && getComputedStyle(arrowElement).fill === 'rgb(255, 128, 0)') {
+              this.orangeLineState = successor
+          // const input_key = jsPsych.pluginAPI.convertKeyCodeToKeyCharacter(info.key);
+          // let key; // Declare the 'key' variable
+          // if (input_key == 'r' || input_key == '1') {
+          //      key = '1';}
+          // if (input_key == 'b' || input_key == '2') {
+          //      key = '2';}
+ 
+
+          // if (key >= '1' && key <= '4') { 
+          //       const index = parseInt(key, 10) - 1; 
+          //       const validSuccessors = this.graph.successors(this.state);
+
+          //       if (index < validSuccessors.length) { 
+          //           const selectedState = validSuccessors[index];
+          //           resolve({ state: selectedState });
+          //       } else {}
+                
+          //   }else {
+          //       this.showToast('Invalid selection.');
+            }
+          });
+          if (this.orangeLineState !== null) {
+            resolve({ state: this.orangeLineState });
+          }
+        }
+
+        
+        
+        if (input_key === 'f') {
+          const node = this.state; 
+          const successors = this.graph.successors(node); 
+          let orangeSuccessor = null; 
+
+          successors.forEach((successor, index) => {
+            const arrowSelector = `.GraphNavigation-arrow.GraphNavigation-edge-${node}-${successor} .triangle`;
+            const arrowElement = this.el.querySelector(arrowSelector);
+
+
+            const edgeSelector = `.GraphNavigation-edge-${node}-${successor}`;
+            const edgeElements = this.el.querySelectorAll(edgeSelector);
+            const arrowElements = this.el.querySelectorAll(arrowSelector);
+
+
+            const color = this.colorSwapped ? (index === 0 ? "#FF8000" : "#000") : (index === 0 ? "#000" : "#FF8000");
+
+
+
+            arrowElements.forEach(arrowEl => {
+              arrowEl.style.fill = color;
+            });
+            edgeElements.forEach(edgeEl => {
+              if (!edgeEl.classList.contains('GraphNavigation-arrow')) {
+                edgeEl.style.backgroundColor = color;
+              }
+            });
+
+            if (arrowElement && getComputedStyle(arrowElement).fill === 'rgb(255, 128, 0)') {
+              orangeSuccessor = successor;
+            }
+          });
+          this.orangeLineState = orangeSuccessor; 
+          this.colorSwapped = !this.colorSwapped;
+          console.log(this.colorSwapped)
+          return
+        }
+      };
+
+      if (this.keyboardListener) {
+        jsPsych.pluginAPI.cancelKeyboardResponse(this.keyboardListener);
+      }
+
+      
+
+      this.keyboardListener = jsPsych.pluginAPI.getKeyboardResponse({
+        callback_function: keyHandler,
+        valid_responses: jsPsych.ALL_KEYS,
+        rt_method: 'performance',
+        persist: true,
+        allow_held_key: false
+      });
+      // const keyboardListener = jsPsych.pluginAPI.getKeyboardResponse({
+      //   callback_function: keyHandler,
+      //   valid_responses: jsPsych.ALL_KEYS,
+      //   rt_method: 'performance',
+      //   persist: true,
+      //   allow_held_key: false
+      // });
+    });
+
+  }
+
+  // Toast massage for invalid selection
+  showToast(message) {
+    const toast = $('<div>')
+      .addClass('toast-message')
+      .text(message)
+      .css({
+        'display': 'none',
+        'position': 'fixed',
+        'top': '10%',
+        'left': '50%',
+        'transform': 'translateX(-50%)',
+        'background-color': '#333',
+        'color': 'white',
+        'padding': '8px 16px',
+        'border-radius': '4px',
+        'box-shadow': '0 2px 4px rgba(0, 0, 0, 0.2)',
+        'z-index': '1000'
+      });
+
+    $(this.root).append(toast);
+
+    toast.fadeIn(400, function () {
+      setTimeout(() => {
+        toast.fadeOut(400, function () {
+          toast.remove();
+        });
+      }, 1500);
+    });
+  }
+
+
+  // --------------------------------
   cancel() {
     // Use this for early termination of the graph.
     // Only used during free-form graph navigation.
@@ -199,6 +380,41 @@ export class CircleGraph {
     });
   }
 
+
+  keyCodeToState(keyCode) {
+    /*
+    Mapping keyCode to states.
+    */
+    const key = String.fromCharCode(keyCode).toUpperCase();
+    const idx = this.options.successorKeys[this.state].indexOf(key);
+    if (idx === -1) {
+      return null;
+    }
+    const succ = this.options.graph.successors(this.state)[idx];
+    if (!this.options.edgeShow(this.state, succ)) {
+      return null;
+    }
+    return succ;
+  }
+
+  keyTransition() {
+    /*
+    Returns a promise that is resolved with {state} when there is a keypress
+    corresponding to a valid state transition.
+    */
+    const p = documentEventPromise('keydown', (e) => {
+      const state = this.keyCodeToState(e.keyCode);
+      if (state !== null) {
+        e.preventDefault();
+        return { state };
+      }
+    });
+
+    this.cancellables.push(p.cancel);
+
+    return p;
+  }
+
   clickTransition(options) {
     options = options || {};
     /*
@@ -215,6 +431,7 @@ export class CircleGraph {
         el.classList.add('PathIdentification-selectable');
       }
     }
+    console.log("Click")
 
     return new Promise((resolve, reject) => {
       const handler = (e) => {
@@ -226,7 +443,8 @@ export class CircleGraph {
         const state = parseInt(el.getAttribute('data-state'), 10);
 
         this.el.removeEventListener('click', handler);
-        resolve({state});
+        resolve({ state });
+        resolve({ state });
       }
 
       this.el.addEventListener('click', handler);
@@ -234,10 +452,13 @@ export class CircleGraph {
   }
 
   async addScore(points, state) {
+
     if (points == null) {
       return
     }
+
     this.setScore(this.score + points)
+
     let cls = {
       "-1": "loss",
       "0": "neutral",
@@ -245,12 +466,9 @@ export class CircleGraph {
     }[Math.sign(points)]
     let plus = (points < 0) ? "" : "+"
     let pop = $("<span>")
-    .addClass('pop ' + cls)
-    .text(plus + points)
-    .appendTo($(`.GraphNavigation-ShadowState-${state}`))
-
-    await sleep(1500)
-    pop.remove()
+      .addClass('pop ' + cls)
+      .text(plus + points)
+      .appendTo($(`.GraphNavigation-ShadowState-${state}`))
   }
 
   setScore(score) {
@@ -258,9 +476,59 @@ export class CircleGraph {
     $("#GraphNavigation-points").html(this.score)
   }
 
-  visitState(state, initial=false) {
-    invariant(typeof(1) == 'number')
-    this.logger('visit', {state, initial})
+
+
+  updateSelectedArrowColor(node, selectedSuccessorIndex) {
+    const successors = this.graph.successors(node);
+    successors.forEach((successor, idx) => {
+      const arrowSelector = `.GraphNavigation-arrow.GraphNavigation-edge-${node}-${successor} .triangle`;
+      const arrowElements = this.el.querySelectorAll(arrowSelector);
+      arrowElements.forEach(arrowEl => {
+        arrowEl.style.fill = idx === selectedSuccessorIndex ? "#FF8000" : "#000";
+      });
+    });
+  }
+  updateEdgeColorsForNode(node) {
+    const successors = this.graph.successors(node);
+
+    const allEdges = this.el.querySelectorAll('.GraphNavigation-edge');
+    const allArrows = this.el.querySelectorAll('.GraphNavigation-arrow .triangle');
+    allEdges.forEach(edge => {
+      edge.style.backgroundColor = '#333';
+    });
+    allArrows.forEach(arrow => {
+      arrow.style.fill = '#333';
+    });
+
+    successors.forEach((successor, index) => {
+      const edgeSelector = `.GraphNavigation-edge-${node}-${successor}`;
+      const arrowSelector = `.GraphNavigation-arrow.GraphNavigation-edge-${node}-${successor} .triangle`;
+
+      const edgeElements = this.el.querySelectorAll(edgeSelector);
+      const arrowElements = this.el.querySelectorAll(arrowSelector);
+
+      const color = index === 0 ? "#FF8000" : "#000";
+
+      arrowElements.forEach(arrowEl => {
+        arrowEl.style.fill = color;
+      });
+      edgeElements.forEach(edgeEl => {
+        if (!edgeEl.classList.contains('GraphNavigation-arrow')) {
+          edgeEl.style.backgroundColor = color;
+        }
+      });
+    });
+  }
+
+
+  visitState(state, initial = false) {
+
+    invariant(typeof (1) == 'number')
+    this.logger('visit', { state, initial })
+
+
+
+    this.updateEdgeColorsForNode(state);
 
     if (!initial) {
       this.addScore(this.rewards[state], state)
@@ -268,7 +536,6 @@ export class CircleGraph {
     if (this.options.consume) {
       this.rewards[state] = 0
       $(`.GraphNavigation-State-${state} img`).remove()
-      // $(`.GraphNavigation-State-${state} img`).remove()
     }
     this.onStateVisit(state);
     this.setCurrentState(state);
@@ -296,11 +563,15 @@ export class CircleGraph {
     while (true) { // eslint-disable-line no-constant-condition
       // State transition
       const g = this.graph;
-      const {state} = await this.clickTransition({
-        invalidStates: new Set(
-          g.states.filter(s => !g.successors(this.state).includes(s))
-        ),
-      });
+      // Update -- get state based on getKeyResponse
+      const { state } = await this.getKeyResponse();
+
+// const {state} = await this.keyTransition()
+      // this.clickTransition({
+      // //   invalidStates: new Set(
+      // //     g.states.filter(s => !g.successors(this.state).includes(s))
+      // //   ),
+      // // });
       this.visitState(state)
       path.push(state)
 
@@ -313,17 +584,17 @@ export class CircleGraph {
         if (options.leave_state) {
           // $(`.GraphNavigation-State-${state}`).animate({opacity: .1}, 500)
         } else if (options.leave_open) {
-          $(`.GraphNavigation-State-${state}`).animate({opacity: 0}, 500)  // works because shadow state
-          $('.State img').animate({opacity: 0}, 500)
+          $(`.GraphNavigation-State-${state}`).animate({ opacity: 0 }, 500)  // works because shadow state
+          $('.State img').animate({ opacity: 0 }, 500)
           await sleep(1000)
           // $(this.el).animate({opacity: 0}, 500); await sleep(500)
           // $(this.el).empty()
         } else {
           await sleep(200)
-          $(this.el).animate({opacity: 0}, 200)
+          $(this.el).animate({ opacity: 0 }, 200)
+          $(this.el).animate({ opacity: 0 }, 200)
           await sleep(500)
         }
-        // $(this.el).addClass('.GraphNavigation-terminated')
 
 
         $(`.GraphNavigation-current`).removeClass('GraphNavigation-current');
@@ -333,6 +604,7 @@ export class CircleGraph {
       await sleep(200);
       // await sleep(5)
     }
+    console.log(path,"Path")
     return path
   }
 
@@ -346,7 +618,8 @@ export class CircleGraph {
     this.rewards[state] = parseFloat(reward)
     let graphic = this.options.emojiGraphics[reward]
     $(`.GraphNavigation-State-${state}`).html(`
-      <img src="${graphicsUrl(graphic)}" />
+            <img src="${graphicsUrl(graphic)}" alt="Circle Graphic" style="width: 70px; height: 70px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);max-width: 100%; max-height: 100%;border-radius: 50%;"/>
+
     `)
   }
 
@@ -359,6 +632,7 @@ export class CircleGraph {
 
 
 const stateTemplate = (state, graphic, options) => {
+
   let cls = `GraphNavigation-State-${state}`;
   if (options.goal) {
     cls += ' GraphNavigation-goal';
@@ -367,13 +641,16 @@ const stateTemplate = (state, graphic, options) => {
     cls += ' GraphNavigation-probe';
   }
   return `
+  
   <div class="State GraphNavigation-State ${cls || ''}" style="${options.style || ''}" data-state="${state}">
-    <img src="${graphicsUrl(graphic)}" />
+
+  <img src="${graphicsUrl(graphic)}" alt="Circle Graphic" style="width: 70px; height: 70px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);max-width: 100%; max-height: 100%;border-radius: 50%;"/>
   </div>
   `;
 };
 
 export const renderSmallEmoji = (graphic, cls) => `
+
 <img style="height:40px" src="${graphicsUrl(graphic)}" />
 `;
 
@@ -395,16 +672,16 @@ function graphXY(graph, width, height, scaleEdgeFactor, fixedXY) {
   // We compute bounds for each dimension.
   const maxX = Math.max.apply(null, fixedXY.map(xy => xy[0]));
   const minX = Math.min.apply(null, fixedXY.map(xy => xy[0]));
-  const rangeX = maxX-minX;
+  const rangeX = maxX - minX;
   const maxY = Math.max.apply(null, fixedXY.map(xy => xy[1]));
   const minY = Math.min.apply(null, fixedXY.map(xy => xy[1]));
-  const rangeY = maxY-minY;
+  const rangeY = maxY - minY;
 
   // We determine the appropriate scaling factor for the dimensions by comparing the
   // aspect ratio of the bounding box of the embedding with the aspect ratio of our
   // rendering viewport.
   let scale;
-  if (rangeX/rangeY > widthNoMargin/heightNoMargin) {
+  if (rangeX / rangeY > widthNoMargin / heightNoMargin) {
     scale = widthNoMargin / rangeX;
   } else {
     scale = heightNoMargin / rangeY;
@@ -420,13 +697,13 @@ function graphXY(graph, width, height, scaleEdgeFactor, fixedXY) {
   for (const state of graph.states) {
     let [x, y] = fixedXY[state];
     // We subtract the min, rescale, and offset appropriately.
-    x = (x-minX) * scale + marginX;
-    y = (y-minY) * scale + marginY;
+    x = (x - minX) * scale + marginX;
+    y = (y - minY) * scale + marginY;
     coordinate[state] = [x, y];
     // We rescale for edges/keys by centering over the origin, scaling, then translating to the original position.
     scaled[state] = [
-      (x - width/2) * scaleEdgeFactor + width/2,
-      (y - height/2) * scaleEdgeFactor + height/2,
+      (x - width / 2) * scaleEdgeFactor + width / 2,
+      (y - height / 2) * scaleEdgeFactor + height / 2,
     ];
   }
 
@@ -442,9 +719,9 @@ function graphXY(graph, width, height, scaleEdgeFactor, fixedXY) {
 function normrot([x, y], [sx, sy]) {
   // This function returns the length/norm and angle of rotation
   // needed for a line starting at [x, y] to end at [sx, sy].
-  const norm = Math.sqrt(Math.pow(x-sx, 2) + Math.pow(y-sy, 2));
-  const rot = Math.atan2(sy-y, sx-x);
-  return {norm, rot};
+  const norm = Math.sqrt(Math.pow(x - sx, 2) + Math.pow(y - sy, 2));
+  const rot = Math.atan2(sy - y, sx - x);
+  return { norm, rot };
 }
 
 function renderCircleGraph(graph, gfx, goal, options) {
@@ -476,66 +753,91 @@ function renderCircleGraph(graph, gfx, goal, options) {
     return stateTemplate(state, gfx[state], {
       probe: state == options.probe,
       goal: state == goal,
-      style: `transform: translate(${x - BLOCK_SIZE/2}px,${y - BLOCK_SIZE/2}px);`,
+      style: `transform: translate(${x - BLOCK_SIZE / 2}px,${y - BLOCK_SIZE / 2}px);
+      
+      `,
+      style: `transform: translate(${x - BLOCK_SIZE / 2}px,${y - BLOCK_SIZE / 2}px);
+      
+      `,
     });
   });
 
-  function addArrow(state, successor, norm, rot) {
-      const [x, y] = xy.scaled[state];
-      const [sx, sy] = xy.scaled[successor];
-      arrows.push(`
-        <div class="GraphNavigation-arrow GraphNavigation-edge-${state}-${successor}"
-        style="
-        transform-origin: center;
-        transform:
-          translate(${sx-35}px, ${sy-35}px)
-          rotate(${rot}rad)
-          translate(-30px)
-          rotate(90deg)
-        ;">
-        <svg height="70" width="70" style="display: block; ">
-            <polygon points="
-            35  , 38
-            29  , 50
-            41 , 50
-          " class="triangle" />
-        </svg>
-        </div>
-      `);
-    }
+
+
+
+  // Update2 addArrow define color
+  function addArrow(state, successor, norm, rot, color) {
+    const [x, y] = xy.scaled[state];
+    const [sx, sy] = xy.scaled[successor];
+
+    arrows.push(`
+      <div class="GraphNavigation-arrow GraphNavigation-edge-${state}-${successor}"
+      style="
+      transform-origin: center;
+      transform:
+        translate(${sx - 35}px, ${sy - 35}px)
+        rotate(${rot}rad)
+        translate(-30px)
+        rotate(90deg)
+      ;">
+      <svg height="70" width="70" style="display: block; ">
+          <polygon points="
+          35  , 38
+          29  , 50
+          41 , 50
+        " class="triangle" style="fill: ${color};" /> 
+
+      </svg>
+      </div>
+    `);
+  }
 
   // HACK for the score animation
   let shadowStates = states.map(state => {
     return state
-    .replaceAll("-State-", "-ShadowState-")
-    .replaceAll("\"State ", "\"State ShadowState ")
+      .replaceAll("-State-", "-ShadowState-")
+      .replaceAll("\"State ", "\"State ShadowState ")
   })
   window.states = states
   window.shadowStates = shadowStates
 
+  function addKey(key, state, successor, norm) {
+    const [x, y] = xy.scaled[state];
+    const [sx, sy] = xy.scaled[successor];
+    const [keyWidth, keyHeight] = [20, 28]; // HACK get from CSS
+    // We also add the key labels here
+    const mul = keyDistanceFactor * BLOCK_SIZE / 2;
+    keys.push(`
+      <div class="GraphNavigation-key GraphNavigation-key-${state}-${successor} GraphNavigation-key-${keyForCSSClass(key)}" style="
+        transform: translate(
+          ${x - keyWidth / 2 + mul * (sx - x) / norm}px,
+          ${y - keyHeight / 2 + mul * (sy - y) / norm}px)
+      ">${options.successorKeysRender(key)}</div>
+    `);
+  }
+
   const succ = [];
   const arrows = [];
+
   for (const state of graph.states) {
     let [x, y] = xy.scaled[state];
-    graph.successors(state).forEach((successor, idx) => {
-      // if (state >= successor) {
-      //   return;
-      // }
-      const e = xy.edge(state, successor);
-      // const opacity = options.edgeShow(state, successor) ? 1 : 0;
-      // opacity: ${opacity};
-      succ.push(`
-        <div class="GraphNavigation-edge GraphNavigation-edge-${state}-${successor}" style="
-        width: ${e.norm}px;
-        transform: translate(${x}px,${y-1}px) rotate(${e.rot}rad);
-        "></div>
-      `);
+    const successors = graph.successors(state);
 
-      // We also add the key labels here
-      addArrow(state, successor, e.norm, e.rot);
-      // addArrow(successor, state, e.norm);
+    successors.forEach((successor, idx) => {
+      const e = xy.edge(state, successor);
+      const color = colors[idx % colors.length];
+
+      succ.push(`
+          <div class="GraphNavigation-edge GraphNavigation-edge-${state}-${successor}" style="
+          width: ${e.norm}px;
+          transform: translate(${x}px,${y - 1}px) rotate(${e.rot}rad);
+          background-color: ${color}; 
+          "></div>
+        `);
+      addArrow(state, successor, e.norm, e.rot, color);
     });
   }
+
 
   return `
   <div class="GraphNavigation withGraphic" style="width: ${width}px; height: ${height}px;">
@@ -546,6 +848,7 @@ function renderCircleGraph(graph, gfx, goal, options) {
   </div>
   `;
 }
+
 
 export function queryEdge(root, state, successor) {
   /*
@@ -559,7 +862,8 @@ function setCurrentState(display_element, graph, state, options) {
   options = options || {};
   options.edgeShow = options.edgeShow || (() => true);
   // showCurrentEdges enables rendering of current edges/keys. This is off for PathIdentification and AcceptReject.
-  options.showCurrentEdges = typeof(options.showCurrentEdges) === 'undefined' ? true : options.showCurrentEdges;
+  options.showCurrentEdges = typeof (options.showCurrentEdges) === 'undefined' ? true : options.showCurrentEdges;
+  options.showCurrentEdges = typeof (options.showCurrentEdges) === 'undefined' ? true : options.showCurrentEdges;
   const allKeys = _.unique(_.flatten(options.successorKeys));
 
   // Remove old classes!
@@ -577,7 +881,8 @@ function setCurrentState(display_element, graph, state, options) {
     // removeClass(`GraphNavigation-currentKey-${keyForCSSClass(key)}`)
   }
 
-  // Can call this to clear out current state too.
+  // Can call this to clcconear out current state too.
+  // Can call this to clcconear out current state too.
   if (state == null) {
     return;
   }
@@ -591,7 +896,8 @@ function setCurrentState(display_element, graph, state, options) {
 
   if (options.onlyShowCurrentEdges) {
     for (const el of display_element.querySelectorAll('.GraphNavigation-edge,.GraphNavigation-arrow')) {
-    // for (const el of display_element.querySelectorAll('.GraphNavigation-edge')) {
+      // for (const el of display_element.querySelectorAll('.GraphNavigation-edge')) {
+      // for (const el of display_element.querySelectorAll('.GraphNavigation-edge')) {
       el.style.opacity = 0;
     }
   }
@@ -609,12 +915,6 @@ function setCurrentState(display_element, graph, state, options) {
       el.style.opacity = 1;
     }
 
-    // Now setting active keys
-    // el = display_element.querySelector(`.GraphNavigation-arrow-${state}-${successor}`);
-    // el.classList.add('GraphNavigation-currentKey');
-    // if (options.onlyShowCurrentEdges) {
-    //   el.style.opacity = 1;
-    // }
   });
 }
 
@@ -638,6 +938,7 @@ function renderKeyInstruction(keys) {
   }
 }
 
+
 addPlugin('main', trialErrorHandling(async function main(root, trial) {
   trial.n_steps = -1;
   cg = new CircleGraph($(root), trial);
@@ -655,7 +956,6 @@ addPlugin('main', trialErrorHandling(async function main(root, trial) {
   $(root).empty()
   jsPsych.finishTrial(cg.data)
 }));
-
 
 addPlugin('break', trialErrorHandling(async function breakTrial(root, trial) {
   $(root).html(`
