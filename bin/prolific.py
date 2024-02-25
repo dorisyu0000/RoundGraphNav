@@ -18,7 +18,7 @@ class Prolific(object):
         if token is None:
             token = os.getenv('PROLIFIC_TOKEN')
             if not token:
-                raise ValueError('You must provide a token, create a .prolific_token file, or set a PROLIFIC_TOKEN environment variable.')
+                raise ValueError('You must provide a token or set the PROLIFIC_TOKEN environment variable.')
 
         self.token = token
 
@@ -122,18 +122,21 @@ class Prolific(object):
     def approve_all(self, study_id, ignore_code=False):
         to_approve = []
         bad_code = []
-        completion_code = self.get(f'/studies/{study_id}/')['completion_code']
+        completion_codes = [x['code']
+            for x in self.get(f'/studies/{study_id}/')['completion_codes']
+            if x['code_type'] == "COMPLETED"
+        ]
 
         for sub in self.submissions(study_id):
             if sub['status'] != 'AWAITING REVIEW':
                 continue
-            if ignore_code or sub['study_code'] == completion_code:
+            if ignore_code or sub['study_code'] in completion_codes:
                 to_approve.append(sub["participant_id"])
             else:
                 bad_code.append(sub["participant_id"])
 
         if bad_code:
-            print(f'{len(bad_code)} submissions have an incorrect code. Check',
+            print(f'{len(bad_code)} submissions have an incorrect code. NOT approving. Check',
                 f"https://app.prolific.co/researcher/workspaces/studies/{study_id}/submissions")
 
         if to_approve:
@@ -143,7 +146,7 @@ class Prolific(object):
             })
             print(f'Approved {len(to_approve)} submissions')
         else:
-            print('All submissions have already been approved')
+            print('No submissions to approve')
 
 
     def assign_bonuses(self, study_id, bonuses):
@@ -279,22 +282,17 @@ class CLI(object):
         """Print the link to the submissions page for the most recently posted study"""
         return f"https://app.prolific.co/researcher/workspaces/studies/{self._study_id}/submissions"
 
-    def total_cost(self):
-        """Print the total cost accumulated by studies in this project"""
-        return self._prolific.total_cost(self._project_id)
-
-
 
     @cached_property
     def _token(self):
-        if os.path.isfile(".token"):
-            with open('.token') as f:
-                token = f.read().strip()
-                if token:
-                    return token
         token = os.getenv('PROLIFIC_TOKEN')
         if token:
             return token
+        if os.path.isfile(".token"):
+            with open('.token') as f:
+                token = f.read()
+                if token:
+                    return token
         token = input('PROLIFIC_TOKEN environment variable not found. Please enter it here: ')
         if not token.strip():
             print("Exiting.")
@@ -325,7 +323,7 @@ class CLI(object):
             )
             project_id = input("project id: ")
             if 'projects/' in project_id:
-                project_id = project_id.split('projects/')[1].strip().split('/')[0]
+                project_id = project_id.split('projects/')[1].strip()
 
             with open('.project_id', 'w') as f:
                 f.write(project_id)
