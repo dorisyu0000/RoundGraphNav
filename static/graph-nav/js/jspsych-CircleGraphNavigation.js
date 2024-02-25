@@ -11,7 +11,8 @@ import { bfs } from './graphs.js';
 
 const BLOCK_SIZE = 100;
 window.$ = $
-const colors = ["#E57373", "#64B5F6", "#81C784", "#FFF176"]; 
+const colors = ["#00000"]
+// ["#E57373", "#64B5F6", "#81C784", "#FFF176"];
 
 
 // descirbe the graph
@@ -41,6 +42,11 @@ const colors = ["#E57373", "#64B5F6", "#81C784", "#FFF176"];
 
 export class CircleGraph {
   constructor(root, options) {
+
+    this.keyPressCounter = 0; 
+    this.colorSwapped = false;
+    this.orangeLineState = this.state;
+
     this.root = $(root)
     window.cg = this
     console.log('CircleGraph', options)
@@ -51,7 +57,7 @@ export class CircleGraph {
 
     let gro = options.graphRenderOptions;
     gro.successorKeysRender = gro.successorKeysRender || (key => key);
-    options.successorKeys = ['1','2','3','4']
+    options.successorKeys = ['1', '2', '3', '4']
 
     this.options = options;
     options.consume = options.consume ?? true
@@ -61,9 +67,9 @@ export class CircleGraph {
     options.show_points = options.show_points ?? true
 
 
-    this.rewards = [...options.rewards] ?? Array(options.graph.length).fill(0)
+    this.rewards = [...options.rewards] ?? Array(options.graph.length).fill(null)
     this.onStateVisit = options.onStateVisit ?? ((s) => { })
-    this.score = options.score ?? null
+    this.score = options.score ?? 0
 
     if (options.consume) {
       this.rewards[options.start] = null
@@ -100,6 +106,7 @@ export class CircleGraph {
     this.cancellables = [];
     this.setupLogging()
   }
+
 
   showGraph() {
     this.root.append(this.wrapper)
@@ -160,7 +167,7 @@ export class CircleGraph {
   setupLogging() {
     this.data = {
       events: [],
-      trial: _.pick(this.options, 'graph', 'n_steps', 'rewards', 'start', 'hover_edges', 'hover_rewards','trialNumber','bonus')
+      trial: _.pick(this.options, 'graph', 'n_steps', 'rewards', 'start', 'hover_edges', 'hover_rewards', 'trialNumber', 'bonus'),
     }
     let start_time = Date.now()
     this.logger = function (event, info = {}) {
@@ -168,6 +175,7 @@ export class CircleGraph {
       if (!event.startsWith('mouse')) {
         console.log(event, info)
       }
+
 
       // console.log(event, info)
       this.data.events.push({
@@ -184,7 +192,6 @@ export class CircleGraph {
     if (this.options.hover_rewards) this.el.classList.add('hideStates');
     if (this.options.hover_edges) this.el.classList.add('hideEdges');
 
-    // don't double up the event listeners
     if (this.mouseTrackingEnabled) return
     this.mouseTrackingEnabled = true
 
@@ -200,6 +207,7 @@ export class CircleGraph {
           $(`.GraphNavigation-edge-${pred}-${state}`).addClass('is-visible')
         }
       });
+      
       el.addEventListener('mouseleave', (e) => {
         this.logger('mouseleave', { state })
         el.classList.remove('is-visible');
@@ -213,72 +221,143 @@ export class CircleGraph {
     }
   }
 
-  // Update
-  // keyResponse for choose
+  
+
   async getKeyResponse() {
     return new Promise((resolve) => {
-        const keyHandler = (info) => {
-          const input_key = jsPsych.pluginAPI.convertKeyCodeToKeyCharacter(info.key);
-          let key; // Declare the 'key' variable
-          if (input_key == 'r' || input_key == '1') {
-               key = '1';}
-          if (input_key == 'b' || input_key == '2') {
-               key = '2';}
-                    
+      const keyHandler = (info) => {
 
-          if (key >= '1' && key <= '4') { 
-                const index = parseInt(key, 10) - 1; 
-                const validSuccessors = this.graph.successors(this.state);
+        const input_key = jsPsych.pluginAPI.convertKeyCodeToKeyCharacter(info.key);
 
-                if (index < validSuccessors.length) { 
-                    const selectedState = validSuccessors[index];
-                    resolve({ state: selectedState });
-                } else {
-                    this.showToast("Invalid selection: not a valid successor.");
-                }
+
+        if (input_key === 'j') {
+          const successors = this.graph.successors(this.state); 
+          const node = this.state
+          successors.forEach((successor, index) => {
+            const arrowSelector = `.GraphNavigation-arrow.GraphNavigation-edge-${node}-${successor} .triangle`;
+            const arrowElement = this.el.querySelector(arrowSelector);
+            if (arrowElement && getComputedStyle(arrowElement).fill === 'rgb(255, 128, 0)') {
+              this.orangeLineState = successor
+          // const input_key = jsPsych.pluginAPI.convertKeyCodeToKeyCharacter(info.key);
+          // let key; // Declare the 'key' variable
+          // if (input_key == 'r' || input_key == '1') {
+          //      key = '1';}
+          // if (input_key == 'b' || input_key == '2') {
+          //      key = '2';}
+ 
+
+          // if (key >= '1' && key <= '4') { 
+          //       const index = parseInt(key, 10) - 1; 
+          //       const validSuccessors = this.graph.successors(this.state);
+
+          //       if (index < validSuccessors.length) { 
+          //           const selectedState = validSuccessors[index];
+          //           resolve({ state: selectedState });
+          //       } else {}
+                
+          //   }else {
+          //       this.showToast('Invalid selection.');
             }
-        };
+          });
+          if (this.orangeLineState !== null) {
+            resolve({ state: this.orangeLineState });
+          }
+        }
 
-        const keyboardListener = jsPsych.pluginAPI.getKeyboardResponse({
-            callback_function: keyHandler,
-            valid_responses: jsPsych.ALL_KEYS,
-            rt_method: 'performance',
-            persist: true,
-            allow_held_key: false
-        });
+        
+        
+        if (input_key === 'f') {
+          const node = this.state; 
+          const successors = this.graph.successors(node); 
+          let orangeSuccessor = null; 
+
+          successors.forEach((successor, index) => {
+            const arrowSelector = `.GraphNavigation-arrow.GraphNavigation-edge-${node}-${successor} .triangle`;
+            const arrowElement = this.el.querySelector(arrowSelector);
+
+
+            const edgeSelector = `.GraphNavigation-edge-${node}-${successor}`;
+            const edgeElements = this.el.querySelectorAll(edgeSelector);
+            const arrowElements = this.el.querySelectorAll(arrowSelector);
+
+
+            const color = this.colorSwapped ? (index === 0 ? "#FF8000" : "#000") : (index === 0 ? "#000" : "#FF8000");
+
+
+
+            arrowElements.forEach(arrowEl => {
+              arrowEl.style.fill = color;
+            });
+            edgeElements.forEach(edgeEl => {
+              if (!edgeEl.classList.contains('GraphNavigation-arrow')) {
+                edgeEl.style.backgroundColor = color;
+              }
+            });
+
+            if (arrowElement && getComputedStyle(arrowElement).fill === 'rgb(255, 128, 0)') {
+              orangeSuccessor = successor;
+            }
+          });
+          this.orangeLineState = orangeSuccessor; 
+          this.colorSwapped = !this.colorSwapped;
+          console.log(this.colorSwapped)
+          return
+        }
+      };
+
+      if (this.keyboardListener) {
+        jsPsych.pluginAPI.cancelKeyboardResponse(this.keyboardListener);
+      }
+
+      
+
+      this.keyboardListener = jsPsych.pluginAPI.getKeyboardResponse({
+        callback_function: keyHandler,
+        valid_responses: jsPsych.ALL_KEYS,
+        rt_method: 'performance',
+        persist: true,
+        allow_held_key: false
+      });
+      // const keyboardListener = jsPsych.pluginAPI.getKeyboardResponse({
+      //   callback_function: keyHandler,
+      //   valid_responses: jsPsych.ALL_KEYS,
+      //   rt_method: 'performance',
+      //   persist: true,
+      //   allow_held_key: false
+      // });
     });
-}
 
+  }
 
   // Toast massage for invalid selection
   showToast(message) {
     const toast = $('<div>')
-        .addClass('toast-message')
-        .text(message)
-        .css({
-            'display': 'none', 
-            'position': 'fixed', 
-            'top': '10%', 
-            'left': '50%',
-            'transform': 'translateX(-50%)',
-            'background-color': '#333', 
-            'color': 'white', 
-            'padding': '8px 16px',
-            'border-radius': '4px',
-            'box-shadow': '0 2px 4px rgba(0, 0, 0, 0.2)',
-            'z-index': '1000' 
-        });
+      .addClass('toast-message')
+      .text(message)
+      .css({
+        'display': 'none',
+        'position': 'fixed',
+        'top': '10%',
+        'left': '50%',
+        'transform': 'translateX(-50%)',
+        'background-color': '#333',
+        'color': 'white',
+        'padding': '8px 16px',
+        'border-radius': '4px',
+        'box-shadow': '0 2px 4px rgba(0, 0, 0, 0.2)',
+        'z-index': '1000'
+      });
 
     $(this.root).append(toast);
 
-    toast.fadeIn(400, function() {
-        setTimeout(() => {
-            toast.fadeOut(400, function() {
-                toast.remove();
-            });
-        }, 1500);
+    toast.fadeIn(400, function () {
+      setTimeout(() => {
+        toast.fadeOut(400, function () {
+          toast.remove();
+        });
+      }, 1500);
     });
-}
+  }
 
 
   // --------------------------------
@@ -327,7 +406,7 @@ export class CircleGraph {
       const state = this.keyCodeToState(e.keyCode);
       if (state !== null) {
         e.preventDefault();
-        return {state};
+        return { state };
       }
     });
 
@@ -373,10 +452,13 @@ export class CircleGraph {
   }
 
   async addScore(points, state) {
+
     if (points == null) {
       return
     }
+
     this.setScore(this.score + points)
+
     let cls = {
       "-1": "loss",
       "0": "neutral",
@@ -387,9 +469,6 @@ export class CircleGraph {
       .addClass('pop ' + cls)
       .text(plus + points)
       .appendTo($(`.GraphNavigation-ShadowState-${state}`))
-
-    await sleep(1500)
-    pop.remove()
   }
 
   setScore(score) {
@@ -397,9 +476,59 @@ export class CircleGraph {
     $("#GraphNavigation-points").html(this.score)
   }
 
+
+
+  updateSelectedArrowColor(node, selectedSuccessorIndex) {
+    const successors = this.graph.successors(node);
+    successors.forEach((successor, idx) => {
+      const arrowSelector = `.GraphNavigation-arrow.GraphNavigation-edge-${node}-${successor} .triangle`;
+      const arrowElements = this.el.querySelectorAll(arrowSelector);
+      arrowElements.forEach(arrowEl => {
+        arrowEl.style.fill = idx === selectedSuccessorIndex ? "#FF8000" : "#000";
+      });
+    });
+  }
+  updateEdgeColorsForNode(node) {
+    const successors = this.graph.successors(node);
+
+    const allEdges = this.el.querySelectorAll('.GraphNavigation-edge');
+    const allArrows = this.el.querySelectorAll('.GraphNavigation-arrow .triangle');
+    allEdges.forEach(edge => {
+      edge.style.backgroundColor = '#333';
+    });
+    allArrows.forEach(arrow => {
+      arrow.style.fill = '#333';
+    });
+
+    successors.forEach((successor, index) => {
+      const edgeSelector = `.GraphNavigation-edge-${node}-${successor}`;
+      const arrowSelector = `.GraphNavigation-arrow.GraphNavigation-edge-${node}-${successor} .triangle`;
+
+      const edgeElements = this.el.querySelectorAll(edgeSelector);
+      const arrowElements = this.el.querySelectorAll(arrowSelector);
+
+      const color = index === 0 ? "#FF8000" : "#000";
+
+      arrowElements.forEach(arrowEl => {
+        arrowEl.style.fill = color;
+      });
+      edgeElements.forEach(edgeEl => {
+        if (!edgeEl.classList.contains('GraphNavigation-arrow')) {
+          edgeEl.style.backgroundColor = color;
+        }
+      });
+    });
+  }
+
+
   visitState(state, initial = false) {
+
     invariant(typeof (1) == 'number')
     this.logger('visit', { state, initial })
+
+
+
+    this.updateEdgeColorsForNode(state);
 
     if (!initial) {
       this.addScore(this.rewards[state], state)
@@ -407,7 +536,6 @@ export class CircleGraph {
     if (this.options.consume) {
       this.rewards[state] = 0
       $(`.GraphNavigation-State-${state} img`).remove()
-      // $(`.GraphNavigation-State-${state} img`).remove()
     }
     this.onStateVisit(state);
     this.setCurrentState(state);
@@ -435,14 +563,10 @@ export class CircleGraph {
     while (true) { // eslint-disable-line no-constant-condition
       // State transition
       const g = this.graph;
-
-
-
-
       // Update -- get state based on getKeyResponse
       const { state } = await this.getKeyResponse();
 
-      // const {state} = await this.keyTransition()
+// const {state} = await this.keyTransition()
       // this.clickTransition({
       // //   invalidStates: new Set(
       // //     g.states.filter(s => !g.successors(this.state).includes(s))
@@ -471,7 +595,6 @@ export class CircleGraph {
           $(this.el).animate({ opacity: 0 }, 200)
           await sleep(500)
         }
-        // $(this.el).addClass('.GraphNavigation-terminated')
 
 
         $(`.GraphNavigation-current`).removeClass('GraphNavigation-current');
@@ -481,6 +604,7 @@ export class CircleGraph {
       await sleep(200);
       // await sleep(5)
     }
+    console.log(path,"Path")
     return path
   }
 
@@ -494,7 +618,8 @@ export class CircleGraph {
     this.rewards[state] = parseFloat(reward)
     let graphic = this.options.emojiGraphics[reward]
     $(`.GraphNavigation-State-${state}`).html(`
-      <img src="${graphicsUrl(graphic)}" />
+            <img src="${graphicsUrl(graphic)}" alt="Circle Graphic" style="width: 70px; height: 70px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);max-width: 100%; max-height: 100%;border-radius: 50%;"/>
+
     `)
   }
 
@@ -507,6 +632,7 @@ export class CircleGraph {
 
 
 const stateTemplate = (state, graphic, options) => {
+
   let cls = `GraphNavigation-State-${state}`;
   if (options.goal) {
     cls += ' GraphNavigation-goal';
@@ -515,13 +641,16 @@ const stateTemplate = (state, graphic, options) => {
     cls += ' GraphNavigation-probe';
   }
   return `
+  
   <div class="State GraphNavigation-State ${cls || ''}" style="${options.style || ''}" data-state="${state}">
-    <img src="${graphicsUrl(graphic)}" />
+
+  <img src="${graphicsUrl(graphic)}" alt="Circle Graphic" style="width: 70px; height: 70px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);max-width: 100%; max-height: 100%;border-radius: 50%;"/>
   </div>
   `;
 };
 
 export const renderSmallEmoji = (graphic, cls) => `
+
 <img style="height:40px" src="${graphicsUrl(graphic)}" />
 `;
 
@@ -633,10 +762,14 @@ function renderCircleGraph(graph, gfx, goal, options) {
     });
   });
 
-// Update2 addArrow define color
-function addArrow(state, successor, norm, rot, color) {
+
+
+
+  // Update2 addArrow define color
+  function addArrow(state, successor, norm, rot, color) {
     const [x, y] = xy.scaled[state];
     const [sx, sy] = xy.scaled[successor];
+
     arrows.push(`
       <div class="GraphNavigation-arrow GraphNavigation-edge-${state}-${successor}"
       style="
@@ -653,6 +786,7 @@ function addArrow(state, successor, norm, rot, color) {
           29  , 50
           41 , 50
         " class="triangle" style="fill: ${color};" /> 
+
       </svg>
       </div>
     `);
@@ -676,8 +810,8 @@ function addArrow(state, successor, norm, rot, color) {
     keys.push(`
       <div class="GraphNavigation-key GraphNavigation-key-${state}-${successor} GraphNavigation-key-${keyForCSSClass(key)}" style="
         transform: translate(
-          ${x - keyWidth/2 + mul * (sx-x)/norm}px,
-          ${y - keyHeight/2 + mul * (sy-y)/norm}px)
+          ${x - keyWidth / 2 + mul * (sx - x) / norm}px,
+          ${y - keyHeight / 2 + mul * (sy - y) / norm}px)
       ">${options.successorKeysRender(key)}</div>
     `);
   }
@@ -690,19 +824,19 @@ function addArrow(state, successor, norm, rot, color) {
     const successors = graph.successors(state);
 
     successors.forEach((successor, idx) => {
-        const e = xy.edge(state, successor);
-        const color = colors[idx % colors.length];  
+      const e = xy.edge(state, successor);
+      const color = colors[idx % colors.length];
 
-        succ.push(`
+      succ.push(`
           <div class="GraphNavigation-edge GraphNavigation-edge-${state}-${successor}" style="
           width: ${e.norm}px;
           transform: translate(${x}px,${y - 1}px) rotate(${e.rot}rad);
           background-color: ${color}; 
           "></div>
         `);
-        addArrow(state, successor, e.norm, e.rot, color);
+      addArrow(state, successor, e.norm, e.rot, color);
     });
-}
+  }
 
 
   return `
@@ -781,12 +915,6 @@ function setCurrentState(display_element, graph, state, options) {
       el.style.opacity = 1;
     }
 
-    // Now setting active keys
-    // el = display_element.querySelector(`.GraphNavigation-arrow-${state}-${successor}`);
-    // el.classList.add('GraphNavigation-currentKey');
-    // if (options.onlyShowCurrentEdges) {
-    //   el.style.opacity = 1;
-    // }
   });
 }
 
@@ -820,7 +948,7 @@ addPlugin('main', trialErrorHandling(async function main(root, trial) {
   else {
     await cg.showGraph();
   }
-  
+
   await cg.navigate()
   trial.bonus.addPoints(cg.score)
   cg.data.current_bonus = trial.bonus.dollars()
@@ -828,7 +956,6 @@ addPlugin('main', trialErrorHandling(async function main(root, trial) {
   $(root).empty()
   jsPsych.finishTrial(cg.data)
 }));
-
 
 addPlugin('break', trialErrorHandling(async function breakTrial(root, trial) {
   $(root).html(`
