@@ -144,7 +144,10 @@ async function initializeExperiment() {
       <b>${bonus.describeScheme()}.</b> We'll start you off with ${bonus.initial}
       points for free. Good luck!
     `),
-    
+    {type: 'call-function', func: () => {
+      console.log('finishInstructions')
+      psiturk.finishInstructions()
+    }},
     build_main(),
     {
       type: 'survey-text',

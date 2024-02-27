@@ -11,6 +11,7 @@ import './lib/jspsych-exported.js';
 import './lib/jspsych-6.0.1/plugins/jspsych-survey-text.js';
 import './lib/jspsych-6.0.1/plugins/jspsych-survey-multi-choice.js';
 import './lib/jspsych-6.0.1/plugins/jspsych-fullscreen.js';
+import './lib/jspsych-6.0.1/plugins/jspsych-call-function.js'
 
 import './js/psiturk.js';
 import './js/setup.js';
